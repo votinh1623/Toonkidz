@@ -1,24 +1,18 @@
-#NOTES:
+# NOTES:
 
-##batching requests
+##  batching requests
 
+## npm start //Done
 
-##npm start //Done
+## python edge_tts_server.py //Done
 
+## recommendation algorithm for similar behavior**
 
-##python edge_tts_server.py //Done
+## CMMI for software process???
 
+## iso and cmmi
 
-##recommendation algorithm for similar behavior**
-
-
-##CMMI for software process???
-
-
-##iso and cmmi
-
-
-##shell -> cd "C:Redis" -> redis-server.exe
+## shell -> cd "C:Redis" -> redis-server.exe
 
 
 ***Config .env first!!!***
@@ -34,7 +28,7 @@
 **node scripts/start-dev.js**
 
 
-##---- modules(check package.lock) ---##
+## ---- modules(check package.lock) ---##
 
 
 + backend
