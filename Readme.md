@@ -1,23 +1,49 @@
-batching requests
-npm start //Done
-python edge_tts_server.py //Done
-recommendation algorithm for similar behavior**
-CMMI for software process???
-iso and cmmi
-shell -> cd "C:Redis" -> redis-server.exe
+#NOTES:
 
-*Config .env first!!!
-
-Path: \toonkidz\backend\.env(create)
+##batching requests
 
 
-How to run:
-node scripts/start-dev.js
+##npm start //Done
 
 
----- modules(check package.lock) ---
+##python edge_tts_server.py //Done
+
+
+##recommendation algorithm for similar behavior**
+
+
+##CMMI for software process???
+
+
+##iso and cmmi
+
+
+##shell -> cd "C:Redis" -> redis-server.exe
+
+
+***Config .env first!!!***
+
+
+**Path: \toonkidz\backend\.env(create)**
+
+
+***How to run:***
+
+**npm install**
+
+**node scripts/start-dev.js**
+
+
+##---- modules(check package.lock) ---##
+
+
 + backend
+
+  
 npm install cookie-parser multer...
 
+ 
 + frontend
+
+  
 npm install react-router-dom jwt-decode...
