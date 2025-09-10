@@ -1,0 +1,15 @@
+{
+  "name": "toonkidz",
+  "version": "1.0.0",
+  "description": "Smart Comic Drawing App for Kids",
+  "scripts": {
+    "start:backend": "cd backend && npx nodemon src/app.js",
+    "start:frontend": "cd frontend && npm run dev",
+    "start:tts": "cd gpu && python scripts/edge_tts_server.py",
+    "dev": "concurrently \"npm run start:backend\" \"npm run start:frontend\" \"npm run start:tts\""
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0",
+    "nodemon": "^2.0.20"
+  }
+}
