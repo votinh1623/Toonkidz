@@ -10,6 +10,7 @@ prompt = sys.argv[1]
 steps = int(sys.argv[2]) if len(sys.argv) > 2 else 20
 num_images = int(sys.argv[3]) if len(sys.argv) > 3 else 4  # Default to 4 images
 
+
 print(f"Generating {num_images} images with prompt: {prompt}, steps: {steps}")
 
 # Load model with GPU optimizations

@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api'; // Import the configured API instance
 
 const Dashboard = () => {
-    const [imagePrompt, setImagePrompt] = useState('');
+     const [imagePrompt, setImagePrompt] = useState('');
     const [ttsText, setTtsText] = useState('');
-    const [generatedImage, setGeneratedImage] = useState(null);
+    const [generatedImages, setGeneratedImages] = useState([]); // Changed to array
     const [audioUrl, setAudioUrl] = useState(null);
     const [loading, setLoading] = useState(false);
     const [ttsLoading, setTtsLoading] = useState(false);
@@ -14,7 +14,7 @@ const Dashboard = () => {
     const navigate = useNavigate();
     const [ttsStatus, setTtsStatus] = useState('checking');
     const [imageStatus, setImageStatus] = useState('checking');
-    
+
     // Check if user is logged in
     useEffect(() => {
         const fetchProfile = async () => {
@@ -31,7 +31,7 @@ const Dashboard = () => {
         };
         fetchProfile();
     }, [navigate]);
-    
+
     useEffect(() => {
         const checkServices = async () => {
             try {
@@ -46,14 +46,18 @@ const Dashboard = () => {
         };
         checkServices();
     }, []);
+
     
     const handleGenerateImage = async () => {
         if (!imagePrompt.trim()) return;
         setLoading(true);
         try {
-            // Use the api instance - no need for manual token handling
-            const response = await api.post('/generate-image', { prompt: imagePrompt });
-            setGeneratedImage(response.data.imageUrl);
+            const response = await api.post('/generate-image', { 
+                prompt: imagePrompt,
+                numImages: 4 // Generate 4 images
+            });
+            console.log('Generated image URLs:', response.data.imageUrls);
+            setGeneratedImages(response.data.imageUrls);
         } catch (error) {
             console.error('Error generating image:', error);
             alert('Failed to generate image');
@@ -61,7 +65,7 @@ const Dashboard = () => {
             setLoading(false);
         }
     };
-    
+
     const handleGenerateTTS = async () => {
         if (!ttsText.trim()) return;
         setTtsLoading(true);
@@ -81,7 +85,7 @@ const Dashboard = () => {
             setTtsLoading(false);
         }
     };
-    
+
     const handleLogout = async () => {
         try {
             // Use the api instance - no need for manual token handling
@@ -92,7 +96,7 @@ const Dashboard = () => {
             navigate('/login');
         }
     };
-    
+
     if (authLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -100,14 +104,14 @@ const Dashboard = () => {
             </div>
         );
     }
-    
+
     if (!user) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center p-8 bg-white rounded-xl shadow-lg max-w-md">
                     <h2 className="text-2xl font-bold text-red-600 mb-4">Authentication Error</h2>
                     <p className="text-gray-700 mb-6">Please login to access the dashboard.</p>
-                    <button 
+                    <button
                         onClick={() => navigate('/login')}
                         className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
                     >
@@ -117,7 +121,7 @@ const Dashboard = () => {
             </div>
         );
     }
-    
+
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Navigation */}
@@ -139,7 +143,7 @@ const Dashboard = () => {
                     </div>
                 </div>
             </nav>
-            
+
             <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
                 <div className="px-4 py-6 sm:px-0">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -166,19 +170,39 @@ const Dashboard = () => {
                                 >
                                     {loading ? 'Generating...' : 'Generate Image'}
                                 </button>
-                                {generatedImage && (
+                                
+                                {/* Updated to display multiple images */}
+                                {generatedImages.length > 0 && (
                                     <div className="mt-4">
-                                        <h3 className="text-lg font-medium mb-2">Generated Image:</h3>
-                                        <img
-                                            src={generatedImage}
-                                            alt="Generated"
-                                            className="w-full max-w-md rounded-lg shadow-md"
-                                        />
+                                        <h3 className="text-lg font-medium mb-2">Generated Images:</h3>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {generatedImages.map((url, index) => (
+                                                <div key={index} className="relative">
+                                                    <img
+                                                        src={url}
+                                                        alt={`Generated ${index}`}
+                                                        className="w-full rounded-lg shadow-md"
+                                                        onError={(e) => {
+                                                            console.error(`Image ${index} failed to load:`, url);
+                                                            e.target.src = 'https://via.placeholder.com/400x300?text=Image+Failed+to+Load';
+                                                        }}
+                                                    />
+                                                    <a 
+                                                        href={url} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded hover:bg-opacity-70"
+                                                    >
+                                                        View Full Size
+                                                    </a>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
                             </div>
                         </div>
-                        
+
                         {/* TTS Section */}
                         <div className="bg-white shadow rounded-lg p-6">
                             <h2 className="text-2xl font-bold mb-4 text-purple-600">Text-to-Speech</h2>
