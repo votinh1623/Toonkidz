@@ -4,9 +4,10 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
-const path = require('path'); // Add this
-const fs = require('fs'); // Add this
+const path = require('path'); 
+const fs = require('fs'); 
 const config = require('./config/server.config');
+const imageRoutes = require('./routes/image.route.js');
 const healthController = require('./controllers/health.controller.js');
 const database = require('./lib/database.js');
 const { exec } = require('child_process')
@@ -51,7 +52,7 @@ cloudinary.config({
 // Routes
 app.get('/health', healthController.healthCheck);
 app.use('/api/auth', authRoutes);
-
+app.use('/api', imageRoutes); 
 // TTS Status Check Endpoint (MOVED HERE - BEFORE ERROR HANDLING)
 app.get('/api/tts-status', async (req, res) => {
   try {
@@ -69,184 +70,6 @@ app.get('/api/tts-status', async (req, res) => {
 });
 
 
-
-// Image generation endpoint
-app.post('/api/generate-image', async (req, res) => {
-  try {
-    const prompt = req.body.prompt;
-    const steps = req.body.steps || 20;
-    const numImages = req.body.numImages || 4;
-
-    console.log(`Generating ${numImages} images for prompt: "${prompt}" with ${steps} steps`);
-
-    // Verify script exists
-    const scriptPath = path.join(__dirname, '../../gpu/scripts/generate.py');
-    if (!fs.existsSync(scriptPath)) {
-      console.error('Python script not found at:', scriptPath);
-      return res.status(500).json({ error: 'Image generation script not found' });
-    }
-
-    // Verify generated directory exists
-    const generatedDir = path.join(__dirname, '../../../storage/images/generated');
-    if (!fs.existsSync(generatedDir)) {
-      console.log('Creating generated directory:', generatedDir);
-      fs.mkdirSync(generatedDir, { recursive: true });
-    }
-
-    // Try to find Python executable
-    const pythonCommands = ['python', 'python3', 'py'];
-    let python = null;
-    let pythonCmd = '';
-
-    for (const cmd of pythonCommands) {
-      try {
-        const testPython = spawn(cmd, ['--version']);
-        await new Promise((resolve, reject) => {
-          testPython.on('close', (code) => {
-            if (code === 0) {
-              pythonCmd = cmd;
-              resolve();
-            } else {
-              reject();
-            }
-          });
-          testPython.on('error', reject);
-        });
-        break;
-      } catch (e) {
-        console.log(`${cmd} not available, trying next...`);
-      }
-    }
-
-    if (!pythonCmd) {
-      return res.status(500).json({ error: 'Python not found on server' });
-    }
-
-    console.log(`Using Python command: ${pythonCmd}`);
-
-    // Execute Python script
-    python = spawn(pythonCmd, [scriptPath, prompt, steps.toString(), numImages.toString()]);
-
-    let output = '';
-    let error = '';
-
-    python.stdout.on('data', (data) => {
-      output += data.toString();
-    });
-
-    python.stderr.on('data', (data) => {
-      error += data.toString();
-      console.error(`Python stderr: ${data}`);
-    });
-
-    python.on('close', async (code) => {
-      if (code !== 0) {
-        console.error(`Python process exited with code ${code}`);
-        console.error(`Error output: ${error}`);
-        return res.status(500).json({
-          error: 'Image generation failed',
-          details: error,
-          code: code
-        });
-      }
-
-      // Get the last line of output which should be JSON
-      const lines = output.trim().split('\n');
-      const jsonLine = lines[lines.length - 1];
-
-      let filenames;
-      try {
-        filenames = JSON.parse(jsonLine);
-      } catch (e) {
-        console.error('Failed to parse JSON from Python output:', jsonLine);
-        console.error('Full output:', output);
-        return res.status(500).json({
-          error: 'Invalid response from image generation',
-          details: output
-        });
-      }
-
-      if (!Array.isArray(filenames)) {
-        console.error('Expected an array of filenames, got:', filenames);
-        return res.status(500).json({
-          error: 'Invalid response from image generation',
-          details: filenames
-        });
-      }
-
-      console.log(`Generated images: ${filenames.join(', ')}`);
-
-      // Check Cloudinary configuration
-      if (!process.env.CLOUDINARY_CLOUD_NAME ||
-        !process.env.CLOUDINARY_API_KEY ||
-        !process.env.CLOUDINARY_API_SECRET) {
-        console.error('Cloudinary configuration missing');
-        return res.status(500).json({ error: 'Cloudinary not configured' });
-      }
-
-      // Upload each image to Cloudinary
-      const imageUrls = [];
-      const uploadErrors = [];
-
-      for (const filename of filenames) {
-        const filepath = path.join(generatedDir, filename);
-
-        if (fs.existsSync(filepath)) {
-          try {
-            console.log(`Uploading ${filename} to Cloudinary...`);
-            const result = await cloudinary.uploader.upload(filepath, {
-              folder: 'generated-images',
-              public_id: `generated_${Date.now()}_${filename}`,
-              resource_type: 'image'
-            });
-            imageUrls.push(result.secure_url);
-
-            // Delete local file after successful upload
-            fs.unlinkSync(filepath);
-            console.log(`Uploaded and deleted: ${filename}`);
-          } catch (uploadError) {
-            console.error(`Error uploading ${filename}:`, uploadError);
-            uploadErrors.push(filename);
-          }
-        } else {
-          console.error(`File not found: ${filepath}`);
-          uploadErrors.push(filename);
-        }
-      }
-
-      if (uploadErrors.length > 0) {
-        if (imageUrls.length > 0) {
-          return res.status(206).json({
-            imageUrls,
-            warning: `Some images failed to upload: ${uploadErrors.join(', ')}`
-          });
-        } else {
-          return res.status(500).json({
-            error: 'Failed to upload images',
-            details: uploadErrors
-          });
-        }
-      }
-
-      res.json({ imageUrls });
-    });
-
-    python.on('error', (err) => {
-      console.error('Failed to start Python process:', err);
-      return res.status(500).json({
-        error: 'Failed to start image generation process',
-        details: err.message
-      });
-    });
-
-  } catch (error) {
-    console.error('Unexpected error in image generation:', error);
-    return res.status(500).json({
-      error: 'Unexpected error in image generation',
-      details: error.message
-    });
-  }
-});
 
 // TTS Generation Endpoint (MOVED HERE)
 app.post('/api/generate-tts', async (req, res) => {
