@@ -11,7 +11,7 @@ cloudinary.config({
 });
 
 // Safety prompts
-const SAFETY_PROMPT = "Child-friendly, safe for kids, no violence, no weapons, positive and uplifting image, cartoon style, bright colors, educational content, diverse characters, inclusive representation";
+const SAFETY_PROMPT = "";
 const NEGATIVE_PROMPT = "violence, weapons, blood, gore, scary, horror, frightening, inappropriate, adult content, sad, depressing, dark, menacing, dangerous, harmful, unsafe, fighting, arguing, crying";
 
 class ImageService {

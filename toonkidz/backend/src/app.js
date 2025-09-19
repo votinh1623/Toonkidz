@@ -1,25 +1,37 @@
-const express = require('express');
-const { spawn } = require('child_process');
-const cors = require('cors');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-const cookieParser = require('cookie-parser');
-const path = require('path'); 
-const fs = require('fs'); 
-const config = require('./config/server.config');
-const imageRoutes = require('./routes/image.route.js');
-const healthController = require('./controllers/health.controller.js');
-const database = require('./lib/database.js');
-const { exec } = require('child_process')
-const authRoutes = require('./routes/auth.route.js');
-const axios = require('axios');
-const cloudinary = require('cloudinary').v2;
-require('dotenv').config();
+import express from "express";
+import { spawn } from "child_process";
+import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import cookieParser from "cookie-parser";
+import path from "path"; 
+import fs from "fs"; 
+import { fileURLToPath } from "url"; // Add this import
+import config from "./config/server.config.js";
+import imageRoutes from "./routes/image.route.js";
+import themeRoutes from "./routes/theme.route.js"
+import vietnameseWordsRoutes from './routes/viet.words.route.js'
+import healthController from "./controllers/health.controller.js";
+import database from "./lib/database.js";
+import { exec } from "child_process";
+import authRoutes from "./routes/auth.route.js";
+import storyRoutes from "./routes/story.route.js";
+import axios from "axios";
+import { v2 as cloudinary } from "cloudinary";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 
 console.log('Environment variables loaded:');
 console.log('ACCESS_TOKEN_SECRET:', process.env.ACCESS_TOKEN_SECRET ? '***SET***' : '***NOT SET***');
 console.log('REFRESH_TOKEN_SECRET:', process.env.REFRESH_TOKEN_SECRET ? '***SET***' : '***NOT SET***');
+
 // Middleware
 app.use(helmet());
 app.use(cors(config.cors));
@@ -31,6 +43,7 @@ app.use(rateLimit({
   max: 100 // limit each IP to 100 requests per windowMs
 }));
 
+// Use the __dirname we created
 app.use('/generated', express.static(path.join(__dirname, '../../storage/images/generated')));
 
 // Create generated directory if it doesn't exist
@@ -38,6 +51,7 @@ const generatedDir = path.join(__dirname, '../../storage/images/generated');
 if (!fs.existsSync(generatedDir)) {
   fs.mkdirSync(generatedDir, { recursive: true });
 }
+
 // Connect to databases
 database.connectMongo();
 database.connectRedis();
@@ -53,7 +67,11 @@ cloudinary.config({
 app.get('/health', healthController.healthCheck);
 app.use('/api/auth', authRoutes);
 app.use('/api', imageRoutes); 
-// TTS Status Check Endpoint (MOVED HERE - BEFORE ERROR HANDLING)
+app.use('/api/stories', storyRoutes);
+app.use('/api/themes', themeRoutes);
+app.use('/api/vie-words', vietnameseWordsRoutes);
+
+// TTS Status Check Endpoint
 app.get('/api/tts-status', async (req, res) => {
   try {
     const response = await axios.get('http://localhost:5001/', { timeout: 5000 });
@@ -69,9 +87,7 @@ app.get('/api/tts-status', async (req, res) => {
   }
 });
 
-
-
-// TTS Generation Endpoint (MOVED HERE)
+// TTS Generation Endpoint
 app.post('/api/generate-tts', async (req, res) => {
   try {
     const { text, voice = 'vi-VN-HoaiMyNeural' } = req.body;
@@ -113,7 +129,7 @@ app.post('/api/generate-tts', async (req, res) => {
   }
 });
 
-// Error handling middleware (MOVED TO THE END)
+// Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
