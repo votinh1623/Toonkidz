@@ -10,7 +10,6 @@ import { fileURLToPath } from "url"; // Add this import
 import config from "./config/server.config.js";
 import imageRoutes from "./routes/image.route.js";
 import themeRoutes from "./routes/theme.route.js"
-import vietnameseWordsRoutes from './routes/viet.words.route.js'
 import healthController from "./controllers/health.controller.js";
 import database from "./lib/database.js";
 import { exec } from "child_process";
@@ -69,7 +68,6 @@ app.use('/api/auth', authRoutes);
 app.use('/api', imageRoutes); 
 app.use('/api/stories', storyRoutes);
 app.use('/api/themes', themeRoutes);
-app.use('/api/vie-words', vietnameseWordsRoutes);
 
 // TTS Status Check Endpoint
 app.get('/api/tts-status', async (req, res) => {
