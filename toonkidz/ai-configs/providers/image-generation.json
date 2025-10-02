@@ -1,0 +1,15 @@
+{
+  "safety_prompt": "Generate a child-friendly image that is appropriate for children of all ages, positive, uplifting, educational, free from violence, weapons, or harmful content, colorful and engaging for kids, shows respectful interactions between characters, and promotes creativity and imagination.",
+  "negative_prompt": "violence, weapons, blood, gore, scary, horror, frightening, inappropriate, adult content, sad, depressing, dark, menacing, dangerous, harmful, unsafe, fighting, arguing, crying",
+  "content_filters": [
+    "violence",
+    "adult_content",
+    "hate_symbols",
+    "harassment",
+    "self_harm",
+    "sexual_content"
+  ],
+  "style_guidance": "cartoon style, bright colors, friendly characters, soft edges, whimsical",
+  "character_guidance": "diverse characters, inclusive representation, positive role models",
+  "setting_guidance": "safe environments, educational settings, playful scenes, nature, fantasy worlds"
+}

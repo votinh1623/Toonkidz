@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api'; // Import the configured API instance
 
 const Dashboard = () => {
-    const [imagePrompt, setImagePrompt] = useState('');
+     const [imagePrompt, setImagePrompt] = useState('');
     const [ttsText, setTtsText] = useState('');
-    const [generatedImage, setGeneratedImage] = useState(null);
+    const [generatedImages, setGeneratedImages] = useState([]); // Changed to array
     const [audioUrl, setAudioUrl] = useState(null);
     const [loading, setLoading] = useState(false);
     const [ttsLoading, setTtsLoading] = useState(false);
@@ -51,9 +51,12 @@ const Dashboard = () => {
         if (!imagePrompt.trim()) return;
         setLoading(true);
         try {
-            // Use the api instance - no need for manual token handling
-            const response = await api.post('/generate-image', { prompt: imagePrompt });
-            setGeneratedImage(response.data.imageUrl);
+            const response = await api.post('/generate-image', { 
+                prompt: imagePrompt,
+                numImages: 4 // Generate 4 images
+            });
+            console.log('Generated image URLs:', response.data.imageUrls);
+            setGeneratedImages(response.data.imageUrls);
         } catch (error) {
             console.error('Error generating image:', error);
             alert('Failed to generate image');
@@ -166,14 +169,34 @@ const Dashboard = () => {
                                 >
                                     {loading ? 'Generating...' : 'Generate Image'}
                                 </button>
-                                {generatedImage && (
+                                
+                                {/* Updated to display multiple images */}
+                                {generatedImages.length > 0 && (
                                     <div className="mt-4">
-                                        <h3 className="text-lg font-medium mb-2">Generated Image:</h3>
-                                        <img
-                                            src={generatedImage}
-                                            alt="Generated"
-                                            className="w-full max-w-md rounded-lg shadow-md"
-                                        />
+                                        <h3 className="text-lg font-medium mb-2">Generated Images:</h3>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {generatedImages.map((url, index) => (
+                                                <div key={index} className="relative">
+                                                    <img
+                                                        src={url}
+                                                        alt={`Generated ${index}`}
+                                                        className="w-full rounded-lg shadow-md"
+                                                        onError={(e) => {
+                                                            console.error(`Image ${index} failed to load:`, url);
+                                                            e.target.src = 'https://via.placeholder.com/400x300?text=Image+Failed+to+Load';
+                                                        }}
+                                                    />
+                                                    <a 
+                                                        href={url} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded hover:bg-opacity-70"
+                                                    >
+                                                        View Full Size
+                                                    </a>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
                             </div>

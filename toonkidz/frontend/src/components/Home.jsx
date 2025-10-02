@@ -78,7 +78,7 @@ const Home = () => {
                 <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
                     <div className="flex justify-center mb-6">
                         <img
-                            src={user?.pfp || "https://scontent.fdad3-1.fna.fbcdn.net/v/t39.30808-6/444489138_1019981339484259_4504008877707254740_n.jpg?_nc_cat=1&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeGsawln9micDlHfgVyxui_1URabDd90GjNRFpsN33QaMz3uHBW6IEMvv2SxlA63mOHXfaPdz8_7G5KyYF4pHEDX&_nc_ohc=_xO55_x1RzUQ7kNvwHt_zhq&_nc_oc=AdnlFQpaWQurFM-xCHVAehcgJU-zglV-xYk3l9Cm79HAoIYuiZlOKeIb4hAbX-YVM_M&_nc_zt=23&_nc_ht=scontent.fdad3-1.fna&_nc_gid=jSqZtchoZ66Iep76YbAkpw&oh=00_AfaCuNNZopu1MMUSoj6TR5dadAPef6oOkhl5L-i8KF3Y6A&oe=68C46D20"}
+                            src={user?.pfp || "https://res.cloudinary.com/dxk9czcoa/image/upload/v1741937844/pfp/wpvq1k5tohnnmkqjyln4.jpg"}
                             alt="Profile"
                             className="w-24 h-24 rounded-full object-cover border-4 border-purple-200"
                         />
