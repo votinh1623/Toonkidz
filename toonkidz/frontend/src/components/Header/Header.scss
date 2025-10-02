@@ -1,0 +1,166 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.container__header {
+  width: 100%;
+  background-color: #fff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  padding: 0.8rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'Poppins', sans-serif;
+  position: sticky;
+  top: 0;
+  z-index: 999;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  justify-content: space-between;
+
+  &__menu-toggle {
+    display: none;
+    font-size: 1.6rem;
+    cursor: pointer;
+    margin-right: 1rem;
+    color: #a663cc;
+    transition: transform 0.3s ease;
+
+    &:hover {
+      transform: rotate(90deg);
+    }
+  }
+
+  &__logo {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #a663cc;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
+
+  &__search {
+    flex: 1;
+    margin: 0 2rem;
+
+    .ant-input-affix-wrapper {
+      border-radius: 2rem;
+      border: 1px solid #ddd;
+      padding: 6px 16px;
+      font-size: 0.95rem;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+
+      &:hover {
+        border-color: #a663cc;
+      }
+
+      &:focus,
+      &.ant-input-affix-wrapper-focused {
+        border-color: #a663cc;
+        box-shadow: 0 0 8px rgba(166, 99, 204, 0.3);
+      }
+
+      input {
+        font-size: 0.95rem;
+      }
+    }
+  }
+
+  &__menu {
+    margin-right: 2rem;
+
+    ul {
+      display: flex;
+      list-style: none;
+      gap: 1.5rem;
+
+      li {
+        a {
+          font-size: 1rem;
+          font-weight: 500;
+          color: #444;
+          text-decoration: none;
+          padding: 0.3rem 0.5rem;
+          border-radius: 0.5rem;
+          transition: all 0.3s ease;
+
+          &:hover {
+            background: #f3e5ff;
+            color: #a663cc;
+            transform: translateY(-2px);
+          }
+
+          &.active {
+            background: #f3e5ff;
+            color: #a663cc;
+          }
+        }
+      }
+    }
+  }
+
+  &__account {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    margin-right: 1.5rem;
+
+    svg {
+      font-size: 1.25rem;
+      color: #555;
+      transition: all 0.3s ease;
+      cursor: pointer;
+
+      &:hover {
+        color: #a663cc;
+        transform: scale(1.2);
+      }
+    }
+  }
+
+  &__button {
+    button {
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 2rem;
+      background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+      }
+    }
+  }
+}
+
+/* Responsive Header */
+@media (max-width: 896px) {
+
+  .header__search,
+  .header__menu,
+  .header__button {
+    display: none;
+  }
+
+  .header__menu-toggle {
+    display: block;
+  }
+}

@@ -47,7 +47,6 @@ const Dashboard = () => {
         checkServices();
     }, []);
 
-    
     const handleGenerateImage = async () => {
         if (!imagePrompt.trim()) return;
         setLoading(true);

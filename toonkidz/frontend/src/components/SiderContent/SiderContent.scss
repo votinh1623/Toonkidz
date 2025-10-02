@@ -1,0 +1,143 @@
+.sider-content {
+  padding: 1.5rem;
+  font-family: 'Poppins', sans-serif;
+  color: #333;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+
+  .sider-section {
+    margin-bottom: 2.5rem;
+
+    .sider-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .sider-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+
+      li {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.95rem;
+        color: #444;
+        padding: 0.5rem 0.8rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+
+        &:hover {
+          background: linear-gradient(90deg, #f3e5ff, #e0f7fa);
+          color: #a663cc;
+          transform: translateX(4px);
+        }
+
+        .icon {
+          font-size: 1.1rem;
+          flex-shrink: 0;
+        }
+
+        /* Các màu icon riêng */
+        .star {
+          color: #f1c40f;
+        }
+
+        .adventure {
+          color: #3498db;
+        }
+
+        .animal {
+          color: #27ae60;
+        }
+
+        .science {
+          color: #8e44ad;
+        }
+
+        .nature {
+          color: #16a085;
+        }
+
+        .music {
+          color: #e74c3c;
+        }
+
+        .new {
+          color: #3498db;
+        }
+
+        .done {
+          color: #2ecc71;
+        }
+
+        .hot {
+          color: #e67e22;
+        }
+
+        .heart {
+          color: #e84393;
+        }
+      }
+    }
+  }
+
+  /* Box thông tin “Bé đã học” */
+  .sider-box {
+    background: linear-gradient(135deg, #fceabb, #f8b500);
+    border-radius: 16px;
+    text-align: center;
+    padding: 2rem 1rem;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    margin-top: 1rem;
+    transition: transform 0.3s ease;
+
+    &:hover {
+      transform: translateY(-4px);
+    }
+
+    .balloon {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      animation: float 2s ease-in-out infinite alternate;
+    }
+
+    .sider-count {
+      font-size: 1rem;
+      font-weight: 500;
+      color: #444;
+      margin-bottom: 0.5rem;
+    }
+
+    h2 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #a663cc;
+      margin: 0.3rem 0;
+    }
+
+    .sider-note {
+      font-size: 0.9rem;
+      color: #555;
+    }
+  }
+}
+
+/* Animation balloon */
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+
+  100% {
+    transform: translateY(-6px);
+  }
+}
