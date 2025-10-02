@@ -14,7 +14,7 @@ const Dashboard = () => {
     const navigate = useNavigate();
     const [ttsStatus, setTtsStatus] = useState('checking');
     const [imageStatus, setImageStatus] = useState('checking');
-    
+
     // Check if user is logged in
     useEffect(() => {
         const fetchProfile = async () => {
@@ -31,7 +31,7 @@ const Dashboard = () => {
         };
         fetchProfile();
     }, [navigate]);
-    
+
     useEffect(() => {
         const checkServices = async () => {
             try {
@@ -46,7 +46,7 @@ const Dashboard = () => {
         };
         checkServices();
     }, []);
-    
+
     const handleGenerateImage = async () => {
         if (!imagePrompt.trim()) return;
         setLoading(true);
@@ -61,7 +61,7 @@ const Dashboard = () => {
             setLoading(false);
         }
     };
-    
+
     const handleGenerateTTS = async () => {
         if (!ttsText.trim()) return;
         setTtsLoading(true);
@@ -81,7 +81,7 @@ const Dashboard = () => {
             setTtsLoading(false);
         }
     };
-    
+
     const handleLogout = async () => {
         try {
             // Use the api instance - no need for manual token handling
@@ -92,7 +92,7 @@ const Dashboard = () => {
             navigate('/login');
         }
     };
-    
+
     if (authLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -100,14 +100,14 @@ const Dashboard = () => {
             </div>
         );
     }
-    
+
     if (!user) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center p-8 bg-white rounded-xl shadow-lg max-w-md">
                     <h2 className="text-2xl font-bold text-red-600 mb-4">Authentication Error</h2>
                     <p className="text-gray-700 mb-6">Please login to access the dashboard.</p>
-                    <button 
+                    <button
                         onClick={() => navigate('/login')}
                         className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
                     >
@@ -117,7 +117,7 @@ const Dashboard = () => {
             </div>
         );
     }
-    
+
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Navigation */}
@@ -139,7 +139,7 @@ const Dashboard = () => {
                     </div>
                 </div>
             </nav>
-            
+
             <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
                 <div className="px-4 py-6 sm:px-0">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -178,7 +178,7 @@ const Dashboard = () => {
                                 )}
                             </div>
                         </div>
-                        
+
                         {/* TTS Section */}
                         <div className="bg-white shadow rounded-lg p-6">
                             <h2 className="text-2xl font-bold mb-4 text-purple-600">Text-to-Speech</h2>

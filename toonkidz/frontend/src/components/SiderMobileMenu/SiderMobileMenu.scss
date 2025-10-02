@@ -1,0 +1,47 @@
+.sider-mobile-menu {
+  width: 100%;
+  max-width: 300px;
+  padding: 1.2rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  font-family: 'Poppins', sans-serif;
+
+  .search-input {
+    margin-bottom: 1rem;
+    border-radius: 2rem;
+
+    .ant-input-affix-wrapper {
+      border-radius: 2rem;
+      padding: 6px 16px;
+      border: 1px solid #ddd;
+
+      &:focus,
+      &.ant-input-affix-wrapper-focused {
+        border-color: #a663cc;
+        box-shadow: 0 0 8px rgba(166, 99, 204, 0.3);
+      }
+    }
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    li {
+      padding: 0.6rem 0.8rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      color: #444;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: #f3e5ff;
+        color: #a663cc;
+        transform: translateX(4px);
+      }
+    }
+  }
+}
