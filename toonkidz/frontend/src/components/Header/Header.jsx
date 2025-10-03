@@ -4,9 +4,10 @@ import { Input } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBell, faUser, faBars } from "@fortawesome/free-solid-svg-icons";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 const Header = ({ onToggleSider }) => {
+  const navigate = useNavigate();
   return (
     <div className="container__header">
       <div className="header">
@@ -15,7 +16,7 @@ const Header = ({ onToggleSider }) => {
           <FontAwesomeIcon icon={faBars} />
         </div>
 
-        <div className="header__logo">Tool Kidz</div>
+        <div className="header__logo">Toon Kidz</div>
 
         <div className="header__search">
           <Input
@@ -59,7 +60,7 @@ const Header = ({ onToggleSider }) => {
         </div>
 
         <div className="header__button">
-          <button>Tạo truyện</button>
+          <button onClick={() => navigate("/home/create-comic")}>Tạo truyện</button>
         </div>
       </div>
     </div>

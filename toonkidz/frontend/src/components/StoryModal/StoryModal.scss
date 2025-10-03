@@ -1,0 +1,216 @@
+* {
+  font-family: 'Poppins', sans-serif;
+}
+
+.story-modal {
+  .ant-modal-content {
+    border-radius: 16px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
+    padding: 20px;
+  }
+
+  // Ẩn nút đóng
+  .ant-modal-close {
+    display: none;
+  }
+
+  .ant-carousel {
+    position: relative;
+
+    .slick-slider {
+      position: relative;
+
+      .slick-slide>div {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        background: #fff;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+      }
+
+      // Arrows
+      .slick-prev,
+      .slick-next {
+        width: 40px !important;
+        height: 40px !important;
+        background: rgba(198, 169, 238, 0.6) !important; // tím nhẹ
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+        transition: all 0.3s !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        z-index: 20 !important;
+
+        &:hover {
+          background: rgba(198, 169, 238, 0.9) !important;
+          box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25) !important;
+        }
+
+        &:before {
+          content: '';
+        }
+
+        &::after {
+          content: '';
+          position: absolute;
+          width: 12px;
+          height: 12px;
+          border-style: solid;
+          border-width: 2px 2px 0 0;
+          border-color: #6c086c;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%) rotate(45deg); // mũi tên sang ngang
+        }
+      }
+
+      .slick-prev {
+        left: 10px !important;
+
+        &::after {
+          transform: translate(-50%, -50%) rotate(-135deg); // sang trái
+        }
+      }
+
+      .slick-next {
+        right: 10px !important;
+
+        &::after {
+          transform: translate(-50%, -50%) rotate(45deg); // sang phải
+        }
+      }
+
+      // Dots
+      .slick-dots {
+        position: absolute;
+        bottom: 10px !important;
+        width: 100%;
+        text-align: center;
+
+        li {
+          margin: 0 4px;
+
+          button {
+            &:before {
+              font-size: 10px;
+              color: #d6c1e8; // tím nhạt
+            }
+          }
+
+          &.slick-active button:before {
+            color: #6c086c; // tím đậm
+          }
+        }
+      }
+    }
+  }
+
+  .image-audio-wrapper {
+    display: flex;
+    gap: 20px;
+
+    .image-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 300px;
+      overflow: hidden;
+      border-radius: 12px;
+      background: #f5f5f5;
+
+      img {
+        width: auto;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 12px;
+        transition: transform 0.3s;
+
+        &:hover {
+          transform: scale(1.03);
+        }
+      }
+    }
+
+    .audio-vocab-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+
+      audio {
+        width: 100%;
+        margin-bottom: 16px;
+      }
+
+      h4 {
+        color: #6c086c;
+        margin-bottom: 12px;
+      }
+
+      .vocab-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+
+        .ant-tag {
+          padding: 6px 12px;
+          font-size: 14px;
+          font-weight: 500;
+        }
+      }
+    }
+  }
+
+  .page-content {
+    margin-top: 20px;
+    padding: 16px;
+    border-radius: 10px;
+    background: #fff;
+    border: 1px solid #eee;
+    min-height: 120px;
+
+    p {
+      margin: 0;
+      line-height: 1.6;
+      color: #444;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .image-audio-wrapper {
+      flex-direction: column;
+
+      .image-container,
+      .audio-vocab-container {
+        flex: unset;
+        height: auto;
+      }
+    }
+
+    .ant-modal-content {
+      padding: 15px;
+    }
+
+    .image-container img {
+      height: auto;
+      width: 100%;
+    }
+  }
+}
+
+.slick-slide {
+  border-radius: 10px;
+  overflow: hidden;
+}
