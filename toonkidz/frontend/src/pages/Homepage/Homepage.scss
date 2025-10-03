@@ -8,17 +8,26 @@
     border-radius: 12px;
     text-align: center;
     margin-bottom: 40px;
+    overflow: hidden;
 
     &__title {
       font-size: 32px;
       font-weight: 700;
       color: #6c086c;
+      animation-delay: 0.2s;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: slideFadeUp 0.8s forwards;
     }
 
     &__subtitle {
       font-size: 18px;
       color: #94569c;
       margin: 12px 0;
+      animation-delay: 0.4s;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: slideFadeUp 0.8s forwards;
     }
 
     &__button {
@@ -31,6 +40,10 @@
         cursor: pointer;
         transition: all 0.3s ease-in-out;
         margin-top: 20px;
+        animation-delay: 0.6s;
+        opacity: 0;
+        transform: translateY(20px);
+        animation: slideFadeUp 0.8s forwards;
 
         &:hover {
           transform: translateY(-3px);
@@ -241,6 +254,13 @@
         }
       }
     }
+  }
+}
+
+@keyframes slideFadeUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
