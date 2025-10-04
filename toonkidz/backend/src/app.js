@@ -14,7 +14,7 @@ import healthController from "./controllers/health.controller.js";
 import database from "./lib/database.js";
 import { exec } from "child_process";
 import authRoutes from "./routes/auth.route.js";
-import storyRoutes from "./routes/story.route.js";
+import storyRoutes from './routes/story.route.js';
 import axios from "axios";
 import { v2 as cloudinary } from "cloudinary";
 import dotenv from "dotenv";
@@ -66,7 +66,7 @@ cloudinary.config({
 app.get('/health', healthController.healthCheck);
 app.use('/api/auth', authRoutes);
 app.use('/api', imageRoutes); 
-app.use('/api/stories', storyRoutes);
+app.use('/api/story', storyRoutes);
 app.use('/api/themes', themeRoutes);
 
 // TTS Status Check Endpoint

@@ -4,6 +4,7 @@ import Login from "../components/auth/Login/Login";
 import Signup from "../components/auth/Signup/Signup";
 import { Children } from "react";
 import Homepage from "../pages/Homepage/Homepage";
+import Dashboard from '../components/Dashboard';//Testing
 
 export const route = [
   {
@@ -31,5 +32,8 @@ export const route = [
   {
     path: "/",
     element: <Signup />
-  }
+  },  {
+    path: '/dashboard',
+    element: <Dashboard />, // ✅ Dashboard route added for testing
+  },
 ]

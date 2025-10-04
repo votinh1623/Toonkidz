@@ -15,7 +15,7 @@ const Header = ({ onToggleSider }) => {
           <FontAwesomeIcon icon={faBars} />
         </div>
 
-        <div className="header__logo">Tool Kidz</div>
+        <div className="header__logo">Toonkidz</div>
 
         <div className="header__search">
           <Input
@@ -59,7 +59,12 @@ const Header = ({ onToggleSider }) => {
         </div>
 
         <div className="header__button">
-          <button>Tạo truyện</button>
+          <NavLink
+                to="/dashboard" //Testing
+                className={({ isActive }) => (isActive ? "active" : "")}
+              ><button>Tạo truyện</button>
+              </NavLink>
+            
         </div>
       </div>
     </div>

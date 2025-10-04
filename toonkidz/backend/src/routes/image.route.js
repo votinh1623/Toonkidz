@@ -6,8 +6,9 @@ const contentFilter = require('../middleware/contentFilter');
 // Image generation endpoint
 router.post('/generate-image', contentFilter, async (req, res) => {
   try {
-    const { prompt, steps, numImages } = req.body;
-    const result = await ImageService.generateImage(prompt, steps, numImages);
+    console.log('Request body:', req.body); // <-- Add this for debugging
+    const { prompt, steps, numImages, keywords } = req.body;
+    const result = await ImageService.generateImage(prompt, steps, numImages, keywords);
     res.json(result);
   } catch (error) {
     console.error('Error in image generation:', error);
