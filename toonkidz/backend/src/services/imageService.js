@@ -15,9 +15,12 @@ const SAFETY_PROMPT = "";
 const NEGATIVE_PROMPT = "violence, weapons, blood, gore, scary, horror, frightening, inappropriate, adult content, sad, depressing, dark, menacing, dangerous, harmful, unsafe, fighting, arguing, crying";
 
 class ImageService {
-  static async generateImage(prompt, steps = 20, numImages = 4) {
+  static async generateImage(prompt, steps = 20, numImages = 4, keywords = []) {
+    const keywordsText = Array.isArray(keywords) && keywords.length > 0
+    ? ` Keywords: ${keywords.join(', ')}.`
+    : '';
     // Combine user prompt with safety guidelines
-    const enhancedPrompt = `${SAFETY_PROMPT}. ${prompt}`;
+    const enhancedPrompt = `${SAFETY_PROMPT}. ${prompt}${keywordsText}`;
     
     console.log(`Generating ${numImages} images for prompt: "${enhancedPrompt}" with ${steps} steps`);
     console.log(`Using negative prompt: "${NEGATIVE_PROMPT}"`);
