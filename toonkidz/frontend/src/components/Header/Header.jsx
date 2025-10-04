@@ -43,6 +43,15 @@ const Header = ({ onToggleSider }) => {
                 Khám phá
               </NavLink>
             </li>
+            {/* Thêm tab "Học Tiếng Anh" */}
+            <li>
+              <NavLink
+                to="/home/learn-english"
+                className={({ isActive }) => (isActive ? "active" : "")}
+              >
+                Học Tiếng Anh
+              </NavLink>
+            </li>
             <li>
               <NavLink
                 to="/library"

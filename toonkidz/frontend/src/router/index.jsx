@@ -5,6 +5,7 @@ import Signup from "../components/auth/Signup/Signup";
 import { Children } from "react";
 import Homepage from "../pages/Homepage/Homepage";
 import CreateComic from "../pages/CreateComic/CreateComic";
+import LearnEnglish from "../pages/LearnEnglish/LearnEnglish";
 
 export const route = [
   {
@@ -23,6 +24,11 @@ export const route = [
         path: "create-comic",
         element: <CreateComic />
       },
+      // Thêm route cho "Học Tiếng Anh"
+      {
+        path: "learn-english",
+        element: <LearnEnglish />
+      },
     ]
   },
   {
@@ -37,4 +43,4 @@ export const route = [
     path: "/",
     element: <Signup />
   }
-]
+];

@@ -1,10 +1,5 @@
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-.container__header {
+  
+  .container__header {
   width: 100%;
   background-color: #fff;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
@@ -152,15 +147,22 @@
 }
 
 /* Responsive Header */
+
+  
 @media (max-width: 896px) {
 
   .header__search,
   .header__menu,
   .header__button {
     display: none;
-  }
+  
+  } 
 
   .header__menu-toggle {
     display: block;
   }
 }
+
+
+
+
