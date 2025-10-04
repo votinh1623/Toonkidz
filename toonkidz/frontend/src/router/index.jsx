@@ -5,6 +5,7 @@ import Signup from "../components/auth/Signup/Signup";
 import { Children } from "react";
 import Homepage from "../pages/Homepage/Homepage";
 import Dashboard from '../components/Dashboard';//Testing
+import CreateComic from "../pages/CreateComic/CreateComic";
 
 export const route = [
   {
@@ -18,6 +19,10 @@ export const route = [
       {
         path: "homepage",
         element: <Homepage />
+      },
+      {
+        path: "create-comic",
+        element: <CreateComic />
       },
     ]
   },
