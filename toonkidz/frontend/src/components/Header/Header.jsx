@@ -61,7 +61,7 @@ const Header = ({ onToggleSider }) => {
 
         <div className="header__button">
           <NavLink
-                to="/dashboard" //Testing
+                to="/home/create-comic" 
                 className={({ isActive }) => (isActive ? "active" : "")}
               ><button>Tạo truyện</button>
               </NavLink>
