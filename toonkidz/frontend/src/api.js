@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:3001/api',
+  baseURL: 'http://localhost:3000/api',
   withCredentials: true, // This is crucial for sending cookies
   // timeout: 10000, // Add timeout to prevent hanging requests
 });

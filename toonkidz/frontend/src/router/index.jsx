@@ -2,10 +2,11 @@ import { Navigate } from "react-router";
 import LayoutDefault from "../layout/LayoutDefault/LayoutDefault";
 import Login from "../components/auth/Login/Login";
 import Signup from "../components/auth/Signup/Signup";
-import { Children } from "react";
 import Homepage from "../pages/Homepage/Homepage";
+import Dashboard from '../components/Dashboard'; // Testing
 import CreateComic from "../pages/CreateComic/CreateComic";
 import LearnEnglish from "../pages/LearnEnglish/LearnEnglish";
+import LibraryPage from "../pages/LibraryPage/LibraryPage";
 
 export const route = [
   {
@@ -24,10 +25,13 @@ export const route = [
         path: "create-comic",
         element: <CreateComic />
       },
-      // Thêm route cho "Học Tiếng Anh"
       {
         path: "learn-english",
         element: <LearnEnglish />
+      },
+      {
+        path: "library",
+        element: <LibraryPage />
       },
     ]
   },
@@ -42,5 +46,9 @@ export const route = [
   {
     path: "/",
     element: <Signup />
-  }
+  },
+  {
+    path: "/dashboard",
+    element: <Dashboard /> // ✅ Dashboard route added for testing
+  },
 ];
