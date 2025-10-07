@@ -1,36 +1,37 @@
-import { Outlet } from "react-router-dom";
-import Header from "../../components/Header/Header";
-import { Layout, Grid, Drawer } from "antd";
-import SiderContent from "../../components/SiderContent/SiderContent.jsx";
-import SiderMobileMenu from "../../components/SiderMobileMenu/SiderMobileMenu.jsx";
 import { useState } from "react";
+import { Layout, Grid, Drawer } from "antd";
+import Header from "../../components/Header/Header";
+import AdminSiderContent from "../../components/AdminSiderContent/AdminSiderContent";
+import { Outlet } from "react-router-dom";
+import "./AdminLayout.scss";
 
 const { Sider, Content } = Layout;
 const { useBreakpoint } = Grid;
 
-const LayoutDefault = () => {
+const AdminLayout = () => {
   const screens = useBreakpoint();
   const [drawerVisible, setDrawerVisible] = useState(false);
-  const role = "USER";
 
   const toggleDrawer = () => setDrawerVisible(!drawerVisible);
 
   return (
     <Layout className="layout-default">
+      {/* Header chung (dùng luôn Header cũ nếu có icon menu) */}
       <Header onToggleSider={toggleDrawer} />
+
       <Layout className="layout-child">
-        {/* Desktop Sider */}
+        {/* SIDEBAR cho desktop */}
         {screens.md && (
           <Sider
             theme="light"
             width={250}
             style={{ minWidth: 210 }}
           >
-            <SiderContent />
+            <AdminSiderContent />
           </Sider>
         )}
 
-        {/* Mobile Drawer */}
+        {/* DRAWER cho mobile */}
         {!screens.md && (
           <Drawer
             placement="left"
@@ -39,11 +40,11 @@ const LayoutDefault = () => {
             bodyStyle={{ padding: 0 }}
             width={250}
           >
-            <SiderMobileMenu onClose={() => setDrawerVisible(false)} />
-            <SiderContent />
+            <AdminSiderContent />
           </Drawer>
         )}
 
+        {/* Nội dung chính */}
         <Content className="layout__content">
           <div className="content__container">
             <Outlet />
@@ -54,4 +55,4 @@ const LayoutDefault = () => {
   );
 };
 
-export default LayoutDefault;
+export default AdminLayout;
