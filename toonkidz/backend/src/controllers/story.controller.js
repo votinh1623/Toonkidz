@@ -1,18 +1,17 @@
 import axios from 'axios';
 import { AI_MODELS, AI_RETRY_OPTIONS } from '../config/ai.config.js';
-import themes from "../config/theme.config.js"
+import Story from '../models/story.model.js';
 
 export const generateStory = async (req, res) => {
   const { theme, keywords, prompt: userPrompt } = req.body;
+  const userId = req.user._id;
 
-  // ✅ 1️⃣ Require at least a theme or a user prompt
   if (!theme && !userPrompt) {
     return res.status(400).json({ error: 'Theme or prompt is required' });
   }
 
   const storyKeywords = Array.isArray(keywords) && keywords.length > 0 ? keywords : [];
 
-  // ✅ 2️⃣ Build the instruction
   const basePrompt = userPrompt
     ? `ĐÂY LÀ Ý TƯỞNG NGƯỜI DÙNG GÕ TRỰC TIẾP (ưu tiên cao nhất): *${userPrompt}*`
     : `CHỦ ĐỀ: "${theme}"`;
@@ -27,14 +26,24 @@ TỪ KHÓA BẮT BUỘC (nếu có): ${storyKeywords.length ? storyKeywords.join
 YÊU CẦU:
 1. Tiêu đề: Một dòng ngắn gọn, hấp dẫn.
 2. Tóm tắt: Một hoặc hai câu mô tả nội dung chính của câu chuyện, không chứa "một câu chuyện...".
-3. Câu chuyện: Khoảng 10 từ, viết bằng ngôn ngữ đơn giản, dễ hiểu cho trẻ em từ 5-10 tuổi.
-4. Kết cấu câu chuyện rõ ràng: mở đầu, diễn biến, kết thúc, không cần ghi rõ ra.
+3. Câu chuyện: Chia thành 2 trang, mỗi trang khoảng 20 từ.
+4. Mỗi trang phải có nội dung hoàn chỉnh và liên kết với trang trước/sau.
+5. Kết cấu câu chuyện rõ ràng: mở đầu, diễn biến, kết thúc.
 
 ĐỊNH DẠNG ĐẦU RA (JSON):
 {
   "title": "Tiêu đề câu chuyện",
   "heading": "Tóm tắt ngắn gọn",
-  "story": "Nội dung câu chuyện đầy đủ..."
+  "pages": [
+    {
+      "pageNumber": 1,
+      "content": "Nội dung trang 1..."
+    },
+    {
+      "pageNumber": 2,
+      "content": "Nội dung trang 2..."
+    }
+  ]
 }
 
 Lưu ý:
@@ -42,6 +51,7 @@ Lưu ý:
 - Ưu tiên tuyệt đối ý tưởng do người dùng gõ (*${userPrompt || theme}*).
 - Sử dụng từ khóa một cách tự nhiên, không gượng ép.
 - Câu chuyện có tính giáo dục, vui vẻ và phù hợp với trẻ em.
+- Chia câu chuyện thành các trang hợp lý, mỗi trang là một phần của cốt truyện.
 `;
 
   const sortedModels = AI_MODELS.sort((a, b) => a.priority - b.priority);
@@ -53,15 +63,15 @@ Lưu ý:
       try {
         let storyText = '';
 
-        // 🆕 REPLICATE INTEGRATION (Claude 3.7 Sonnet)
+        // Generate story content
         if (model.provider === 'replicate') {
           const response = await axios.post(
             model.endpoint,
             {
               input: {
                 prompt: prompt,
-                system_prompt: "Bạn là một nhà văn chuyên viết truyện thiếu nhi. Hãy viết câu chuyện bằng tiếng Việt.",
-                max_tokens: 1200,
+                system_prompt: "Bạn là một nhà văn chuyên viết truyện thiếu nhi. Hãy viết câu chuyện bằng tiếng Việt với cấu trúc trang rõ ràng.",
+                max_tokens: 2000,
                 temperature: 0.8
               }
             },
@@ -74,7 +84,6 @@ Lưu ý:
             }
           );
           
-          // Replicate responses are often async, check for completion
           if (response.data.status === 'succeeded') {
             storyText = response.data.output.join('');
           } else if (response.data.output) {
@@ -85,8 +94,6 @@ Lưu ý:
             throw new Error('Replicate response not ready');
           }
         }
-
-        // DEEPSEEK INTEGRATION
         else if (model.provider === 'deepseek') {
           const response = await axios.post(
             model.endpoint,
@@ -99,7 +106,7 @@ Lưu ý:
                 }
               ],
               temperature: 0.8,
-              max_tokens: 1200,
+              max_tokens: 2000,
               stream: false
             },
             {
@@ -112,8 +119,6 @@ Lưu ý:
           );
           storyText = response.data.choices[0].message.content;
         }
-
-        // GOOGLE GEMINI INTEGRATION
         else if (model.provider === 'google') {
           const response = await axios.post(
             `${model.endpoint}?key=${process.env.GEMINI_API_KEY}`,
@@ -126,7 +131,7 @@ Lưu ý:
               ],
               generation_config: {
                 temperature: 0.8,
-                max_output_tokens: 1500
+                max_output_tokens: 2500
               }
             },
             {
@@ -136,8 +141,6 @@ Lưu ý:
           );
           storyText = response.data.candidates?.[0]?.content?.parts?.[0]?.text || '';
         }
-
-        // HUGGINGFACE INTEGRATION
         else if (model.provider === 'huggingface') {
           const response = await axios.post(
             model.endpoint,
@@ -150,7 +153,7 @@ Lưu ý:
                 }
               ],
               temperature: 0.8,
-              max_tokens: 1500
+              max_tokens: 2000
             },
             {
               headers: {
@@ -162,8 +165,6 @@ Lưu ý:
           );
           storyText = response.data.choices?.[0]?.message?.content || '';
         }
-
-        // POLLINATIONS INTEGRATION
         else if (model.provider === 'pollinations') {
           const encodedPrompt = encodeURIComponent(prompt);
           const response = await axios.get(
@@ -184,51 +185,62 @@ Lưu ý:
           }
         }
 
-        // Ensure storyText is always a string
         storyText = String(storyText || '');
-
         if (!storyText || storyText.trim() === '') throw new Error('Empty response from AI');
 
         let result;
         try {
           result = JSON.parse(storyText);
         } catch {
-          // fallback parsing logic
-          const lines = storyText.split('\n').map(l => l.trim()).filter(Boolean);
-          let title = '', heading = '', story = '';
-          lines.forEach(line => {
-            const lower = line.toLowerCase();
-            if (!title && (lower.startsWith('title:') || lower.startsWith('tiêu đề:')))
-              title = line.replace(/title:|tiêu đề:/i, '').trim();
-            else if (!heading && (lower.startsWith('heading:') || lower.startsWith('tóm tắt:') || lower.startsWith('summary:')))
-              heading = line.replace(/heading:|tóm tắt:|summary:/i, '').trim();
-            else if (!story && (lower.startsWith('story:') || lower.startsWith('câu chuyện:') || lower.startsWith('nội dung:')))
-              story = line.replace(/story:|câu chuyện:|nội dung:/i, '').trim();
-          });
-
-          if (!story) story = lines.join(' ');
-          if (!title) title = `Câu chuyện về ${theme}`;
-          if (!heading) heading = 'Một câu chuyện thú vị dành cho trẻ em';
-          if (!story) story = storyText;
-
-          result = { title, heading, story };
+          result = await parseNonJSONResponse(storyText, theme);
         }
 
+        if (!result.pages || !Array.isArray(result.pages)) {
+          throw new Error('Invalid response format: missing pages array');
+        }
+
+        // ✅ Create pages without images
+        const pages = result.pages.map((page, index) => ({
+          pageNumber: page.pageNumber || index + 1,
+          content: page.content
+          // No image field - images will be handled separately by frontend
+        }));
+
+        // ✅ Save to database without images
+        const storyData = {
+          theme: theme || 'custom',
+          title: result.title || `Câu chuyện về ${theme}`,
+          head: result.heading || 'Một câu chuyện thú vị dành cho trẻ em',
+          content: pages.map(page => page.content).join('\n\n'),
+          pages: pages,
+          userId: userId,
+          status: 'generated', // Story content generated, images pending
+          tags: storyKeywords.join(', '),
+          readingTime: Math.ceil(pages.length * 0.5),
+          ageGroup: '6-8',
+          language: 'vi'
+        };
+
+        const savedStory = await Story.create(storyData);
+
+        // ✅ Return story without images
         return res.json({
-          ...result,
+          success: true,
+          storyId: savedStory._id,
+          title: savedStory.title,
+          heading: savedStory.head,
+          pages: savedStory.pages,
+          theme: savedStory.theme,
           keywords: storyKeywords,
-          theme: theme,
-          model_used: model.name // Track which model succeeded
+          model_used: model.name
         });
 
       } catch (err) {
         console.warn(`Attempt ${attempt + 1} failed for model ${model.name}:`, err.message);
         
-        // 🆕 AUTOMATIC MODEL SWITCHING CONDITIONS
         const errorMessage = err.message?.toLowerCase() || '';
         const responseData = err.response?.data;
         
-        // Check for token limits, quota exceeded, or rate limits
         const shouldSwitchModel = 
           errorMessage.includes('token') ||
           errorMessage.includes('quota') ||
@@ -246,7 +258,7 @@ Lưu ý:
 
         if (shouldSwitchModel) {
           console.warn(`Model ${model.name} reached limits, switching to next model...`);
-          break; // Break out of retry loop and move to next model
+          break;
         }
 
         if (err.response) {
@@ -255,12 +267,126 @@ Lưu ý:
         attempt++;
       }
     }
-
-    console.warn(`Model ${model.name} failed all attempts, trying next model...`);
   }
 
   return res.status(500).json({ 
     error: 'All AI models failed to generate story',
     message: 'Xin lỗi, tất cả các dịch vụ AI hiện đang gặp sự cố. Vui lòng thử lại sau.'
   });
+};
+
+// Helper function to parse non-JSON responses
+async function parseNonJSONResponse(storyText, theme) {
+  const lines = storyText.split('\n').map(l => l.trim()).filter(Boolean);
+  
+  let title = '';
+  let heading = '';
+  const pages = [];
+  let currentPage = null;
+
+  for (const line of lines) {
+    const lower = line.toLowerCase();
+    
+    if (lower.startsWith('title:') || lower.startsWith('tiêu đề:')) {
+      title = line.replace(/title:|tiêu đề:/i, '').trim();
+    } else if (lower.startsWith('heading:') || lower.startsWith('tóm tắt:') || lower.startsWith('summary:')) {
+      heading = line.replace(/heading:|tóm tắt:|summary:/i, '').trim();
+    } else if (lower.startsWith('page') || lower.startsWith('trang')) {
+      if (currentPage) {
+        pages.push(currentPage);
+      }
+      const pageMatch = line.match(/(\d+)/);
+      const pageNumber = pageMatch ? parseInt(pageMatch[1]) : pages.length + 1;
+      currentPage = {
+        pageNumber,
+        content: ''
+      };
+    } else if (currentPage) {
+      currentPage.content += (currentPage.content ? ' ' : '') + line;
+    }
+  }
+
+  if (currentPage) {
+    pages.push(currentPage);
+  }
+
+  if (pages.length === 0) {
+    const content = lines.join(' ');
+    pages.push({
+      pageNumber: 1,
+      content: content
+    });
+  }
+
+  if (!title) title = `Câu chuyện về ${theme}`;
+  if (!heading) heading = 'Một câu chuyện thú vị dành cho trẻ em';
+
+  return { title, heading, pages };
+}
+
+// ✅ Function to update story with images (called by frontend after image generation)
+export const updateStoryWithImages = async (req, res) => {
+  try {
+    const { storyId } = req.params;
+    const { pages } = req.body; // Array of pages with image URLs from frontend
+
+    const story = await Story.findById(storyId);
+    if (!story) {
+      return res.status(404).json({ error: 'Story not found' });
+    }
+
+    // Update pages with image URLs from frontend
+    story.pages = story.pages.map((page, index) => ({
+      ...page.toObject(),
+      image: pages[index]?.image || '' // Add image URL to each page
+    }));
+
+    // Update status to completed when images are added
+    story.status = 'completed';
+
+    await story.save();
+
+    res.json({
+      success: true,
+      message: 'Story updated with images successfully',
+      story: {
+        id: story._id,
+        title: story.title,
+        pages: story.pages
+      }
+    });
+  } catch (error) {
+    console.error('Error updating story with images:', error);
+    res.status(500).json({ error: 'Failed to update story with images' });
+  }
+};
+
+// ✅ Function to get story by ID
+export const getStory = async (req, res) => {
+  try {
+    const { storyId } = req.params;
+    
+    const story = await Story.findById(storyId).populate('userId', 'name email');
+    if (!story) {
+      return res.status(404).json({ error: 'Story not found' });
+    }
+
+    res.json({
+      success: true,
+      story: {
+        id: story._id,
+        title: story.title,
+        head: story.head,
+        theme: story.theme,
+        pages: story.pages,
+        status: story.status,
+        readingTime: story.readingTime,
+        ageGroup: story.ageGroup,
+        createdAt: story.createdAt
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching story:', error);
+    res.status(500).json({ error: 'Failed to fetch story' });
+  }
 };
