@@ -1,6 +1,8 @@
 import axios from 'axios';
 import { AI_MODELS, AI_RETRY_OPTIONS } from '../config/ai.config.js';
 import Story from '../models/story.model.js';
+import cloudinary from "../lib/cloudinary.js";
+import fs from "fs";
 
 export const generateStory = async (req, res) => {
   const { theme, keywords, prompt: userPrompt } = req.body;
@@ -83,12 +85,12 @@ Lưu ý:
               timeout: AI_RETRY_OPTIONS.timeoutMs
             }
           );
-          
+
           if (response.data.status === 'succeeded') {
             storyText = response.data.output.join('');
           } else if (response.data.output) {
-            storyText = Array.isArray(response.data.output) 
-              ? response.data.output.join('') 
+            storyText = Array.isArray(response.data.output)
+              ? response.data.output.join('')
               : response.data.output;
           } else {
             throw new Error('Replicate response not ready');
@@ -237,11 +239,11 @@ Lưu ý:
 
       } catch (err) {
         console.warn(`Attempt ${attempt + 1} failed for model ${model.name}:`, err.message);
-        
+
         const errorMessage = err.message?.toLowerCase() || '';
         const responseData = err.response?.data;
-        
-        const shouldSwitchModel = 
+
+        const shouldSwitchModel =
           errorMessage.includes('token') ||
           errorMessage.includes('quota') ||
           errorMessage.includes('limit') ||
@@ -269,7 +271,7 @@ Lưu ý:
     }
   }
 
-  return res.status(500).json({ 
+  return res.status(500).json({
     error: 'All AI models failed to generate story',
     message: 'Xin lỗi, tất cả các dịch vụ AI hiện đang gặp sự cố. Vui lòng thử lại sau.'
   });
@@ -278,7 +280,7 @@ Lưu ý:
 // Helper function to parse non-JSON responses
 async function parseNonJSONResponse(storyText, theme) {
   const lines = storyText.split('\n').map(l => l.trim()).filter(Boolean);
-  
+
   let title = '';
   let heading = '';
   const pages = [];
@@ -286,7 +288,7 @@ async function parseNonJSONResponse(storyText, theme) {
 
   for (const line of lines) {
     const lower = line.toLowerCase();
-    
+
     if (lower.startsWith('title:') || lower.startsWith('tiêu đề:')) {
       title = line.replace(/title:|tiêu đề:/i, '').trim();
     } else if (lower.startsWith('heading:') || lower.startsWith('tóm tắt:') || lower.startsWith('summary:')) {
@@ -365,7 +367,7 @@ export const updateStoryWithImages = async (req, res) => {
 export const getStory = async (req, res) => {
   try {
     const { storyId } = req.params;
-    
+
     const story = await Story.findById(storyId).populate('userId', 'name email');
     if (!story) {
       return res.status(404).json({ error: 'Story not found' });
@@ -388,5 +390,102 @@ export const getStory = async (req, res) => {
   } catch (error) {
     console.error('Error fetching story:', error);
     res.status(500).json({ error: 'Failed to fetch story' });
+  }
+};
+
+
+//Create story
+export const createStory = async (req, res) => {
+  try {
+    const { title, head, theme, pages } = req.body;
+
+    if (!title || !head || !theme || !pages) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing required fields: title, head, theme, or pages",
+      });
+    }
+
+    const parsedPages = JSON.parse(pages);
+    const files = req.files || [];
+    const findFile = (fieldName) => {
+      const file = files.find((f) => f.fieldname === fieldName);
+      return file ? file.path : null;
+    };
+    let coverImageUrl = null;
+    const coverPath = findFile("coverImage");
+    if (coverPath) {
+      try {
+        const coverUpload = await cloudinary.uploader.upload(coverPath, {
+          folder: "toonkidz/story_covers",
+        });
+        coverImageUrl = coverUpload.secure_url;
+      } finally {
+        // Dù thành công hay thất bại đều xoá file tạm
+        fs.unlink(coverPath, (err) => {
+          if (err) console.warn("Could not delete temp cover file:", err);
+        });
+      }
+    }
+    const storyPages = [];
+    for (let i = 0; i < parsedPages.length; i++) {
+      const page = parsedPages[i];
+      const imgPath = findFile(`pageImage_${i}`);
+      const audioPath = findFile(`pageAudio_${i}`);
+
+      let imageUrl = null;
+      let audioUrl = null;
+
+      // Upload ảnh
+      if (imgPath) {
+        try {
+          const imgUpload = await cloudinary.uploader.upload(imgPath, {
+            folder: "toonkidz/story_pages",
+          });
+          imageUrl = imgUpload.secure_url;
+        } finally {
+          fs.unlink(imgPath, (err) => {
+            if (err) console.warn(`Could not delete image temp file ${imgPath}:`, err);
+          });
+        }
+      }
+
+      if (audioPath) {
+        try {
+          const audioUpload = await cloudinary.uploader.upload(audioPath, {
+            resource_type: "video",
+            folder: "toonkidz/story_audios",
+            format: "mp3",
+          });
+          audioUrl = audioUpload.secure_url;
+        } finally {
+          fs.unlink(audioPath, (err) => {
+            if (err) console.warn(`Could not delete audio temp file ${audioPath}:`, err);
+          });
+        }
+      }
+
+      storyPages.push({
+        pageNumber: i + 1,
+        content: page.content,
+        image: imageUrl,
+        audio: audioUrl,
+      });
+    }
+
+    const story = await Story.create({
+      title,
+      head,
+      theme,
+      userId: req.user._id,
+      pages: storyPages,
+      coverImage: coverImageUrl,
+      status: "draft",
+    });
+
+    return res.status(201).json({ success: true, story });
+  } catch (error) {
+    console.error("Error creating story:", error);
+    return res.status(500).json({ success: false, error: error.message });
   }
 };

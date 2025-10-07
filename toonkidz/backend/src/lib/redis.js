@@ -9,15 +9,15 @@ class RedisConnection {
 
   async connect() {
     if (this.client) return this.client;
-    
+
     try {
-      this.client = redis.createClient(config.redis.url);
-      
+      this.redisClient = redis.createClient({ url: config.redis.url });
+
       // Promisify Redis methods
       this.client.get = promisify(this.client.get).bind(this.client);
       this.client.set = promisify(this.client.set).bind(this.client);
       this.client.del = promisify(this.client.del).bind(this.client);
-      
+
       await this.client.connect();
       console.log('Redis connected successfully');
       return this.client;
