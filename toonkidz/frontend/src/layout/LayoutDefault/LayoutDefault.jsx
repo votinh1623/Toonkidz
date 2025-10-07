@@ -36,7 +36,6 @@ const LayoutDefault = () => {
             placement="left"
             onClose={() => setDrawerVisible(false)}
             open={drawerVisible}
-            bodyStyle={{ padding: 0 }}
             width={250}
           >
             <SiderMobileMenu onClose={() => setDrawerVisible(false)} />
