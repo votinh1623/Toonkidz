@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { Form, Input, Button, Select, Upload, Modal, message, List, Space } from "antd";
 import { PlusOutlined, UploadOutlined, AudioOutlined, FileImageOutlined } from "@ant-design/icons";
 import "./AddStory.scss";
+import { createStory } from "../../service/storyService";
+import Swal from 'sweetalert2/dist/sweetalert2.js'
+import 'sweetalert2/src/sweetalert2.scss'
 
 const AddStory = () => {
   const [form] = Form.useForm();
@@ -12,6 +15,7 @@ const AddStory = () => {
   const [mainImage, setMainImage] = useState([]);
   const [pageImage, setPageImage] = useState([]);
   const [pageAudio, setPageAudio] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleAddPage = () => {
     setIsModalOpen(true);
@@ -26,6 +30,8 @@ const AddStory = () => {
           content: values.content,
           img: pageImage[0]?.name || null,
           audio: pageAudio[0]?.name || null,
+          imgFile: pageImage[0]?.originFileObj || null,
+          audioFile: pageAudio[0]?.originFileObj || null,
         };
         setPages([...pages, newPage]);
         setPageImage([]);
@@ -41,14 +47,58 @@ const AddStory = () => {
     setPages(pages.filter((p) => p.key !== key));
   };
 
-  const handleSubmit = (values) => {
-    const storyData = {
-      ...values,
-      image: mainImage[0]?.name || null,
-      pages,
-    };
-    console.log("Dữ liệu truyện:", storyData);
-    message.success("Lưu truyện thành công!");
+  const handleSubmit = async (values) => {
+    setIsLoading(true);
+    try {
+      const formData = new FormData();
+
+      formData.append("title", values.title);
+      formData.append("head", values.head);
+      formData.append("theme", values.theme);
+
+      // coverImage
+      if (mainImage[0]) {
+        formData.append("coverImage", mainImage[0].originFileObj);
+      }
+
+      // pages
+      const pagesData = pages.map((p) => ({
+        content: p.content,
+      }));
+      formData.append("pages", JSON.stringify(pagesData));
+
+      // page images + audios
+      pages.forEach((page, index) => {
+        if (page.imgFile) {
+          formData.append(`pageImage_${index}`, page.imgFile);
+        }
+        if (page.audioFile) {
+          formData.append(`pageAudio_${index}`, page.audioFile);
+        }
+      });
+
+      const res = await createStory(formData);
+
+      if (res.success) {
+        message.success("Tạo truyện thành công!");
+        Swal.fire({
+          title: "Login Successfully!",
+          icon: "success",
+          draggable: true
+        });
+        console.log("Story:", res.story);
+        form.resetFields();
+        setPages([]);
+        setMainImage([]);
+      } else {
+        message.error("Tạo truyện thất bại!");
+      }
+    } catch (error) {
+      console.error("Submit error:", error);
+      message.error("Đã xảy ra lỗi khi tạo truyện!");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -66,7 +116,7 @@ const AddStory = () => {
 
         <Form.Item
           label="Giới thiệu"
-          name="intro"
+          name="head"
           rules={[{ required: true, message: "Vui lòng nhập giới thiệu!" }]}
         >
           <Input.TextArea rows={4} placeholder="Giới thiệu ngắn về truyện..." />
@@ -83,7 +133,7 @@ const AddStory = () => {
           </Select>
         </Form.Item>
 
-        <Form.Item label="Ảnh chính" name="image">
+        <Form.Item label="Ảnh chính" name="coverImage">
           <Upload
             beforeUpload={() => false}
             listType="picture"
@@ -122,7 +172,7 @@ const AddStory = () => {
           />
         </div>
 
-        <Button type="primary" htmlType="submit" className="add-story__submit">
+        <Button type="primary" loading={isLoading} disabled={isLoading} htmlType="submit" className="add-story__submit">
           Lưu truyện
         </Button>
       </Form>
