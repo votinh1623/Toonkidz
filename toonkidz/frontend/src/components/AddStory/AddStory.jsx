@@ -9,6 +9,10 @@ const AddStory = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [pageForm] = Form.useForm();
 
+  const [mainImage, setMainImage] = useState([]);
+  const [pageImage, setPageImage] = useState([]);
+  const [pageAudio, setPageAudio] = useState([]);
+
   const handleAddPage = () => {
     setIsModalOpen(true);
   };
@@ -17,7 +21,15 @@ const AddStory = () => {
     pageForm
       .validateFields()
       .then((values) => {
-        setPages([...pages, { ...values, key: Date.now() }]);
+        const newPage = {
+          key: Date.now(),
+          content: values.content,
+          img: pageImage[0]?.name || null,
+          audio: pageAudio[0]?.name || null,
+        };
+        setPages([...pages, newPage]);
+        setPageImage([]);
+        setPageAudio([]);
         pageForm.resetFields();
         setIsModalOpen(false);
         message.success("Đã thêm trang mới!");
@@ -30,7 +42,12 @@ const AddStory = () => {
   };
 
   const handleSubmit = (values) => {
-    console.log("📘 Dữ liệu truyện:", { ...values, pages });
+    const storyData = {
+      ...values,
+      image: mainImage[0]?.name || null,
+      pages,
+    };
+    console.log("Dữ liệu truyện:", storyData);
     message.success("Lưu truyện thành công!");
   };
 
@@ -38,17 +55,20 @@ const AddStory = () => {
     <div className="add-story">
       <h2>Thêm truyện mới</h2>
 
-      <Form
-        layout="vertical"
-        form={form}
-        onFinish={handleSubmit}
-        className="add-story__form"
-      >
-        <Form.Item label="Tiêu đề" name="title" rules={[{ required: true, message: "Vui lòng nhập tiêu đề!" }]}>
+      <Form layout="vertical" form={form} onFinish={handleSubmit} className="add-story__form">
+        <Form.Item
+          label="Tiêu đề"
+          name="title"
+          rules={[{ required: true, message: "Vui lòng nhập tiêu đề!" }]}
+        >
           <Input placeholder="Nhập tiêu đề truyện..." />
         </Form.Item>
 
-        <Form.Item label="Giới thiệu" name="intro" rules={[{ required: true, message: "Vui lòng nhập giới thiệu!" }]}>
+        <Form.Item
+          label="Giới thiệu"
+          name="intro"
+          rules={[{ required: true, message: "Vui lòng nhập giới thiệu!" }]}
+        >
           <Input.TextArea rows={4} placeholder="Giới thiệu ngắn về truyện..." />
         </Form.Item>
 
@@ -64,7 +84,12 @@ const AddStory = () => {
         </Form.Item>
 
         <Form.Item label="Ảnh chính" name="image">
-          <Upload beforeUpload={() => false} listType="picture">
+          <Upload
+            beforeUpload={() => false}
+            listType="picture"
+            fileList={mainImage}
+            onChange={({ fileList }) => setMainImage(fileList)}
+          >
             <Button icon={<UploadOutlined />}>Chọn ảnh</Button>
           </Upload>
         </Form.Item>
@@ -102,13 +127,13 @@ const AddStory = () => {
         </Button>
       </Form>
 
-      {/* 🧩 Modal thêm page */}
       <Modal
         title="Thêm trang mới"
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         onOk={handleSavePage}
         okText="Lưu"
+        styles={{ body: { paddingTop: 12 } }}
       >
         <Form form={pageForm} layout="vertical">
           <Form.Item label="Nội dung" name="content" rules={[{ required: true }]}>
@@ -116,13 +141,22 @@ const AddStory = () => {
           </Form.Item>
 
           <Form.Item label="Ảnh" name="img">
-            <Upload beforeUpload={() => false} listType="picture">
+            <Upload
+              beforeUpload={() => false}
+              listType="picture"
+              fileList={pageImage}
+              onChange={({ fileList }) => setPageImage(fileList)}
+            >
               <Button icon={<FileImageOutlined />}>Chọn ảnh</Button>
             </Upload>
           </Form.Item>
 
           <Form.Item label="Audio" name="audio">
-            <Upload beforeUpload={() => false} listType="text">
+            <Upload
+              beforeUpload={() => false}
+              fileList={pageAudio}
+              onChange={({ fileList }) => setPageAudio(fileList)}
+            >
               <Button icon={<AudioOutlined />}>Tải âm thanh</Button>
             </Upload>
           </Form.Item>

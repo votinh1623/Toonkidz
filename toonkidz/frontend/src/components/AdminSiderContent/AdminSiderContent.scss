@@ -35,6 +35,7 @@
           cursor: pointer;
           text-decoration: none;
           transition: all 0.3s ease;
+          margin-bottom: 5px;
 
           &:hover {
             background: linear-gradient(90deg, #f3e5ff, #e0f7fa);
@@ -43,11 +44,14 @@
           }
 
           &.active {
-            background: linear-gradient(90deg, #dfe6ff, #e8f5e9);
-            color: #6c5ce7;
-            font-weight: 600;
+            // background: linear-gradient(90deg, #dfe6ff, #e8f5e9);
+            // color: #6c5ce7;
+            // font-weight: 600;
+            // transform: translateX(4px);
+            // box-shadow: inset 2px 0 0 #6c5ce7;
+            background: linear-gradient(90deg, #f3e5ff, #e0f7fa);
+            color: #a663cc;
             transform: translateX(4px);
-            box-shadow: inset 2px 0 0 #6c5ce7;
           }
 
           .icon {
