@@ -1,0 +1,40 @@
+.layout-default {
+  min-height: 100vh;
+
+  .layout-child {
+    display: flex;
+
+    .ant-layout-sider {
+      position: sticky;
+      top: 64px; // Chiều cao header
+      height: calc(100vh - 64px);
+      overflow-y: auto;
+      transition: all 0.3s ease;
+      border-right: 1px solid #f0f0f0;
+      min-width: 260px !important;
+    }
+
+    .layout__content {
+      flex: 1;
+      background: #fafafa;
+      padding: 1.5rem;
+      min-height: 100vh;
+      transition: all 0.3s ease;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .layout__content {
+    padding: 1rem;
+  }
+
+  .ant-layout-sider {
+    position: relative;
+    height: auto;
+  }
+}
+
+.content__container {
+  padding: 20px;
+}

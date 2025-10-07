@@ -39,14 +39,6 @@ const SiderContent = () => {
           <li><HeartFilled className="icon heart" /> Yêu thích nhất</li>
         </ul>
       </div>
-
-      {/* Bé đã học */}
-      {/* <div className="sider-box">
-        <div className="balloon">🎈</div>
-        <p className="sider-count">Bé đã học</p>
-        <h2>15 truyện</h2>
-        <p className="sider-note">Tuyệt vời !</p>
-      </div> */}
     </div>
   );
 };
