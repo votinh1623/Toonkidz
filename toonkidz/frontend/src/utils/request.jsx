@@ -1,11 +1,14 @@
 // Request
+const API_DOMAIN = `http://localhost:3000/`;
 
-const API_DOMAIN = `http://localhost:8081/`;
+const FIXED_TOKEN =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGQ1Mjc2N2QwNGNlOGQ0YTBiMzJlMmYiLCJpYXQiOjE3NTk4MzkyMTksImV4cCI6MTc1OTg0MDExOX0.atkdwxKilbGCN7sPcp0O9dD7_ch1r2WloGRIFb03rEc";
 
 // Hàm lấy token từ localStorage
 const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  return {
+    Authorization: `Bearer ${FIXED_TOKEN}`,
+  };
 };
 
 export const get = async (path) => {
@@ -61,9 +64,10 @@ export const postFormData = async (path, formData) => {
   const response = await fetch(API_DOMAIN + path, {
     method: "POST",
     headers: {
-      ...getAuthHeaders() // Không set Content-Type, browser tự thêm boundary
+      ...getAuthHeaders()
     },
-    body: formData
+    body: formData,
+    credentials: "include", // gửi cookie kèm theo
   });
   return await response.json();
 };

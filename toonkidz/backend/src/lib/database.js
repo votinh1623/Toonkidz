@@ -11,7 +11,7 @@ class DatabaseConnection {
 
   async connectMongo() {
     if (this.mongoConnection) return this.mongoConnection;
-    
+
     try {
       this.mongoConnection = await mongoose.connect(config.mongo.uri, config.mongo.options);
       console.log('MongoDB connected successfully');
@@ -24,15 +24,15 @@ class DatabaseConnection {
 
   async connectRedis() {
     if (this.redisClient) return this.redisClient;
-    
+
     try {
-      this.redisClient = redis.createClient(config.redis.url);
-      
+      this.redisClient = redis.createClient({ url: config.redis.url });
+
       // Promisify Redis methods
       this.redisClient.get = promisify(this.redisClient.get).bind(this.redisClient);
       this.redisClient.set = promisify(this.redisClient.set).bind(this.redisClient);
       this.redisClient.del = promisify(this.redisClient.del).bind(this.redisClient);
-      
+
       await this.redisClient.connect();
       console.log('Redis connected successfully');
       return this.redisClient;
@@ -40,7 +40,7 @@ class DatabaseConnection {
       console.error('Redis connection error:', error);
       throw error;
     }
-    
+
   }
 
   async disconnect() {
@@ -48,7 +48,7 @@ class DatabaseConnection {
       await mongoose.disconnect();
       this.mongoConnection = null;
     }
-    
+
     if (this.redisClient) {
       await this.redisClient.quit();
       this.redisClient = null;

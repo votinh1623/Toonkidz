@@ -13,6 +13,10 @@ const pageSchema = new mongoose.Schema({
   image: {
     type: String,
     required: false
+  },
+  audio: {
+    type: String,
+    required: false
   }
 });
 
@@ -37,7 +41,7 @@ const storySchema = new mongoose.Schema(
       required: false, // Make optional since we have pages
     },
     pages: [pageSchema], // Array of pages
-    coverImage: {   
+    coverImage: {
       type: String,
       required: false,
     },
@@ -69,9 +73,9 @@ const storySchema = new mongoose.Schema(
       type: String,
       default: "en"
     },
-    favorites: [{ 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: "User" 
+    favorites: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
     }],
     isPublic: {
       type: Boolean,

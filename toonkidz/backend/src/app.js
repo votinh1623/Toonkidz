@@ -1,11 +1,13 @@
+import dotenv from "dotenv";
+dotenv.config();
 import express from "express";
 import { spawn } from "child_process";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import cookieParser from "cookie-parser";
-import path from "path"; 
-import fs from "fs"; 
+import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url"; // Add this import
 import config from "./config/server.config.js";
 import imageRoutes from "./routes/image.route.js";
@@ -17,9 +19,6 @@ import authRoutes from "./routes/auth.route.js";
 import storyRoutes from './routes/story.route.js';
 import axios from "axios";
 import { v2 as cloudinary } from "cloudinary";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -53,6 +52,7 @@ if (!fs.existsSync(generatedDir)) {
 
 // Connect to databases
 database.connectMongo();
+console.log("Redis URL:", process.env.REDIS_URL);
 database.connectRedis();
 
 // Configure Cloudinary
@@ -65,7 +65,7 @@ cloudinary.config({
 // Routes
 app.get('/health', healthController.healthCheck);
 app.use('/api/auth', authRoutes);
-app.use('/api', imageRoutes); 
+app.use('/api', imageRoutes);
 app.use('/api/story', storyRoutes);
 app.use('/api/themes', themeRoutes);
 
