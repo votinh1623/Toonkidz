@@ -1,0 +1,86 @@
+.admin-sider-content {
+  padding: 1.5rem;
+  font-family: 'Poppins', sans-serif;
+  color: #333;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+
+  .sider-section {
+    margin-bottom: 2rem;
+
+    .sider-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .sider-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+
+      li {
+        .sider-link {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          font-size: 0.95rem;
+          color: #444;
+          padding: 0.55rem 0.9rem;
+          border-radius: 8px;
+          cursor: pointer;
+          text-decoration: none;
+          transition: all 0.3s ease;
+          margin-bottom: 5px;
+
+          &:hover {
+            background: linear-gradient(90deg, #f3e5ff, #e0f7fa);
+            color: #a663cc;
+            transform: translateX(4px);
+          }
+
+          &.active {
+            // background: linear-gradient(90deg, #dfe6ff, #e8f5e9);
+            // color: #6c5ce7;
+            // font-weight: 600;
+            // transform: translateX(4px);
+            // box-shadow: inset 2px 0 0 #6c5ce7;
+            background: linear-gradient(90deg, #f3e5ff, #e0f7fa);
+            color: #a663cc;
+            transform: translateX(4px);
+          }
+
+          .icon {
+            font-size: 1.1rem;
+            flex-shrink: 0;
+          }
+
+          /* Màu icon riêng */
+          .overview {
+            color: #6c5ce7;
+          }
+
+          .users {
+            color: #00b894;
+          }
+
+          .content {
+            color: #0984e3;
+          }
+
+          .statistic {
+            color: #e67e22;
+          }
+
+          .report {
+            color: #d63031;
+          }
+        }
+      }
+    }
+  }
+}

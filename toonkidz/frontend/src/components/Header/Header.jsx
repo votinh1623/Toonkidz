@@ -1,13 +1,38 @@
 import React from "react";
 import "./Header.scss";
 import { Input } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import { LogoutOutlined, SearchOutlined } from "@ant-design/icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBell, faUser, faBars } from "@fortawesome/free-solid-svg-icons";
 import { NavLink, useNavigate } from "react-router-dom";
+import { DownOutlined, SettingOutlined } from '@ant-design/icons';
+import { Dropdown, Space } from 'antd';
+import Notify from '../Notify/Notify';
 
 const Header = ({ onToggleSider }) => {
   const navigate = useNavigate();
+
+  const items = [
+    {
+      key: '1',
+      label: 'Tài khoản',
+      disabled: true,
+    },
+    {
+      type: 'divider',
+    },
+    {
+      key: '2',
+      label: 'Hồ sơ',
+      extra: <FontAwesomeIcon icon={faUser} />,
+    },
+    {
+      key: '3',
+      label: 'Đăng xuất',
+      extra: <LogoutOutlined />,
+    },
+  ];
+
   return (
     <div className="container__header">
       <div className="header">
@@ -16,7 +41,7 @@ const Header = ({ onToggleSider }) => {
           <FontAwesomeIcon icon={faBars} />
         </div>
 
-        <div className="header__logo">Toon Kidz</div>
+        <div className="header__logo" onClick={() => navigate("/home/homepage")}>Toon Kidz</div>
 
         <div className="header__search">
           <Input
@@ -43,9 +68,18 @@ const Header = ({ onToggleSider }) => {
                 Khám phá
               </NavLink>
             </li>
+            {/* Thêm tab "Học Tiếng Anh" */}
             <li>
               <NavLink
-                to="/library"
+                to="/home/learn-english"
+                className={({ isActive }) => (isActive ? "active" : "")}
+              >
+                Học Tiếng Anh
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                to="/home/library"
                 className={({ isActive }) => (isActive ? "active" : "")}
               >
                 Thư viện
@@ -55,8 +89,15 @@ const Header = ({ onToggleSider }) => {
         </div>
 
         <div className="header__account">
-          <FontAwesomeIcon icon={faBell} />
-          <FontAwesomeIcon icon={faUser} />
+          {/* <FontAwesomeIcon icon={faBell} /> */}
+          <Notify />
+          <Dropdown menu={{ items }}>
+            <a onClick={e => e.preventDefault()}>
+              <Space>
+                <FontAwesomeIcon icon={faUser} />
+              </Space>
+            </a>
+          </Dropdown>
         </div>
 
         <div className="header__button">
