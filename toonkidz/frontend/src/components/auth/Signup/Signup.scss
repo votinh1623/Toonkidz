@@ -12,9 +12,9 @@
 
   .signup-card {
     background: #fff;
-    padding: 2rem 1.8rem; // giảm padding ngang để nội dung cân hơn
+    padding: 2.2rem 2rem;
     border-radius: 1.5rem;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
     width: 100%;
     max-width: 420px;
     animation: fadeInUp 0.8s ease forwards;
@@ -22,23 +22,37 @@
     opacity: 0;
 
     h2 {
-      font-size: 2rem;
+      font-size: 2.2rem;
       font-weight: 700;
       text-align: center;
-      margin-bottom: 1.8rem;
-      background: linear-gradient(90deg, #fbc2eb, #a6c1ee);
+      margin-bottom: 0.5rem;
+      background: linear-gradient(90deg, #a663cc, #a6c1ee);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+    }
+
+    .signup-subtitle {
+      text-align: center;
+      font-size: 0.95rem;
+      color: #777;
+      margin-bottom: 2rem;
+      transition: all 0.3s ease-in-out;
+
+      &:hover {
+        color: #a663cc;
+        transform: scale(1.03);
+      }
     }
 
     form {
       display: flex;
       flex-direction: column;
-      align-items: center; // căn giữa input + button
+      align-items: center;
+      width: 100%;
     }
 
     .form-group {
-      width: 100%; // đảm bảo input trải đều hết chiều ngang
+      width: 100%;
       margin-bottom: 1.2rem;
 
       label {
@@ -52,7 +66,7 @@
 
       input {
         width: 100%;
-        padding: 15px 10px;
+        padding: 14px 12px;
         border: 2px solid #eee;
         border-radius: 0.8rem;
         font-size: 1rem;
@@ -75,7 +89,7 @@
       margin-bottom: 1.2rem;
       font-size: 0.9rem;
       animation: shake 0.3s ease;
-      width: 100%; // căn bằng với input
+      width: 100%;
       text-align: center;
     }
 
@@ -88,13 +102,14 @@
       font-weight: 600;
       color: #fff;
       cursor: pointer;
-      background: linear-gradient(90deg, #fbc2eb, #a6c1ee);
-      transition: all 0.3s ease;
+      background: linear-gradient(90deg, #a663cc, #a6c1ee);
+      transition: all 0.35s ease;
       box-shadow: 0 4px 12px rgba(166, 193, 238, 0.4);
       margin-top: 0.5rem;
 
       &:hover {
-        transform: translateY(-2px) scale(1.02);
+        transform: translateY(-2px) scale(1.03);
+        background: linear-gradient(90deg, #a6c1ee, #fbc2eb);
         box-shadow: 0 8px 20px rgba(166, 193, 238, 0.6);
       }
 
@@ -107,19 +122,36 @@
     .extra-links {
       margin-top: 1.5rem;
       text-align: center;
+      font-size: 0.95rem;
+      color: #555;
 
       p {
-        font-size: 0.95rem;
-        color: #555;
+        margin: 0;
 
         .signin-link {
           color: #a663cc;
           font-weight: 600;
           text-decoration: none;
+          position: relative;
           transition: all 0.3s ease-in-out;
 
+          &::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: -3px;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #a663cc, #a6c1ee);
+            transition: width 0.3s ease-in-out;
+          }
+
           &:hover {
-            text-decoration: underline;
+            color: #a6c1ee;
+
+            &::after {
+              width: 100%;
+            }
           }
         }
       }
@@ -155,5 +187,95 @@
     80% {
       transform: translateX(4px);
     }
+  }
+}
+
+
+.ant-modal-content {
+  border-radius: 1.2rem !important;
+  overflow: hidden;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+  animation: fadeInScale 0.4s ease;
+
+  .ant-modal-header {
+    border-bottom: none;
+    background: linear-gradient(90deg, #a663cc, #a6c1ee);
+    border-radius: 1.2rem 1.2rem 0 0;
+    text-align: center;
+    padding: 1.2rem;
+
+    .ant-modal-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: white;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+  }
+
+  .ant-modal-body {
+    padding: 1.8rem 1.5rem;
+    text-align: center;
+    background: #fdfaff;
+
+    p {
+      font-size: 0.95rem;
+      color: #555;
+      margin-bottom: 1.5rem;
+    }
+
+    .ant-input {
+      border-radius: 0.8rem;
+      font-size: 1.1rem;
+      letter-spacing: 3px;
+      padding: 0.9rem 0.8rem;
+      border: 2px solid #eee;
+      transition: all 0.3s ease;
+      text-align: center;
+      background: #fff;
+
+      &:focus {
+        border-color: #a6c1ee;
+        box-shadow: 0 0 8px rgba(166, 193, 238, 0.4);
+      }
+    }
+
+    .ant-btn {
+      border-radius: 0.8rem;
+      font-weight: 600;
+      padding: 0.8rem 1.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .ant-btn-primary {
+      background: linear-gradient(90deg, #a663cc, #a6c1ee);
+      border: none;
+
+      &:hover {
+        background: linear-gradient(90deg, #a6c1ee, #fbc2eb);
+        transform: translateY(-2px);
+      }
+    }
+
+    .ant-btn-default {
+      border-color: #ccc;
+      color: #555;
+
+      &:hover {
+        border-color: #a6c1ee;
+        color: #a663cc;
+      }
+    }
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
   }
 }

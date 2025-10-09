@@ -1,17 +1,14 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import api from '../../../api.js';
+import React, { useState } from "react";
+import { useNavigate, NavLink } from "react-router-dom";
+import { login } from "@/service/authService";
+import Swal from "sweetalert2";
+import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
 import "./Login.scss";
-import Swal from 'sweetalert2/dist/sweetalert2.js'
-import 'sweetalert2/src/sweetalert2.scss'
 
 const Login = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
-  const [error, setError] = useState('');
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -20,36 +17,44 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // setError('');
-    // setLoading(true);
-    // try {
-    //   const response = await api.post('/auth/login', {
-    //     email: formData.email,
-    //     password: formData.password
-    //   });
+    setLoading(true);
 
-    //   if (response.status === 200) {
-    //     navigate('/home');
-    //   }
-    // } catch (err) {
-    //   setError(err.response?.data?.message || 'Login failed');
-    // } finally {
-    //   setLoading(false);
-    // }
-    Swal.fire({
-      title: "Login Successfully!",
-      icon: "success",
-      draggable: true
-    });
-    navigate("/home/homepage")
+    try {
+      const res = await login({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (res._id) {
+        Swal.fire({
+          title: "Đăng nhập thành công!",
+          icon: "success",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+        navigate("/home/homepage");
+      } else {
+        Swal.fire({
+          title: "Đăng nhập thất bại",
+          text: res.message || "Sai email hoặc mật khẩu",
+          icon: "error",
+        });
+      }
+    } catch (err) {
+      Swal.fire({
+        title: "Lỗi kết nối máy chủ!",
+        icon: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="login-container">
       <div className="login-card">
         <h2>Welcome Back</h2>
-
-        {error && <div className="error-message">{error}</div>}
+        <p className="login-subtitle">Đăng nhập để tiếp tục khám phá thế giới truyện</p>
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -66,29 +71,36 @@ const Login = () => {
 
           <div className="form-group">
             <label>Password</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
-              required
-            />
+            <div className="password-field">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Enter your password"
+                required
+              />
+              <span
+                className="toggle-password"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeTwoTone twoToneColor="#a663cc" />
+                ) : (
+                  <EyeInvisibleOutlined style={{ color: "#a663cc" }} />
+                )}
+              </span>
+            </div>
           </div>
 
           <button type="submit" disabled={loading}>
-            {loading ? 'Signing In...' : 'Sign In'}
+            {loading ? "Signing In..." : "Sign In"}
           </button>
         </form>
 
-        <div className="forgot-password">
-          <a href="#">Forgot password?</a>
-        </div>
-
         <div className="signup-link">
-          <p>
-            Don't have an account? <a href="/signup">Sign up</a>
-          </p>
+          <span>Chưa có tài khoản? </span>
+          <NavLink to="/signup">Đăng ký ngay</NavLink>
         </div>
       </div>
     </div>

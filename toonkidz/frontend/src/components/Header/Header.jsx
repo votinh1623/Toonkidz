@@ -1,47 +1,77 @@
 import React from "react";
 import "./Header.scss";
-import { Input } from "antd";
+import { Input, Dropdown, Space } from "antd";
 import { LogoutOutlined, SearchOutlined } from "@ant-design/icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBell, faUser, faBars } from "@fortawesome/free-solid-svg-icons";
+import { faUser, faBars } from "@fortawesome/free-solid-svg-icons";
 import { NavLink, useNavigate } from "react-router-dom";
-import { DownOutlined, SettingOutlined } from '@ant-design/icons';
-import { Dropdown, Space } from 'antd';
-import Notify from '../Notify/Notify';
+import Swal from "sweetalert2";
+import { logout } from "@/service/authService";
+import Notify from "../Notify/Notify";
 
 const Header = ({ onToggleSider }) => {
   const navigate = useNavigate();
 
+  const handleLogout = async () => {
+    Swal.fire({
+      title: "Đăng xuất?",
+      text: "Bạn có chắc muốn đăng xuất?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Đăng xuất",
+      cancelButtonText: "Huỷ",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await logout();
+          // Xóa cookies thủ công nếu backend không set httpOnly=true
+          document.cookie = "accessToken=; Max-Age=0; path=/;";
+          document.cookie = "refreshToken=; Max-Age=0; path=/;";
+
+          Swal.fire({
+            title: "Đã đăng xuất!",
+            icon: "success",
+            timer: 1200,
+            showConfirmButton: false,
+          });
+          navigate("/login");
+        } catch (err) {
+          Swal.fire("Lỗi!", "Không thể đăng xuất. Thử lại sau!", "error");
+        }
+      }
+    });
+  };
+
   const items = [
     {
-      key: '1',
-      label: 'Tài khoản',
+      key: "1",
+      label: "Tài khoản",
       disabled: true,
     },
+    { type: "divider" },
     {
-      type: 'divider',
+      key: "2",
+      label: "Hồ sơ",
+      onClick: () => navigate("/home/profile"),
     },
     {
-      key: '2',
-      label: 'Hồ sơ',
-      extra: <FontAwesomeIcon icon={faUser} />,
-    },
-    {
-      key: '3',
-      label: 'Đăng xuất',
-      extra: <LogoutOutlined />,
+      key: "3",
+      label: "Đăng xuất",
+      icon: <LogoutOutlined />,
+      onClick: handleLogout,
     },
   ];
 
   return (
     <div className="container__header">
       <div className="header">
-        {/* Hamburger icon */}
         <div className="header__menu-toggle" onClick={onToggleSider}>
           <FontAwesomeIcon icon={faBars} />
         </div>
 
-        <div className="header__logo" onClick={() => navigate("/home/homepage")}>Toon Kidz</div>
+        <div className="header__logo" onClick={() => navigate("/home/homepage")}>
+          Toon Kidz
+        </div>
 
         <div className="header__search">
           <Input
@@ -52,47 +82,17 @@ const Header = ({ onToggleSider }) => {
 
         <div className="header__menu">
           <ul>
-            <li>
-              <NavLink
-                to="/home/homepage"
-                className={({ isActive }) => (isActive ? "active" : "")}
-              >
-                Trang chủ
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/discover"
-                className={({ isActive }) => (isActive ? "active" : "")}
-              >
-                Khám phá
-              </NavLink>
-            </li>
-            {/* Thêm tab "Học Tiếng Anh" */}
-            <li>
-              <NavLink
-                to="/home/learn-english"
-                className={({ isActive }) => (isActive ? "active" : "")}
-              >
-                Học Tiếng Anh
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/home/library"
-                className={({ isActive }) => (isActive ? "active" : "")}
-              >
-                Thư viện
-              </NavLink>
-            </li>
+            <li><NavLink to="/home/homepage">Trang chủ</NavLink></li>
+            <li><NavLink to="/discover">Khám phá</NavLink></li>
+            <li><NavLink to="/home/learn-english">Học Tiếng Anh</NavLink></li>
+            <li><NavLink to="/home/library">Thư viện</NavLink></li>
           </ul>
         </div>
 
         <div className="header__account">
-          {/* <FontAwesomeIcon icon={faBell} /> */}
           <Notify />
-          <Dropdown menu={{ items }}>
-            <a onClick={e => e.preventDefault()}>
+          <Dropdown menu={{ items }} trigger={["click"]}>
+            <a onClick={(e) => e.preventDefault()}>
               <Space>
                 <FontAwesomeIcon icon={faUser} />
               </Space>
@@ -101,12 +101,9 @@ const Header = ({ onToggleSider }) => {
         </div>
 
         <div className="header__button">
-          <NavLink
-                to="/home/create-comic" 
-                className={({ isActive }) => (isActive ? "active" : "")}
-              ><button>Tạo truyện</button>
-              </NavLink>
-            
+          <NavLink to="/home/create-comic">
+            <button>Tạo truyện</button>
+          </NavLink>
         </div>
       </div>
     </div>

@@ -12,35 +12,38 @@ import UserManagement from "../pages/Admin/UserManagement/UserManagement"
 import ReportingAndCensorship from "../pages/Admin/ReportingAndCensorship/ReportingAndCensorship"
 import StoryManagement from "../pages/Admin/StoryManagement/StoryManagement"
 import AddStory from "../components/AddStory/AddStory";
+import PrivateRoute from "./PrivateRoute";
 
 export const route = [
   {
-    path: "/home",
-    element: <LayoutDefault />,
+    element: <PrivateRoute />,
     children: [
-      { index: true, element: <Navigate to="homepage" replace /> },
-      { path: "homepage", element: <Homepage /> },
-      { path: "create-comic", element: <CreateComic /> },
-      { path: "learn-english", element: <LearnEnglish /> },
-      { path: "library", element: <LibraryPage /> },
+      {
+        path: "/home",
+        element: <LayoutDefault />,
+        children: [
+          { index: true, element: <Navigate to="homepage" replace /> },
+          { path: "homepage", element: <Homepage /> },
+          { path: "create-comic", element: <CreateComic /> },
+          { path: "learn-english", element: <LearnEnglish /> },
+          { path: "library", element: <LibraryPage /> },
+        ],
+      },
+      {
+        path: "/admin",
+        element: <AdminLayout />,
+        children: [
+          { index: true, element: <Navigate to="dashboard" replace /> },
+          { path: "dashboard", element: <Dashboard /> },
+          { path: "users-management", element: <UserManagement /> },
+          { path: "stories-management", element: <StoryManagement /> },
+          { path: "stories-management/add", element: <AddStory /> },
+          { path: "reports", element: <ReportingAndCensorship /> },
+        ],
+      },
     ],
   },
-
-  {
-    path: "/admin",
-    element: <AdminLayout />,
-    children: [
-      { index: true, element: <Navigate to="dashboard" replace /> },
-      { path: "dashboard", element: <Dashboard /> },
-      { path: "users-management", element: <UserManagement /> },
-      { path: "stories-management", element: <StoryManagement /> },
-      { path: "stories-management/add", element: <AddStory /> },
-      { path: "reports", element: <ReportingAndCensorship /> },
-    ],
-  },
-
   { path: "/login", element: <Login /> },
   { path: "/signup", element: <Signup /> },
-
   { path: "/", element: <Navigate to="/home/homepage" replace /> },
 ];
