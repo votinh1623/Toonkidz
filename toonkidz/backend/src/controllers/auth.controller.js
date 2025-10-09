@@ -1,8 +1,10 @@
 const User = require("../models/user.model.js");
- const { v2: cloudinary } = require('cloudinary');
+const { v2: cloudinary } = require('cloudinary');
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const redis = require("../lib/redis.js");
+const nodemailer = require("nodemailer");
+const crypto = require("crypto");
 
 const generateTokens = (userId) => {
   const accessToken = jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET, {
@@ -23,12 +25,14 @@ const setCookies = (res, accessToken, refreshToken) => {
     httpOnly: false, // prevent XSS attacks, cross site scripting attack
     secure: process.env.NODE_ENV === "production",
     //sameSite: "strict", // prevents CSRF attack, cross-site request forgery attack
+    sameSite: "lax",
     maxAge: 150 * 60 * 1000, // 150 minutes
   });
   res.cookie("refreshToken", refreshToken, {
     httpOnly: false, // prevent XSS attacks, cross site scripting attack
     secure: process.env.NODE_ENV === "production",
     //sameSite: "strict", // prevents CSRF attack, cross-site request forgery attack
+    sameSite: "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 };
@@ -36,11 +40,11 @@ const setCookies = (res, accessToken, refreshToken) => {
 const signup = async (req, res) => {
   const { email, password, name } = req.body;
   try {
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ email: email.toLowerCase() });
     if (userExists) {
       return res.status(400).json({ message: "User already exists" });
     }
-    const user = await User.create({ name, email, password });
+    const user = await User.create({ name, email: email.toLowerCase(), password });
     // authenticate
     const { accessToken, refreshToken } = generateTokens(user._id);
     await storeRefreshToken(user._id, refreshToken);
@@ -85,13 +89,13 @@ const login = async (req, res) => {
 const logout = async (req, res) => {
   try {
     const refreshToken = req.cookies.refreshToken;
-    
+
     if (refreshToken) {
       const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
       await redis.del(`refresh_token:${decoded.userId}`);
     }
     if (req.user) {
-      await User.findByIdAndUpdate(req.user._id, { lastOnline: new Date() }); 
+      await User.findByIdAndUpdate(req.user._id, { lastOnline: new Date() });
     }
     res.clearCookie("accessToken");
     res.clearCookie("refreshToken");
@@ -132,7 +136,7 @@ const getProfile = async (req, res) => {
   try {
     // The user is already attached to req.user by the auth middleware
     const user = req.user;
-    
+
     res.json({
       _id: user._id,
       name: user.name,
@@ -157,17 +161,14 @@ const changePassword = async (req, res) => {
     if (!currentPassword || !newPassword) {
       return res.status(400).json({ message: "Please provide both current and new passwords" });
     }
-    // Re-fetch user with password field
     const user = await User.findById(req.user._id).select("+password");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    // Validate current password
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Current password is incorrect" });
     }
-    // Instead of manually hashing, assign newPassword so that the pre-save hook handles hashing
     user.password = newPassword;
     await user.save();
     res.json({ message: "Password changed successfully" });
@@ -200,6 +201,105 @@ const updateProfile = async (req, res) => {
   }
 };
 
+const sendOtp = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const userExists = await User.findOne({ email: email.toLowerCase() });
+    if (userExists) {
+      return res.status(400).json({ message: "Email already registered" });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const key = `otp:${email.toLowerCase()}`;
+    console.log("sendOtp email:", email.toLowerCase(), "OTP:", otp);
+    await redis.set(key, otp, "EX", 300);
+
+    // Gửi mail
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"Toonkidz" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Mã xác thực đăng ký (OTP)",
+      text: `Mã OTP của bạn là: ${otp} (hết hạn sau 5 phút)`,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "OTP sent successfully"
+    });
+  } catch (error) {
+    console.error("Error sending OTP:", error.message);
+    res.status(500).json({ message: "Failed to send OTP" });
+  }
+};
+
+const verifyOtpAndSignup = async (req, res) => {
+  const { email, name, password, otp } = req.body;
+
+  try {
+    if (!email || !name || !password || !otp) {
+      return res.status(400).json({ success: false, message: "Missing required fields" });
+    }
+
+    const key = `otp:${email.toLowerCase()}`;
+    const storedOtp = await redis.get(key);
+
+    console.log("verify email:", email.toLowerCase());
+    console.log("storedOtp in Redis:", storedOtp);
+    console.log("received OTP from FE:", otp);
+
+    if (!storedOtp) {
+      return res.status(400).json({ success: false, message: "OTP expired or invalid" });
+    }
+    if (storedOtp.trim() !== otp.trim()) {
+      return res.status(400).json({ success: false, message: "Incorrect OTP" });
+    }
+
+    const userExists = await User.findOne({ email: email.toLowerCase() });
+    if (userExists) {
+      return res.status(400).json({ success: false, message: "Email already registered" });
+    }
+
+    const user = await User.create({
+      name,
+      email: email.toLowerCase(),
+      password,
+    });
+
+    const { accessToken, refreshToken } = generateTokens(user._id);
+    await storeRefreshToken(user._id, refreshToken);
+    setCookies(res, accessToken, refreshToken);
+
+    await redis.del(key);
+
+    return res.status(201).json({
+      success: true,
+      message: "Signup successful",
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error("Error verifying OTP:", error);
+    return res.status(500).json({ success: false, message: "Signup failed" });
+  }
+};
+
 module.exports = {
   signup,
   login,
@@ -207,5 +307,7 @@ module.exports = {
   refreshToken,
   getProfile,
   changePassword,
-  updateProfile
+  updateProfile,
+  sendOtp,
+  verifyOtpAndSignup,
 };
