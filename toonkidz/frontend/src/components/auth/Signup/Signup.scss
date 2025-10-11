@@ -1,5 +1,16 @@
-* {
-  box-sizing: border-box;
+:root {
+  --primary-color: #a663cc;
+  --secondary-color: #a6c1ee;
+  --gradient-primary: linear-gradient(120deg, var(--primary-color), var(--secondary-color));
+  --gradient-hover: linear-gradient(120deg, var(--secondary-color), #fbc2eb);
+  --text-color-dark: #333;
+  --text-color-light: #666;
+  --background-light: #fff;
+  --border-color: #e0e0e0;
+  --border-radius-md: 12px;
+  --border-radius-lg: 20px;
+  --shadow-main: 0 10px 30px rgba(0, 0, 0, 0.1);
+  --shadow-hover: 0 15px 35px rgba(166, 193, 238, 0.4);
 }
 
 .signup-container {
@@ -7,110 +18,90 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
+  background: var(--gradient-primary);
   font-family: 'Poppins', sans-serif;
+  padding: 20px;
 
+  /* ---- Card Đăng Ký ---- */
   .signup-card {
-    background: #fff;
-    padding: 2.2rem 2rem;
-    border-radius: 1.5rem;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    background: var(--background-light);
+    padding: 2.5rem;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-main);
     width: 100%;
     max-width: 420px;
-    animation: fadeInUp 0.8s ease forwards;
-    transform: translateY(40px);
+    animation: fadeInUp 0.7s ease-out forwards;
+    transform: translateY(30px);
     opacity: 0;
 
     h2 {
       font-size: 2.2rem;
       font-weight: 700;
       text-align: center;
-      margin-bottom: 0.5rem;
-      background: linear-gradient(90deg, #a663cc, #a6c1ee);
+      margin-bottom: 1.5rem;
+      background: var(--gradient-primary);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-    }
-
-    .signup-subtitle {
-      text-align: center;
-      font-size: 0.95rem;
-      color: #777;
-      margin-bottom: 2rem;
-      transition: all 0.3s ease-in-out;
-
-      &:hover {
-        color: #a663cc;
-        transform: scale(1.03);
-      }
     }
 
     form {
       display: flex;
       flex-direction: column;
-      align-items: center;
-      width: 100%;
+      gap: 1rem; // Tạo khoảng cách đều giữa các item
     }
 
     .form-group {
       width: 100%;
-      margin-bottom: 1.2rem;
 
       label {
         display: block;
         font-size: 0.9rem;
         font-weight: 600;
-        color: #555;
+        color: var(--text-color-light);
         margin-bottom: 0.5rem;
-        text-align: left;
+        transition: color 0.3s ease;
       }
 
       input {
         width: 100%;
-        padding: 14px 12px;
-        border: 2px solid #eee;
-        border-radius: 0.8rem;
+        padding: 14px 16px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
         font-size: 1rem;
+        color: var(--text-color-dark);
         transition: all 0.3s ease;
 
         &:focus {
-          border-color: #a6c1ee;
-          box-shadow: 0 0 8px rgba(166, 193, 238, 0.5);
+          border-color: var(--primary-color);
+          box-shadow: 0 0 0 3px rgba(166, 99, 204, 0.2);
           outline: none;
+
+          +label,
+          &:not(:placeholder-shown)+label {
+            color: var(--primary-color);
+          }
         }
       }
     }
 
-    .error-box {
-      background: #ffe5e5;
-      border: 1px solid #ff7a7a;
-      color: #c62828;
-      padding: 0.8rem;
-      border-radius: 0.75rem;
-      margin-bottom: 1.2rem;
-      font-size: 0.9rem;
-      animation: shake 0.3s ease;
+    button[type="submit"] {
       width: 100%;
-      text-align: center;
-    }
-
-    button {
-      width: 100%;
-      padding: 1rem;
-      border-radius: 0.8rem;
+      padding: 16px;
+      border-radius: var(--border-radius-md);
       border: none;
       font-size: 1rem;
       font-weight: 600;
       color: #fff;
       cursor: pointer;
-      background: linear-gradient(90deg, #a663cc, #a6c1ee);
-      transition: all 0.35s ease;
-      box-shadow: 0 4px 12px rgba(166, 193, 238, 0.4);
-      margin-top: 0.5rem;
+      background: var(--gradient-primary);
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(166, 193, 238, 0.3);
+      margin-top: 1rem;
 
-      &:hover {
-        transform: translateY(-2px) scale(1.03);
-        background: linear-gradient(90deg, #a6c1ee, #fbc2eb);
-        box-shadow: 0 8px 20px rgba(166, 193, 238, 0.6);
+      &:hover:not(:disabled) {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-hover);
+        background: var(--gradient-hover);
       }
 
       &:disabled {
@@ -123,154 +114,114 @@
       margin-top: 1.5rem;
       text-align: center;
       font-size: 0.95rem;
-      color: #555;
+      color: var(--text-color-light);
 
-      p {
-        margin: 0;
+      .signin-link {
+        color: var(--primary-color);
+        font-weight: 600;
+        text-decoration: none;
+        position: relative;
 
-        .signin-link {
-          color: #a663cc;
-          font-weight: 600;
-          text-decoration: none;
-          position: relative;
-          transition: all 0.3s ease-in-out;
+        &::after {
+          content: "";
+          position: absolute;
+          left: 0;
+          bottom: -3px;
+          width: 0;
+          height: 2px;
+          background: var(--primary-color);
+          transition: width 0.3s ease;
+        }
 
-          &::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            bottom: -3px;
-            width: 0;
-            height: 2px;
-            background: linear-gradient(90deg, #a663cc, #a6c1ee);
-            transition: width 0.3s ease-in-out;
-          }
-
-          &:hover {
-            color: #a6c1ee;
-
-            &::after {
-              width: 100%;
-            }
-          }
+        &:hover::after {
+          width: 100%;
         }
       }
     }
   }
 
-  @keyframes fadeInUp {
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
+  .ant-modal-content {
+    border-radius: var(--border-radius-lg) !important;
+    overflow: hidden;
+    box-shadow: var(--shadow-main);
+    animation: fadeInScale 0.4s ease;
 
-  @keyframes shake {
+    .ant-modal-header {
+      border-bottom: none;
+      background: var(--gradient-primary);
+      text-align: center;
+      padding: 1.5rem;
 
-    0%,
-    100% {
-      transform: translateX(0);
-    }
-
-    20% {
-      transform: translateX(-6px);
-    }
-
-    40% {
-      transform: translateX(6px);
+      .ant-modal-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: white;
+      }
     }
 
-    60% {
-      transform: translateX(-4px);
+    .ant-modal-body {
+      padding: 2rem;
+      text-align: center;
+
+      p {
+        font-size: 1rem;
+        color: var(--text-color-light);
+        margin-bottom: 1.5rem;
+      }
+
+      .ant-input {
+        border-radius: var(--border-radius-md);
+        font-size: 1.2rem;
+        letter-spacing: 4px;
+        padding: 12px;
+        border: 2px solid var(--border-color);
+        transition: all 0.3s ease;
+        text-align: center;
+
+        &:focus {
+          border-color: var(--primary-color);
+          box-shadow: 0 0 0 3px rgba(166, 99, 204, 0.2);
+        }
+      }
     }
 
-    80% {
-      transform: translateX(4px);
+    .ant-modal-footer {
+      border-top: none;
+      padding: 0 2rem 2rem;
+      text-align: right;
+
+      .ant-btn {
+        border-radius: var(--border-radius-md);
+        font-weight: 600;
+        padding: 10px 24px;
+        height: auto;
+        transition: all 0.3s ease;
+      }
+
+      .ant-btn-primary {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+
+        &:hover {
+          background: #b072d9;
+          border-color: #b072d9;
+          transform: translateY(-2px);
+        }
+      }
     }
   }
 }
 
-
-.ant-modal-content {
-  border-radius: 1.2rem !important;
-  overflow: hidden;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
-  animation: fadeInScale 0.4s ease;
-
-  .ant-modal-header {
-    border-bottom: none;
-    background: linear-gradient(90deg, #a663cc, #a6c1ee);
-    border-radius: 1.2rem 1.2rem 0 0;
-    text-align: center;
-    padding: 1.2rem;
-
-    .ant-modal-title {
-      font-size: 1.3rem;
-      font-weight: 700;
-      color: white;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-    }
-  }
-
-  .ant-modal-body {
-    padding: 1.8rem 1.5rem;
-    text-align: center;
-    background: #fdfaff;
-
-    p {
-      font-size: 0.95rem;
-      color: #555;
-      margin-bottom: 1.5rem;
-    }
-
-    .ant-input {
-      border-radius: 0.8rem;
-      font-size: 1.1rem;
-      letter-spacing: 3px;
-      padding: 0.9rem 0.8rem;
-      border: 2px solid #eee;
-      transition: all 0.3s ease;
-      text-align: center;
-      background: #fff;
-
-      &:focus {
-        border-color: #a6c1ee;
-        box-shadow: 0 0 8px rgba(166, 193, 238, 0.4);
-      }
-    }
-
-    .ant-btn {
-      border-radius: 0.8rem;
-      font-weight: 600;
-      padding: 0.8rem 1.5rem;
-      transition: all 0.3s ease;
-    }
-
-    .ant-btn-primary {
-      background: linear-gradient(90deg, #a663cc, #a6c1ee);
-      border: none;
-
-      &:hover {
-        background: linear-gradient(90deg, #a6c1ee, #fbc2eb);
-        transform: translateY(-2px);
-      }
-    }
-
-    .ant-btn-default {
-      border-color: #ccc;
-      color: #555;
-
-      &:hover {
-        border-color: #a6c1ee;
-        color: #a663cc;
-      }
-    }
+@keyframes fadeInUp {
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
 
 @keyframes fadeInScale {
   from {
-    transform: scale(0.9);
+    transform: scale(0.95);
     opacity: 0;
   }
 

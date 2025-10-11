@@ -1,3 +1,4 @@
+//theme.route.js
 import express from "express";
 import { getThemeWords } from "../controllers/theme.controller.js";
 

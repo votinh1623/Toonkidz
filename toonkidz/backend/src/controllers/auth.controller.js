@@ -1,3 +1,4 @@
+//auth.controller.js
 const User = require("../models/user.model.js");
 const { v2: cloudinary } = require('cloudinary');
 const jwt = require("jsonwebtoken");

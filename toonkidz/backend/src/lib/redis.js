@@ -1,3 +1,4 @@
+//redis.js
 const { createClient } = require('redis');
 const config = require('../config/database.config');
 

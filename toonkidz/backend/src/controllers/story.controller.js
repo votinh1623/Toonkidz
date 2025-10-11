@@ -1,3 +1,4 @@
+//story.controller.js
 import axios from 'axios';
 import { AI_MODELS, AI_RETRY_OPTIONS } from '../config/ai.config.js';
 import Story from '../models/story.model.js';
@@ -201,14 +202,14 @@ Lưu ý:
           throw new Error('Invalid response format: missing pages array');
         }
 
-        // ✅ Create pages without images
+        // Create pages without images
         const pages = result.pages.map((page, index) => ({
           pageNumber: page.pageNumber || index + 1,
           content: page.content
           // No image field - images will be handled separately by frontend
         }));
 
-        // ✅ Save to database without images
+        // Save to database without images
         const storyData = {
           theme: theme || 'custom',
           title: result.title || `Câu chuyện về ${theme}`,
@@ -225,7 +226,7 @@ Lưu ý:
 
         const savedStory = await Story.create(storyData);
 
-        // ✅ Return story without images
+        //Return story without images
         return res.json({
           success: true,
           storyId: savedStory._id,
@@ -277,7 +278,7 @@ Lưu ý:
   });
 };
 
-// Helper function to parse non-JSON responses
+//Helper function to parse non-JSON responses
 async function parseNonJSONResponse(storyText, theme) {
   const lines = storyText.split('\n').map(l => l.trim()).filter(Boolean);
 
@@ -326,7 +327,7 @@ async function parseNonJSONResponse(storyText, theme) {
   return { title, heading, pages };
 }
 
-// ✅ Function to update story with images (called by frontend after image generation)
+//Function to update story with images (called by frontend after image generation)
 export const updateStoryWithImages = async (req, res) => {
   try {
     const { storyId } = req.params;
@@ -363,7 +364,7 @@ export const updateStoryWithImages = async (req, res) => {
   }
 };
 
-// ✅ Function to get story by ID
+//Function to get story by ID
 export const getStory = async (req, res) => {
   try {
     const { storyId } = req.params;
@@ -421,7 +422,6 @@ export const createStory = async (req, res) => {
         });
         coverImageUrl = coverUpload.secure_url;
       } finally {
-        // Dù thành công hay thất bại đều xoá file tạm
         fs.unlink(coverPath, (err) => {
           if (err) console.warn("Could not delete temp cover file:", err);
         });
@@ -487,5 +487,171 @@ export const createStory = async (req, res) => {
   } catch (error) {
     console.error("Error creating story:", error);
     return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+//Get all stories
+export const getAllStories = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search || "";
+    const status = req.query.status || "";
+    const theme = req.query.theme || "";
+
+    const query = {
+      title: { $regex: search, $options: "i" },
+    };
+
+    if (status) {
+      query.status = status;
+    }
+
+    if (theme) {
+      query.theme = theme;
+    }
+
+    const stories = await Story.find(query)
+      .populate('userId', 'name')
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    const totalStories = await Story.countDocuments(query);
+
+    res.json({
+      success: true,
+      stories,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalStories / limit),
+        totalStories
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching stories!: ', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch stories!' });
+  }
+};
+
+// Get Story By ID
+export const getStoryById = async (req, res) => {
+  try {
+    const story = await Story.findById(req.params.id).populate('userId', 'name email');
+    if (!story) {
+      return res.status(404).json({ success: false, error: 'Story not found' });
+    }
+    res.json({ success: true, story });
+  } catch (error) {
+    console.error('Error fetching story by ID:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch story' });
+  }
+};
+
+//Update Story
+export const updateStory = async (req, res) => {
+  try {
+    const { title, head, theme, status, pages: pagesJSON } = req.body;
+    const story = await Story.findById(req.params.id);
+
+    if (!story) {
+      return res.status(404).json({ success: false, error: 'Story not found' });
+    }
+
+    const files = req.files || [];
+    const findFile = (fieldName) => files.find((f) => f.fieldname === fieldName)?.path || null;
+
+    // 1. Cập nhật thông tin cơ bản
+    story.title = title;
+    story.head = head;
+    story.theme = theme;
+    story.status = status;
+
+    // 2. Cập nhật ảnh bìa (nếu có file mới)
+    const coverPath = findFile("coverImage");
+    if (coverPath) {
+      // (Optional) Xóa ảnh bìa cũ trên Cloudinary trước khi upload ảnh mới
+      // if (story.coverImage) { ... }
+      const coverUpload = await cloudinary.uploader.upload(coverPath, { folder: "toonkidz/story_covers" });
+      story.coverImage = coverUpload.secure_url;
+      fs.unlinkSync(coverPath); // Xóa file tạm
+    }
+
+    // 3. Cập nhật các trang
+    const submittedPages = JSON.parse(pagesJSON);
+    const updatedPages = [];
+
+    for (let i = 0; i < submittedPages.length; i++) {
+      const pageData = submittedPages[i];
+      const imgPath = findFile(`pageImage_${i}`);
+      const audioPath = findFile(`pageAudio_${i}`);
+
+      let imageUrl = pageData.image || null; // Giữ lại ảnh cũ mặc định
+      let audioUrl = pageData.audio || null; // Giữ lại audio cũ mặc định
+
+      // Nếu có file ảnh mới, upload và cập nhật URL
+      if (imgPath) {
+        const imgUpload = await cloudinary.uploader.upload(imgPath, { folder: "toonkidz/story_pages" });
+        imageUrl = imgUpload.secure_url;
+        fs.unlinkSync(imgPath);
+      }
+
+      // Nếu có file audio mới, upload và cập nhật URL
+      if (audioPath) {
+        const audioUpload = await cloudinary.uploader.upload(audioPath, { resource_type: "video", folder: "toonkidz/story_audios" });
+        audioUrl = audioUpload.secure_url;
+        fs.unlinkSync(audioPath);
+      }
+
+      updatedPages.push({
+        pageNumber: i + 1,
+        content: pageData.content,
+        image: imageUrl,
+        audio: audioUrl,
+      });
+    }
+    story.pages = updatedPages;
+
+    const savedStory = await story.save();
+    return res.status(200).json({ success: true, story: savedStory });
+
+  } catch (error) {
+    console.error("Error updating story:", error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+//Delete Story
+export const deleteStory = async (req, res) => {
+  try {
+    const story = await Story.findById(req.params.id);
+
+    if (!story) {
+      return res.status(404).json({ success: false, error: 'Story not found' });
+    }
+
+    // (Bonus) Xóa ảnh bìa và ảnh các trang trên Cloudinary
+    if (story.coverImage) {
+      const publicId = story.coverImage.split('/').pop().split('.')[0];
+      await cloudinary.uploader.destroy(`toonkidz/story_covers/${publicId}`);
+    }
+    for (const page of story.pages) {
+      if (page.image) {
+        const publicId = page.image.split('/').pop().split('.')[0];
+        await cloudinary.uploader.destroy(`toonkidz/story_pages/${publicId}`);
+      }
+      if (page.audio) {
+        const publicId = page.audio.split('/').pop().split('.')[0];
+        await cloudinary.uploader.destroy(`toonkidz/story_audios/${publicId}`, { resource_type: 'video' });
+      }
+    }
+
+    await story.deleteOne(); // Sử dụng deleteOne() trên document
+
+    res.json({ success: true, message: 'Story deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting story:', error);
+    res.status(500).json({ success: false, error: 'Failed to delete story' });
   }
 };

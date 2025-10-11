@@ -1,12 +1,70 @@
 // src/service/storyService.js
-import { postFormData } from "@/utils/request";
+import { get, del, postFormData, putFormData } from "@/utils/request";
+
+export const getStories = async (
+  page = 1,
+  limit = 10,
+  search = "",
+  status,
+  theme
+) => {
+  try {
+    const params = {
+      page,
+      limit,
+      search,
+    };
+    if (status) {
+      params.status = status;
+    }
+    if (theme) {
+      params.theme = theme;
+    }
+    const queryParams = new URLSearchParams(params).toString();
+    const res = await get(`story?${queryParams}`);
+    return res;
+  } catch (err) {
+    console.error("Error fetching stories:", err);
+    throw err;
+  }
+};
+
+export const getStoryById = async (storyId) => {
+  try {
+    const res = await get(`story/${storyId}`);
+    return res;
+  } catch (err) {
+    console.error(`Error fetching story with ID ${storyId}:`, err);
+    throw err;
+  }
+};
 
 export const createStory = async (formData) => {
   try {
-    const res = await postFormData("api/story/create", formData);
+    const res = await postFormData("story/create", formData);
     return res;
   } catch (err) {
     console.error("Error creating story:", err);
+    throw err;
+  }
+};
+
+export const updateStory = async (storyId, formData) => {
+  try {
+    const res = await putFormData(`story/${storyId}`, formData);
+    return res;
+  } catch (err) {
+    console.error(`Error updating story with ID ${storyId}:`, err);
+    throw err;
+  }
+};
+
+export const deleteStoryById = async (storyId) => {
+  try {
+    const res = await del(`story/${storyId}`);
+    return res;
+  } catch (err) {
+    console.error(`Error deleting story with ID ${storyId}:`, err);
     throw err;
   }
 };

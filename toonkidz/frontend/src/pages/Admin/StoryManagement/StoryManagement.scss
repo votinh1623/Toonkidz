@@ -1,3 +1,4 @@
+// src/pages/Admin/StoryManagement/StoryManagement.scss
 .story-management {
   background-color: #fff;
   padding: 24px;
@@ -10,7 +11,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 
     h2 {
       font-size: 22px;
@@ -23,39 +24,94 @@
       display: flex;
       gap: 12px;
       align-items: center;
+      flex-wrap: wrap;
     }
   }
 
-  // ✨ Custom button "Thêm mới"
+  .action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ant-input-search {
+    .ant-input {
+      border-radius: 8px 0 0 8px !important;
+      border: 1px solid #d9d9d9;
+      transition: all 0.3s ease;
+      height: 38px;
+
+      &:hover,
+      &:focus {
+        border-color: #836fff;
+        box-shadow: 0 0 0 2px rgba(108, 99, 255, 0.2);
+      }
+    }
+
+    .ant-input-group-addon .ant-btn {
+      border-radius: 0 8px 8px 0 !important;
+      background: #6c63ff;
+      border-color: #6c63ff;
+      height: 38px;
+
+      &:hover {
+        background: #836fff;
+        border-color: #836fff;
+      }
+    }
+  }
+
+  .filter-select {
+    width: 200px;
+
+    .ant-select-selector {
+      border-radius: 8px !important;
+      height: 38px !important;
+
+      .ant-select-selection-search-input,
+      .ant-select-selection-item,
+      .ant-select-selection-placeholder {
+        height: 38px !important;
+        line-height: 36px !important;
+      }
+    }
+
+    &.ant-select-focused .ant-select-selector {
+      border-color: #836fff;
+      box-shadow: 0 0 0 2px rgba(108, 99, 255, 0.2);
+    }
+  }
+
   .btn-add {
-    background: linear-gradient(90deg, #6c63ff, #9b7bff);
+    background: linear-gradient(90deg, #6c63ff, #836fff);
     border: none;
-    color: #fff;
+    color: #fff !important;
     font-weight: 600;
-    font-size: 15px;
-    padding: 8px 18px;
+    font-size: 14px;
+    height: 38px;
+    padding: 0 18px;
     border-radius: 8px;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 8px;
-    box-shadow: 0 3px 10px rgba(108, 99, 255, 0.3);
+    box-shadow: 0 3px 10px rgba(108, 99, 255, 0.25);
     transition: all 0.25s ease;
 
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 14px rgba(108, 99, 255, 0.4);
+      box-shadow: 0 6px 14px rgba(108, 99, 255, 0.35);
+      background: linear-gradient(90deg, #836fff, #a38fff);
     }
 
     &:active {
-      transform: scale(0.96);
+      transform: scale(0.98);
     }
   }
 
-  // 🔘 Nút thao tác nhỏ
   .action-btn {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     border: none;
     border-radius: 8px;
     cursor: pointer;
@@ -93,20 +149,22 @@
     }
   }
 
-  // 💠 Bảng Ant Design
-  .ant-table {
+  .ant-table-wrapper {
     border-radius: 8px;
     overflow: hidden;
+    border: 1px solid #f0f0f0;
   }
 
   .ant-table-thead>tr>th {
     background: #fafafa;
     font-weight: 600;
+    color: #333;
   }
 
   .ant-tag {
     font-weight: 500;
     padding: 3px 10px;
-    border-radius: 8px;
+    border-radius: 6px;
+    font-size: 12px;
   }
 }
