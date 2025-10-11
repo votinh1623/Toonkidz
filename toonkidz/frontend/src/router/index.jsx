@@ -13,6 +13,8 @@ import ReportingAndCensorship from "../pages/Admin/ReportingAndCensorship/Report
 import StoryManagement from "../pages/Admin/StoryManagement/StoryManagement"
 import AddStory from "../components/AddStory/AddStory";
 import PrivateRoute from "./PrivateRoute";
+import EditStory from "../components/EditStory/EditStory";
+import StoryViewPage from "../pages/StoryViewPage/StoryViewPage";
 
 export const route = [
   {
@@ -27,6 +29,7 @@ export const route = [
           { path: "create-comic", element: <CreateComic /> },
           { path: "learn-english", element: <LearnEnglish /> },
           { path: "library", element: <LibraryPage /> },
+          { path: "story/:storyId", element: <StoryViewPage /> },
         ],
       },
       {
@@ -36,8 +39,11 @@ export const route = [
           { index: true, element: <Navigate to="dashboard" replace /> },
           { path: "dashboard", element: <Dashboard /> },
           { path: "users-management", element: <UserManagement /> },
+
+          // Tách các route ra, không còn lồng vào nhau
           { path: "stories-management", element: <StoryManagement /> },
           { path: "stories-management/add", element: <AddStory /> },
+          { path: "stories-management/edit/:storyId", element: <EditStory /> },
           { path: "reports", element: <ReportingAndCensorship /> },
         ],
       },

@@ -1,23 +1,28 @@
+// backend/routes/story.route.js
+
 import express from 'express';
-import { createStory, generateStory, getStory } from '../controllers/story.controller.js';
-import { auth } from '../middleware/auth.middleware.js'; // Import the auth middleware
+import {
+  generateStory,
+  createStory,
+  getAllStories,
+  getStoryById,
+  updateStory,
+  deleteStory
+} from '../controllers/story.controller.js';
+import { auth, adminAuth } from '../middleware/auth.middleware.js';
 import multer from 'multer';
 
 const router = express.Router();
 const upload = multer({ dest: 'uploads/' });
 
-/**
- * POST /api/stories
- * Body: { theme: string, keywords: string[], prompt: string }
- * Response: { storyId, title, heading, pages, theme, keywords, model_used }
- */
-router.post('/', auth, generateStory); // Add auth middleware here
+router.post('/generate', auth, generateStory);
+router.get('/', auth, getAllStories);
+router.post('/create', auth, upload.any(), adminAuth, createStory);
 
-/**
- * GET /api/stories/:storyId
- * Response: { story }
- */
-router.get('/:storyId', auth, getStory); // Also protect the get route
-router.post('/create', auth, upload.any(), createStory);
+router
+  .route('/:id')
+  .get(auth, getStoryById)
+  .put(auth, upload.any(), updateStory)
+  .delete(auth, deleteStory);
 
 export default router;

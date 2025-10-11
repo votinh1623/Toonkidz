@@ -1,3 +1,4 @@
+//nfr.config.js
 module.exports = {
   NFR01: {
     name: 'Response Time',

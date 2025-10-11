@@ -1,3 +1,4 @@
+//src/utils/request
 const API_DOMAIN = "http://localhost:3000/api";
 
 const buildUrl = (path) =>
@@ -48,6 +49,15 @@ export const patch = async (path, data) => {
 export const postFormData = async (path, formData) => {
   const res = await fetch(buildUrl(path), {
     method: "POST",
+    body: formData,
+    credentials: "include",
+  });
+  return res.json();
+};
+
+export const putFormData = async (path, formData) => {
+  const res = await fetch(buildUrl(path), {
+    method: "PUT", // Sử dụng method PUT
     body: formData,
     credentials: "include",
   });

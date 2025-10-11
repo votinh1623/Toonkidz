@@ -1,3 +1,4 @@
+//theme.controller.js
 import themes from "../config/theme.config.js";
 
 // Helper: pick n random elements from an array

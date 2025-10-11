@@ -1,0 +1,61 @@
+// src/pages/StoryViewPage/StoryViewPage.scss
+
+.story-view-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 70px);
+}
+
+.story-view-page-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 70px);
+  padding: 40px 20px;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    background-image: inherit;
+    filter: blur(20px) brightness(0.7);
+    transform: scale(1.1);
+  }
+
+  .story-modal {
+    position: relative;
+    z-index: 1;
+
+    .ant-modal-mask {
+      display: none;
+    }
+
+    .ant-modal-wrap {
+      position: static;
+    }
+
+    .ant-modal {
+      max-width: 900px;
+      width: 100% !important;
+      margin: 0;
+      padding: 0;
+      top: 0;
+    }
+
+    .ant-modal-content {
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .ant-modal-close {
+      display: none;
+    }
+  }
+}
