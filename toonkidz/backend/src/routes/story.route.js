@@ -7,7 +7,8 @@ import {
   getAllStories,
   getStoryById,
   updateStory,
-  deleteStory
+  deleteStory,
+  getMyStories
 } from '../controllers/story.controller.js';
 import { auth, adminAuth } from '../middleware/auth.middleware.js';
 import multer from 'multer';
@@ -18,6 +19,7 @@ const upload = multer({ dest: 'uploads/' });
 router.post('/generate', auth, generateStory);
 router.get('/', auth, getAllStories);
 router.post('/create', auth, upload.any(), adminAuth, createStory);
+router.get('/my-stories', auth, getMyStories);
 
 router
   .route('/:id')

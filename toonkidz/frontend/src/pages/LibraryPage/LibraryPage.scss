@@ -1,6 +1,5 @@
 .library {
   background-color: #f9fbff;
-  padding: 20px;
 
   &__title {
     color: #6c086c;
@@ -34,6 +33,11 @@
       }
     }
 
+    div.active {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+    }
+
     &__yourcomic {
       background-color: rgba(181, 155, 241, 0.25);
       color: #5b2ea6;
@@ -42,6 +46,33 @@
     &__favourite {
       background-color: rgba(252, 208, 216, 0.35);
       color: #c9365d;
+    }
+
+    &__share-btn {
+      margin-left: auto;
+      margin-right: 5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(90deg, #2dd4bf, #34d399);
+      border: none;
+      color: #fff;
+      font-weight: 600;
+      font-size: 14px;
+      border-radius: 8px;
+      padding: 0px 10px;
+      cursor: pointer;
+      box-shadow: 0 3px 10px rgba(45, 212, 191, 0.3);
+      transition: all 0.25s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 14px rgba(45, 212, 191, 0.4);
+      }
+
+      svg {
+        font-size: 16px;
+      }
     }
   }
 
@@ -200,7 +231,34 @@
             background-color: #fecaca;
           }
         }
+
+        &__edit {
+          background-color: #eef2ff;
+          color: #4338ca;
+
+          &:hover {
+            background-color: #e0e7ff;
+          }
+        }
       }
+    }
+  }
+
+  &__empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 80px 20px;
+    background: #fff;
+    border-radius: 12px;
+
+    h3 {
+      font-size: 24px;
+      color: #333;
+    }
+
+    p {
+      font-size: 16px;
+      color: #666;
     }
   }
 }

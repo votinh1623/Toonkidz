@@ -68,3 +68,13 @@ export const deleteStoryById = async (storyId) => {
     throw err;
   }
 };
+
+export const getMyStories = async () => {
+  try {
+    const res = await get(`story/my-stories`);
+    return res;
+  } catch (err) {
+    console.error("Error fetching my stories:", err);
+    throw err;
+  }
+};
