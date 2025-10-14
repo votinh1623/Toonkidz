@@ -1,9 +1,9 @@
 // src/pages/Admin/EditStory/EditStory.jsx
 
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Form, Input, Button, Select, Upload, Modal, message, List, Space, Spin } from "antd";
-import { PlusOutlined, UploadOutlined, AudioOutlined, FileImageOutlined, EditOutlined } from "@ant-design/icons";
+import { PlusOutlined, UploadOutlined, AudioOutlined, FileImageOutlined, EditOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import "./EditStory.scss";
 import { getStoryById, updateStory } from "../../service/storyService";
 import Swal from 'sweetalert2/dist/sweetalert2.js'
@@ -25,6 +25,8 @@ const EditStory = () => {
   const [mainImage, setMainImage] = useState([]);
   const [pageImage, setPageImage] = useState([]);
   const [pageAudio, setPageAudio] = useState([]);
+
+  const location = useLocation();
 
   useEffect(() => {
     const fetchStory = async () => {
@@ -79,7 +81,6 @@ const EditStory = () => {
     setIsModalOpen(true);
   };
 
-  // ✅ FIX: This function now updates the main `pages` state in real-time
   const handlePageFileChange = (fileList, type) => {
     if (type === 'image') {
       setPageImage(fileList);
@@ -141,6 +142,11 @@ const EditStory = () => {
     setPages(pages.filter((p) => p.key !== key));
   };
 
+  const handleGoBack = () => {
+    const returnPath = location.state?.from || '/admin/stories-management';
+    navigate(returnPath);
+  };
+
   const handleSubmit = async (values) => {
     setIsLoading(true);
     try {
@@ -180,7 +186,8 @@ const EditStory = () => {
           timer: 1500,
           showConfirmButton: false,
         }).then(() => {
-          navigate("/admin/stories-management");
+          const returnPath = location.state?.from || '/admin/stories-management';
+          navigate(returnPath);
         });
       } else {
         message.error("Cập nhật truyện thất bại!");
@@ -199,7 +206,16 @@ const EditStory = () => {
 
   return (
     <div className="add-story">
-      <h2>Chỉnh sửa truyện</h2>
+      <div className="edit-story-header">
+        <h2>Chỉnh sửa truyện</h2>
+        <Button
+          icon={<ArrowLeftOutlined />}
+          onClick={handleGoBack}
+          className="back-button"
+        >
+          Quay lại
+        </Button>
+      </div>
       <Form layout="vertical" form={form} onFinish={handleSubmit} className="add-story__form">
         {/* Form Items */}
         <Form.Item label="Tiêu đề" name="title" rules={[{ required: true }]}>

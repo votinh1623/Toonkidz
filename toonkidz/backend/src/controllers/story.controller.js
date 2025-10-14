@@ -559,26 +559,24 @@ export const updateStory = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Story not found' });
     }
 
+    if (story.userId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, error: 'User not authorized to update this story' });
+    }
+
     const files = req.files || [];
     const findFile = (fieldName) => files.find((f) => f.fieldname === fieldName)?.path || null;
 
-    // 1. Cập nhật thông tin cơ bản
     story.title = title;
     story.head = head;
     story.theme = theme;
     story.status = status;
 
-    // 2. Cập nhật ảnh bìa (nếu có file mới)
     const coverPath = findFile("coverImage");
     if (coverPath) {
-      // (Optional) Xóa ảnh bìa cũ trên Cloudinary trước khi upload ảnh mới
-      // if (story.coverImage) { ... }
       const coverUpload = await cloudinary.uploader.upload(coverPath, { folder: "toonkidz/story_covers" });
       story.coverImage = coverUpload.secure_url;
       fs.unlinkSync(coverPath); // Xóa file tạm
     }
-
-    // 3. Cập nhật các trang
     const submittedPages = JSON.parse(pagesJSON);
     const updatedPages = [];
 
@@ -587,17 +585,13 @@ export const updateStory = async (req, res) => {
       const imgPath = findFile(`pageImage_${i}`);
       const audioPath = findFile(`pageAudio_${i}`);
 
-      let imageUrl = pageData.image || null; // Giữ lại ảnh cũ mặc định
-      let audioUrl = pageData.audio || null; // Giữ lại audio cũ mặc định
-
-      // Nếu có file ảnh mới, upload và cập nhật URL
+      let imageUrl = pageData.image || null;
+      let audioUrl = pageData.audio || null;
       if (imgPath) {
         const imgUpload = await cloudinary.uploader.upload(imgPath, { folder: "toonkidz/story_pages" });
         imageUrl = imgUpload.secure_url;
         fs.unlinkSync(imgPath);
       }
-
-      // Nếu có file audio mới, upload và cập nhật URL
       if (audioPath) {
         const audioUpload = await cloudinary.uploader.upload(audioPath, { resource_type: "video", folder: "toonkidz/story_audios" });
         audioUrl = audioUpload.secure_url;
@@ -647,11 +641,30 @@ export const deleteStory = async (req, res) => {
       }
     }
 
-    await story.deleteOne(); // Sử dụng deleteOne() trên document
+    await story.deleteOne();
 
     res.json({ success: true, message: 'Story deleted successfully' });
   } catch (error) {
     console.error('Error deleting story:', error);
     res.status(500).json({ success: false, error: 'Failed to delete story' });
+  }
+};
+
+export const getMyStories = async (req, res) => {
+  try {
+    // req.user._id được cung cấp bởi middleware `auth`
+    const userId = req.user._id;
+
+    const stories = await Story.find({ userId: userId })
+      .sort({ createdAt: -1 }); // Sắp xếp truyện mới nhất lên đầu
+
+    if (!stories) {
+      return res.status(404).json({ success: false, error: 'No stories found for this user' });
+    }
+
+    res.json({ success: true, stories });
+  } catch (error) {
+    console.error('Error fetching user stories:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch user stories' });
   }
 };
