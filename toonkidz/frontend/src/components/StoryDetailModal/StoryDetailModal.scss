@@ -1,0 +1,387 @@
+// src/components/StoryDetailModal/StoryDetailModal.scss
+
+.story-modal {
+
+  // --- TÙY CHỈNH KHUNG MODAL ---
+  .ant-modal-content {
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+  }
+
+  .ant-modal-body {
+    padding: 0;
+  }
+
+  .ant-modal-close {
+    top: 16px;
+    right: 16px;
+    z-index: 20;
+    color: rgba(255, 255, 255, 0.8);
+
+    &:hover {
+      color: #fff;
+    }
+  }
+
+  // --- STYLE CHUNG CHO CAROUSEL/SLICK ---
+  .slick-slide {
+    height: 620px;
+    overflow: hidden;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
+  }
+
+  // --- STYLE CHUNG CHO TẤT CẢ CÁC "TRANG SÁCH" ---
+  .story-cover-slide,
+  .story-end-slide,
+  .story-page-slide {
+    display: flex !important; // Ghi đè style `inline-block` của thư viện
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+  }
+
+  // --- TRANG BÌA & TRANG KẾT THÚC ---
+  .story-cover-slide,
+  .story-end-slide {
+    position: relative;
+    color: #fff;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px;
+
+    .cover-background {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      filter: blur(12px) brightness(0.7);
+      transform: scale(1.1);
+
+      &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.5) 100%);
+      }
+    }
+
+    .cover-content,
+    .end-content {
+      position: relative;
+      z-index: 2;
+      max-width: 600px;
+      animation: fadeIn 1s ease-out;
+    }
+
+    h1 {
+      font-size: 44px;
+      font-weight: 700;
+      text-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+      margin-bottom: 16px;
+    }
+
+    p {
+      font-size: 18px;
+      opacity: 0.9;
+      margin-bottom: 32px;
+    }
+
+    .start-reading-btn {
+      background: #fff;
+      color: #5a52d3;
+      font-weight: 600;
+      border: none;
+      border-radius: 50px;
+      padding: 0 40px;
+      height: 50px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+
+      &:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
+      }
+    }
+
+    .end-content {
+      h2 {
+        font-size: 48px;
+        font-weight: 700;
+        text-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+      }
+
+      p {
+        margin-top: 8px;
+        margin-bottom: 40px;
+      }
+
+      .end-actions {
+        display: flex;
+        gap: 30px;
+        justify-content: center;
+
+        .end-btn {
+          border-radius: 50px;
+          font-weight: 600;
+          font-size: 16px;
+          height: 50px;
+          padding: 0 30px;
+          border: 2px solid rgba(255, 255, 255, 0.8);
+          transition: all 0.3s ease;
+
+          &.reread {
+            background: #fff;
+            color: #5a52d3;
+            border-color: #fff;
+
+            &:hover {
+              background: #f0f0f0;
+              border-color: #f0f0f0;
+            }
+          }
+
+          &.close {
+            background: transparent;
+            color: #fff;
+
+            &:hover {
+              background: rgba(255, 255, 255, 0.1);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .story-page-slide {
+    background-color: #fff;
+    height: 500px;
+
+    // Wrapper mới để kiểm soát layout
+    .story-page-wrapper {
+      display: flex;
+      width: 100%;
+      height: 100%;
+    }
+
+    .page-image-container {
+      width: 50%;
+      flex-shrink: 0;
+      background: #f0f0f0;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .no-image-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ccc;
+      }
+    }
+
+    .page-content-container {
+      width: 50%;
+      display: flex;
+      flex-direction: column;
+      padding: 10px 20px;
+      box-sizing: border-box;
+      overflow: hidden;
+
+      .page-content {
+        font-size: 19px;
+        line-height: 1.7;
+        color: #333;
+        flex-grow: 1;
+        overflow-y: auto;
+        padding-right: 15px;
+
+        p {
+          margin: 0;
+        }
+
+        &::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        &::-webkit-scrollbar-track {
+          background: #f1f1f1;
+        }
+
+        &::-webkit-scrollbar-thumb {
+          background: #ccc;
+          border-radius: 3px;
+
+          &:hover {
+            background: #aaa;
+          }
+        }
+      }
+
+      .audio-player {
+        margin-top: auto;
+        padding-top: 24px;
+        flex-shrink: 0;
+
+        audio {
+          width: 100%;
+          height: 45px;
+
+          &::-webkit-media-controls-panel {
+            background-color: #f1f3f4;
+          }
+
+          &::-webkit-media-controls-play-button {
+            background-color: #6c63ff;
+            border-radius: 50%;
+          }
+        }
+      }
+    }
+  }
+
+  // --- NÚT ĐIỀU HƯỚNG & DẤU CHẤM ---
+  .slick-arrow {
+    z-index: 10;
+    width: 48px;
+    height: 48px;
+
+    &:before {
+      font-size: 24px;
+    }
+  }
+
+  .slick-prev {
+    left: -60px;
+  }
+
+  .slick-next {
+    right: -60px;
+  }
+
+  .custom-dots {
+    bottom: -35px !important;
+
+    li button {
+      background: rgba(0, 0, 0, 0.2) !important;
+      width: 10px !important;
+      height: 10px !important;
+    }
+
+    li.slick-active button {
+      background: #6c63ff !important;
+    }
+  }
+}
+
+// --- ANIMATION ---
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 820px) {
+  .story-modal {
+    .slick-slide {
+      height: 85vh;
+      padding: 0;
+    }
+
+    .story-page-slide .story-page-wrapper {
+      flex-direction: column;
+    }
+
+    .story-page-slide {
+      .page-image-container {
+        width: 100%;
+        height: 45%;
+      }
+
+      .page-content-container {
+        width: 100%;
+        height: 55%;
+        padding: 24px;
+
+        .page-content {
+          font-size: 16px;
+          line-height: 1.7;
+        }
+
+        .audio-player {
+          margin-top: auto;
+          padding-top: 16px;
+
+          audio {
+            height: 40px;
+          }
+        }
+      }
+    }
+
+    .story-cover-slide,
+    .story-end-slide {
+      h1 {
+        font-size: 32px;
+      }
+
+      h2 {
+        font-size: 36px;
+      }
+
+      p {
+        font-size: 16px;
+      }
+    }
+
+    .slick-arrow {
+      width: 40px;
+      height: 40px;
+      background: rgba(0, 0, 0, 0.4) !important;
+
+      &:before {
+        font-size: 18px;
+      }
+    }
+
+    .slick-prev {
+      left: 15px;
+    }
+
+    .slick-next {
+      right: 15px;
+    }
+
+    .custom-dots {
+      bottom: 10px !important;
+
+      li button {
+        background: rgba(255, 255, 255, 0.5) !important;
+      }
+
+      li.slick-active button {
+        background: #fff !important;
+      }
+    }
+  }
+}

@@ -80,9 +80,8 @@ const AddStory = () => {
       const res = await createStory(formData);
 
       if (res.success) {
-        message.success("Tạo truyện thành công!");
         Swal.fire({
-          title: "Login Successfully!",
+          title: "Đã tạo truyện thành công!",
           icon: "success",
           draggable: true
         });

@@ -1,3 +1,4 @@
+//story.model.js
 import mongoose from 'mongoose';
 
 const pageSchema = new mongoose.Schema({

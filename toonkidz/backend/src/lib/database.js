@@ -1,3 +1,4 @@
+//lib/database.js
 const mongoose = require('mongoose');
 const redis = require('redis');
 const { promisify } = require('util');

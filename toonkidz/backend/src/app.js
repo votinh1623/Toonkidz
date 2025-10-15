@@ -1,3 +1,4 @@
+//app.js
 import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
@@ -19,6 +20,7 @@ import authRoutes from "./routes/auth.route.js";
 import storyRoutes from './routes/story.route.js';
 import axios from "axios";
 import { v2 as cloudinary } from "cloudinary";
+import userRoutes from './routes/user.route.js';
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -66,6 +68,7 @@ cloudinary.config({
 app.get('/health', healthController.healthCheck);
 app.use('/api/auth', authRoutes);
 app.use('/api', imageRoutes);
+app.use('/api/user', userRoutes);
 app.use('/api/story', storyRoutes);
 app.use('/api/themes', themeRoutes);
 

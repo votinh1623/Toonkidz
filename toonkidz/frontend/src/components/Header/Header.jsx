@@ -1,57 +1,85 @@
+// src/components/Header/Header.jsx
+
 import React from "react";
-import { Input } from "antd";
+import "./Header.scss";
+import { Input, Dropdown, Space } from "antd";
 import { LogoutOutlined, SearchOutlined } from "@ant-design/icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBell, faUser, faBars } from "@fortawesome/free-solid-svg-icons";
+import { faUser, faBars } from "@fortawesome/free-solid-svg-icons";
 import { NavLink, useNavigate } from "react-router-dom";
-import { Dropdown, Space } from 'antd';
-import Notify from '../Notify/Notify';
-import './Header.scss';
+import Swal from "sweetalert2";
+import { logout } from "@/service/authService";
+import Notify from "../Notify/Notify";
 
 const Header = ({ onToggleSider }) => {
-  const navigate = useNavigate(); // Hook để điều hướng đến các trang
+  const navigate = useNavigate();
 
-  // Dropdown menu items
+  const handleLogout = async () => {
+    Swal.fire({
+      title: "Đăng xuất?",
+      text: "Bạn có chắc muốn đăng xuất?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Đăng xuất",
+      cancelButtonText: "Huỷ",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await logout();
+          // Clear cookies (if backend doesn't set httpOnly)
+          document.cookie = "accessToken=; Max-Age=0; path=/;";
+          document.cookie = "refreshToken=; Max-Age=0; path=/;";
+
+          Swal.fire({
+            title: "Đã đăng xuất!",
+            icon: "success",
+            timer: 1200,
+            showConfirmButton: false,
+          });
+          navigate("/login");
+        } catch (err) {
+          Swal.fire("Lỗi!", "Không thể đăng xuất. Thử lại sau!", "error");
+        }
+      }
+    });
+  };
+
   const items = [
     {
-      key: '1',
-      label: 'Tài khoản',
+      key: "1",
+      label: "Tài khoản",
       disabled: true,
     },
+    { type: "divider" },
     {
-      type: 'divider',
+      key: "2",
+      label: "Hồ sơ",
+      onClick: () => navigate("/home/profile"),
     },
     {
-      key: '2',
-      label: 'Hồ sơ', // Mục "Hồ sơ"
-      extra: <FontAwesomeIcon icon={faUser} />,
-      onClick: () => navigate('/home/profile'), // Điều hướng đến trang ProfilePage
-    },
-    {
-      key: '3',
-      label: 'Đăng xuất',
-      extra: <LogoutOutlined />,
-      onClick: () => {
-        // Logic đăng xuất (ví dụ: xóa session, token, v.v.)
-        console.log('Logged out');
-      },
+      key: "3",
+      label: "Đăng xuất",
+      icon: <LogoutOutlined />,
+      onClick: handleLogout,
     },
   ];
 
   return (
     <div className="container__header">
       <div className="header">
-        {/* Hamburger icon */}
         <div className="header__menu-toggle" onClick={onToggleSider}>
           <FontAwesomeIcon icon={faBars} />
         </div>
 
-        {/* Logo */}
-        <div className="header__logo" onClick={() => navigate("/home/homepage")}>
+        <div
+          className="header__logo"
+          onClick={() => navigate("/home/homepage")}
+          role="button"
+          tabIndex={0}
+        >
           Toon Kidz
         </div>
 
-        {/* Search input */}
         <div className="header__search">
           <Input
             placeholder="Tìm kiếm truyện"
@@ -59,7 +87,6 @@ const Header = ({ onToggleSider }) => {
           />
         </div>
 
-        {/* Navigation links */}
         <div className="header__menu">
           <ul>
             <li>
@@ -78,7 +105,6 @@ const Header = ({ onToggleSider }) => {
                 Khám phá
               </NavLink>
             </li>
-            {/* Add "Học Tiếng Anh" tab */}
             <li>
               <NavLink
                 to="/home/learn-english"
@@ -98,11 +124,9 @@ const Header = ({ onToggleSider }) => {
           </ul>
         </div>
 
-        {/* Account section */}
         <div className="header__account">
-          {/* Notification */}
           <Notify />
-          <Dropdown menu={{ items }}>
+          <Dropdown menu={{ items }} trigger={["click"]}>
             <a onClick={(e) => e.preventDefault()}>
               <Space>
                 <FontAwesomeIcon icon={faUser} />
@@ -111,12 +135,8 @@ const Header = ({ onToggleSider }) => {
           </Dropdown>
         </div>
 
-        {/* Button to create comic */}
         <div className="header__button">
-          <NavLink
-            to="/home/create-comic"
-            className={({ isActive }) => (isActive ? "active" : "")}
-          >
+          <NavLink to="/home/create-comic">
             <button>Tạo truyện</button>
           </NavLink>
         </div>

@@ -1,3 +1,4 @@
+//health.controller.js
 exports.healthCheck = (req, res) => {
   res.json({
     status: 'healthy',

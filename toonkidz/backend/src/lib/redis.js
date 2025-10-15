@@ -1,5 +1,5 @@
-const redis = require('redis');
-const { promisify } = require('util');
+//redis.js
+const { createClient } = require('redis');
 const config = require('../config/database.config');
 
 class RedisConnection {
@@ -8,38 +8,35 @@ class RedisConnection {
   }
 
   async connect() {
-    if (this.client) return this.client;
+    if (this.client && this.client.isOpen) return this.client;
 
     try {
-      this.redisClient = redis.createClient({ url: config.redis.url });
+      this.client = createClient({ url: config.redis.url });
 
-      // Promisify Redis methods
-      this.client.get = promisify(this.client.get).bind(this.client);
-      this.client.set = promisify(this.client.set).bind(this.client);
-      this.client.del = promisify(this.client.del).bind(this.client);
+      this.client.on('error', (err) => console.error('Redis error:', err));
+      this.client.on('connect', () => console.log('Redis connected'));
 
       await this.client.connect();
-      console.log('Redis connected successfully');
       return this.client;
     } catch (error) {
       console.error('Redis connection error:', error);
-      // Return null if Redis is not available
+      this.client = null;
       return null;
     }
   }
 
   async disconnect() {
-    if (this.client) {
+    if (this.client && this.client.isOpen) {
       await this.client.quit();
       this.client = null;
     }
   }
 
   async set(key, value, mode, duration) {
-    if (!this.client) return null;
+    await this.connect();
     try {
       if (mode && duration) {
-        return await this.client.set(key, value, mode, duration);
+        return await this.client.set(key, value, { [mode]: duration });
       }
       return await this.client.set(key, value);
     } catch (error) {
@@ -49,7 +46,7 @@ class RedisConnection {
   }
 
   async get(key) {
-    if (!this.client) return null;
+    await this.connect();
     try {
       return await this.client.get(key);
     } catch (error) {
@@ -59,7 +56,7 @@ class RedisConnection {
   }
 
   async del(key) {
-    if (!this.client) return null;
+    await this.connect();
     try {
       return await this.client.del(key);
     } catch (error) {

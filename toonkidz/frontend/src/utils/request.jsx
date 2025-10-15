@@ -1,84 +1,74 @@
-// Request
-const API_DOMAIN = `http://localhost:3000/`;
+//src/utils/request
+const API_DOMAIN = "http://localhost:3000/api";
 
-const FIXED_TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGQ1Mjc2N2QwNGNlOGQ0YTBiMzJlMmYiLCJpYXQiOjE3NTk4MzkyMTksImV4cCI6MTc1OTg0MDExOX0.atkdwxKilbGCN7sPcp0O9dD7_ch1r2WloGRIFb03rEc";
+const buildUrl = (path) =>
+  `${API_DOMAIN.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
 
-// Hàm lấy token từ localStorage
-const getAuthHeaders = () => {
-  return {
-    Authorization: `Bearer ${FIXED_TOKEN}`,
-  };
-};
+// Nếu dùng cookie-based auth:
+const getAuthHeaders = () => ({});
 
 export const get = async (path) => {
-  const response = await fetch(API_DOMAIN + path, {
-    headers: {
-      ...getAuthHeaders() // gắn token nếu có
-    }
+  const res = await fetch(buildUrl(path), {
+    method: "GET",
+    credentials: "include",
   });
-  const result = await response.json();
-  return result;
+  return res.json();
 };
 
 export const post = async (path, data) => {
-  const response = await fetch(API_DOMAIN + path, {
+  const res = await fetch(buildUrl(path), {
     method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      ...getAuthHeaders()
-    },
-    body: JSON.stringify(data)
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+    credentials: "include",
   });
-  const result = await response.json();
-  return result;
+  return res.json();
 };
 
 export const del = async (path) => {
-  const response = await fetch(API_DOMAIN + path, {
+  const res = await fetch(buildUrl(path), {
     method: "DELETE",
-    headers: {
-      ...getAuthHeaders()
-    }
+    credentials: "include",
   });
-  const result = await response.json();
-  return result;
+  return res.json();
 };
 
 export const patch = async (path, data) => {
-  const response = await fetch(API_DOMAIN + path, {
+  const res = await fetch(buildUrl(path), {
     method: "PATCH",
     headers: {
-      Accept: "application/json",
       "Content-Type": "application/json",
-      ...getAuthHeaders()
+      ...getAuthHeaders(),
     },
-    body: JSON.stringify(data)
+    body: JSON.stringify(data),
+    credentials: "include",
   });
-  const result = await response.json();
-  return result;
+  return res.json();
 };
 
 export const postFormData = async (path, formData) => {
-  const response = await fetch(API_DOMAIN + path, {
+  const res = await fetch(buildUrl(path), {
     method: "POST",
-    headers: {
-      ...getAuthHeaders()
-    },
     body: formData,
-    credentials: "include", // gửi cookie kèm theo
+    credentials: "include",
   });
-  return await response.json();
+  return res.json();
+};
+
+export const putFormData = async (path, formData) => {
+  const res = await fetch(buildUrl(path), {
+    method: "PUT", // Sử dụng method PUT
+    body: formData,
+    credentials: "include",
+  });
+  return res.json();
 };
 
 export const patchFormData = async (path, formData) => {
-  const response = await fetch(API_DOMAIN + path, {
+  const res = await fetch(buildUrl(path), {
     method: "PATCH",
-    headers: {
-      ...getAuthHeaders() // Không set Content-Type
-    },
-    body: formData
+    body: formData,
+    credentials: "include",
   });
-  return await response.json();
+  return res.json();
 };

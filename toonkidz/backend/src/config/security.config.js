@@ -1,3 +1,4 @@
+//security.config.js
 module.exports = {
   encryption: {
     algorithm: 'aes-256-gcm',
