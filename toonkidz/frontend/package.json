@@ -28,12 +28,8 @@
     "react-hot-toast": "^2.6.0",
     "react-icons": "^5.5.0",
     "react-redux": "^9.2.0",
-<<<<<<< HEAD
     "react-router-dom": "^7.9.4",
-=======
-    "react-router-dom": "^7.9.3",
     "react-toastify": "^11.0.5",
->>>>>>> f24614ece0b81a6c9afd76713747a6cb7842c27b
     "redux": "^5.0.1",
     "sass": "^1.93.2",
     "sweetalert2": "^11.23.0"
