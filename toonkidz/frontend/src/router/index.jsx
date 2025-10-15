@@ -7,11 +7,13 @@ import CreateComic from "../pages/CreateComic/CreateComic";
 import LearnEnglish from "../pages/LearnEnglish/LearnEnglish";
 import LibraryPage from "../pages/LibraryPage/LibraryPage";
 import AdminLayout from "../layout/AdminLayout/AdminLayout";
-import Dashboard from "../pages/Admin/Dashboard/Dashboard"
-import UserManagement from "../pages/Admin/UserManagement/UserManagement"
-import ReportingAndCensorship from "../pages/Admin/ReportingAndCensorship/ReportingAndCensorship"
-import StoryManagement from "../pages/Admin/StoryManagement/StoryManagement"
+import Dashboard from "../pages/Admin/Dashboard/Dashboard";
+import UserManagement from "../pages/Admin/UserManagement/UserManagement";
+import ReportingAndCensorship from "../pages/Admin/ReportingAndCensorship/ReportingAndCensorship";
+import StoryManagement from "../pages/Admin/StoryManagement/StoryManagement";
 import AddStory from "../components/AddStory/AddStory";
+import ProfilePage from "../pages/ProfilePage/ProfilePage";
+import Discover from "../pages/Discover/Discover"; // 🔹 Thêm import trang Discover
 
 export const route = [
   {
@@ -23,6 +25,16 @@ export const route = [
       { path: "create-comic", element: <CreateComic /> },
       { path: "learn-english", element: <LearnEnglish /> },
       { path: "library", element: <LibraryPage /> },
+      { path: "profile", element: <ProfilePage /> },
+    ],
+  },
+
+  // 🔹 Thêm route riêng cho Discover
+  {
+    path: "/discover",
+    element: <LayoutDefault />,
+    children: [
+      { index: true, element: <Discover /> },
     ],
   },
 
@@ -42,5 +54,6 @@ export const route = [
   { path: "/login", element: <Login /> },
   { path: "/signup", element: <Signup /> },
 
-  { path: "/", element: <Navigate to="/home/homepage" replace /> },
+  // 🔹 Redirect mặc định về Discover nếu bạn muốn
+  { path: "/", element: <Navigate to="/discover" replace /> },
 ];

@@ -25,6 +25,7 @@
     "multer": "^2.0.2",
     "pino": "^9.9.4",
     "rate-limiter": "^0.2.0",
+    "react-router-dom": "^7.9.4",
     "redis": "^5.8.2"
   },
   "devDependencies": {

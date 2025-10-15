@@ -1,17 +1,17 @@
 import React from "react";
-import "./Header.scss";
 import { Input } from "antd";
 import { LogoutOutlined, SearchOutlined } from "@ant-design/icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBell, faUser, faBars } from "@fortawesome/free-solid-svg-icons";
 import { NavLink, useNavigate } from "react-router-dom";
-import { DownOutlined, SettingOutlined } from '@ant-design/icons';
 import { Dropdown, Space } from 'antd';
 import Notify from '../Notify/Notify';
+import './Header.scss';
 
 const Header = ({ onToggleSider }) => {
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // Hook để điều hướng đến các trang
 
+  // Dropdown menu items
   const items = [
     {
       key: '1',
@@ -23,13 +23,18 @@ const Header = ({ onToggleSider }) => {
     },
     {
       key: '2',
-      label: 'Hồ sơ',
+      label: 'Hồ sơ', // Mục "Hồ sơ"
       extra: <FontAwesomeIcon icon={faUser} />,
+      onClick: () => navigate('/home/profile'), // Điều hướng đến trang ProfilePage
     },
     {
       key: '3',
       label: 'Đăng xuất',
       extra: <LogoutOutlined />,
+      onClick: () => {
+        // Logic đăng xuất (ví dụ: xóa session, token, v.v.)
+        console.log('Logged out');
+      },
     },
   ];
 
@@ -41,8 +46,12 @@ const Header = ({ onToggleSider }) => {
           <FontAwesomeIcon icon={faBars} />
         </div>
 
-        <div className="header__logo" onClick={() => navigate("/home/homepage")}>Toon Kidz</div>
+        {/* Logo */}
+        <div className="header__logo" onClick={() => navigate("/home/homepage")}>
+          Toon Kidz
+        </div>
 
+        {/* Search input */}
         <div className="header__search">
           <Input
             placeholder="Tìm kiếm truyện"
@@ -50,6 +59,7 @@ const Header = ({ onToggleSider }) => {
           />
         </div>
 
+        {/* Navigation links */}
         <div className="header__menu">
           <ul>
             <li>
@@ -68,7 +78,7 @@ const Header = ({ onToggleSider }) => {
                 Khám phá
               </NavLink>
             </li>
-            {/* Thêm tab "Học Tiếng Anh" */}
+            {/* Add "Học Tiếng Anh" tab */}
             <li>
               <NavLink
                 to="/home/learn-english"
@@ -88,11 +98,12 @@ const Header = ({ onToggleSider }) => {
           </ul>
         </div>
 
+        {/* Account section */}
         <div className="header__account">
-          {/* <FontAwesomeIcon icon={faBell} /> */}
+          {/* Notification */}
           <Notify />
           <Dropdown menu={{ items }}>
-            <a onClick={e => e.preventDefault()}>
+            <a onClick={(e) => e.preventDefault()}>
               <Space>
                 <FontAwesomeIcon icon={faUser} />
               </Space>
@@ -100,13 +111,14 @@ const Header = ({ onToggleSider }) => {
           </Dropdown>
         </div>
 
+        {/* Button to create comic */}
         <div className="header__button">
           <NavLink
-                to="/home/create-comic" 
-                className={({ isActive }) => (isActive ? "active" : "")}
-              ><button>Tạo truyện</button>
-              </NavLink>
-            
+            to="/home/create-comic"
+            className={({ isActive }) => (isActive ? "active" : "")}
+          >
+            <button>Tạo truyện</button>
+          </NavLink>
         </div>
       </div>
     </div>

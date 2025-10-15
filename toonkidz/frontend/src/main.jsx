@@ -7,6 +7,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { Provider } from 'react-redux';
 import "./index.css";
 
+
 const store = createStore(allReducers);
 ReactDOM.createRoot(document.getElementById('root')).render(
   <Provider store={store}>

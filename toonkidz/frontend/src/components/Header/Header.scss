@@ -1,5 +1,4 @@
-  
-  .container__header {
+.container__header {
   width: 100%;
   background-color: #fff;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
@@ -147,22 +146,37 @@
 }
 
 /* Responsive Header */
-
-  
 @media (max-width: 896px) {
 
+  /* Hide the search, menu, and button in mobile view */
   .header__search,
   .header__menu,
   .header__button {
     display: none;
-  
-  } 
+  }
 
+  /* Display menu toggle icon in mobile view */
   .header__menu-toggle {
     display: block;
   }
 }
 
+@media (max-width: 768px) {
+  .header__logo {
+    font-size: 1.4rem;
+  }
 
+  .header__menu ul {
+    gap: 1rem;
+  }
 
+  .header__account {
+    gap: 1rem;
+  }
+
+  .header__button button {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+  }
+}
 
