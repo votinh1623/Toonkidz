@@ -4,13 +4,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Spin, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHeart as faHeartSolid, faShareSquare } from '@fortawesome/free-solid-svg-icons';
+import { faHeart as faHeartSolid, faShareSquare, faStar } from '@fortawesome/free-solid-svg-icons';
 import { getMyStories, deleteStoryById } from '../../service/storyService';
 import { getFavorites, toggleFavorite } from '../../service/userService';
 import StoryDetailModal from '../../components/StoryDetailModal/StoryDetailModal';
 import Swal from 'sweetalert2/dist/sweetalert2.js';
 import 'sweetalert2/src/sweetalert2.scss';
 import './LibraryPage.scss';
+import ShareStoryModal from '../../components/ShareStoryModal/ShareStoryModal';
 
 const LibraryPage = () => {
   const [activeTab, setActiveTab] = useState('my-stories');
@@ -21,6 +22,7 @@ const LibraryPage = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedStory, setSelectedStory] = useState(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -73,7 +75,7 @@ const LibraryPage = () => {
   };
 
   const handleShare = () => {
-    message.info("Chức năng chia sẻ sẽ sớm được cập nhật!");
+    setIsShareModalOpen(true);
   };
 
   const handleViewStory = (story) => {
@@ -81,6 +83,19 @@ const LibraryPage = () => {
     setIsModalOpen(true);
   };
   const handleCloseModal = () => setIsModalOpen(false);
+
+  const handleCloseViewModal = () => setIsViewModalOpen(false);
+
+  const handleShareSuccess = () => {
+    setIsShareModalOpen(false);
+    Swal.fire({
+      title: "Chia sẻ thành công!",
+      text: "Câu chuyện của bạn đã được đăng lên trang Khám phá.",
+      icon: "success",
+      timer: 2000,
+      showConfirmButton: false,
+    });
+  };
 
   const handleDelete = (storyId, title) => {
     Swal.fire({
@@ -143,6 +158,12 @@ const LibraryPage = () => {
         {stories.map((story) => (
           <div className="library__comics__item" key={story._id}>
             <div className="library__comics__item__img">
+              {story.ratingAvg > 0 && (
+                <div className="library__comics__item__rating">
+                  <span>{story.ratingAvg.toFixed(1)}</span>
+                  <FontAwesomeIcon icon={faStar} />
+                </div>
+              )}
               <img src={story.coverImage || '/placeholder.png'} alt={story.title} />
             </div>
             <div
@@ -203,6 +224,12 @@ const LibraryPage = () => {
         story={selectedStory}
         open={isModalOpen}
         onClose={handleCloseModal}
+      />
+
+      <ShareStoryModal
+        open={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        onSuccess={handleShareSuccess}
       />
     </div>
   );
