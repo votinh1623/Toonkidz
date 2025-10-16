@@ -21,6 +21,7 @@ import storyRoutes from './routes/story.route.js';
 import axios from "axios";
 import { v2 as cloudinary } from "cloudinary";
 import userRoutes from './routes/user.route.js';
+import postRoutes from './routes/post.route.js';
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -71,6 +72,7 @@ app.use('/api', imageRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/story', storyRoutes);
 app.use('/api/themes', themeRoutes);
+app.use('/api/posts', postRoutes);
 
 // TTS Status Check Endpoint
 app.get('/api/tts-status', async (req, res) => {
