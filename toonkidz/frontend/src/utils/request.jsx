@@ -25,6 +25,16 @@ export const post = async (path, data) => {
   return res.json();
 };
 
+export const put = async (path, data) => {
+  const res = await fetch(buildUrl(path), {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+    credentials: "include",
+  });
+  return res.json();
+};
+
 export const del = async (path) => {
   const res = await fetch(buildUrl(path), {
     method: "DELETE",

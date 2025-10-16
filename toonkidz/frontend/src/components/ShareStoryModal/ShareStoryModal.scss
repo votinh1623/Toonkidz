@@ -1,0 +1,41 @@
+// src/components/ShareStoryModal/ShareStoryModal.scss
+.share-story-modal {
+  .ant-modal-header {
+    border-radius: 12px 12px 0 0;
+  }
+
+  .ant-form-item-label>label {
+    font-weight: 600;
+    color: #555;
+  }
+
+  .ant-btn-primary {
+    background-color: #6c63ff;
+    border-color: #6c63ff;
+    height: 40px;
+    font-weight: 600;
+    border-radius: 8px;
+
+    &:hover {
+      background-color: #836fff;
+      border-color: #836fff;
+    }
+  }
+}
+
+.story-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  img {
+    width: 48px;
+    height: 36px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+
+  span {
+    font-weight: 500;
+  }
+}

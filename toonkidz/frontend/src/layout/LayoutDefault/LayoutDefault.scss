@@ -6,12 +6,12 @@
 
     .ant-layout-sider {
       position: sticky;
-      top: 64px; // chiều cao header
+      top: 64px;
       height: calc(100vh - 64px);
       overflow-y: auto;
       transition: all 0.3s ease;
       border-right: 1px solid #f0f0f0;
-      min-width: 210px !important; // đảm bảo min-width
+      min-width: 210px !important;
     }
 
     .layout__content {
@@ -34,8 +34,4 @@
     position: relative;
     height: auto;
   }
-}
-
-.content__container {
-  padding: 20px;
 }
