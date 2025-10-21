@@ -68,11 +68,11 @@ cloudinary.config({
 // Routes
 app.get('/health', healthController.healthCheck);
 app.use('/api/auth', authRoutes);
-app.use('/api', imageRoutes);
-app.use('/api/user', userRoutes);
-app.use('/api/story', storyRoutes);
-app.use('/api/themes', themeRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/stories', storyRoutes);
 app.use('/api/posts', postRoutes);
+app.use('/api/themes', themeRoutes);
+app.use('/api/images', imageRoutes);
 
 // TTS Status Check Endpoint
 app.get('/api/tts-status', async (req, res) => {

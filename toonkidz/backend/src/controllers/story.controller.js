@@ -668,3 +668,49 @@ export const getMyStories = async (req, res) => {
     res.status(500).json({ success: false, error: 'Failed to fetch user stories' });
   }
 };
+
+export const getPublicStories = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 12;
+    const search = req.query.search || "";
+    const theme = req.query.theme;
+    const ageGroup = req.query.ageGroup;
+
+    const query = {
+      status: "published",
+    };
+
+    if (theme) {
+      query.theme = theme;
+    }
+    if (ageGroup) {
+      query.ageGroup = ageGroup;
+    }
+    if (search) {
+      query.title = { $regex: search, $options: "i" };
+    }
+
+    const stories = await Story.find(query)
+      .populate('userId', 'name')
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    const totalStories = await Story.countDocuments(query);
+
+    res.json({
+      success: true,
+      stories,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalStories / limit),
+        totalStories
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching public stories:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch stories' });
+  }
+};

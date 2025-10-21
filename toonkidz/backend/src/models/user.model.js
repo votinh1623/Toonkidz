@@ -1,6 +1,6 @@
-//user.model.js
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+// backend/src/models/user.model.js
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -30,6 +30,24 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  address: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  gender: {
+    type: String,
+    enum: ['Nam', 'Nữ', 'Khác', ''],
+    default: ''
+  },
+  followers: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  following: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
   lastOnline: {
     type: Date,
     default: Date.now
@@ -46,10 +64,8 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Hash password before saving
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
-
   try {
     const salt = await bcrypt.genSalt(12);
     this.password = await bcrypt.hash(this.password, salt);
@@ -59,11 +75,10 @@ userSchema.pre('save', async function (next) {
   }
 });
 
-// Compare password method
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
 const User = mongoose.model('User', userSchema);
 
-module.exports = User;
+export default User;

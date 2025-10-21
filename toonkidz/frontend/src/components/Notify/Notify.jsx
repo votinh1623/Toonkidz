@@ -3,6 +3,7 @@ import { Badge, Button, Dropdown } from 'antd';
 import "./Notify.scss";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBell, faUser, faBars } from "@fortawesome/free-solid-svg-icons";
+import { Bell } from 'lucide-react';
 
 function Notify() {
   const items = [
@@ -135,7 +136,7 @@ function Notify() {
         )}
       >
         <Badge dot={true}>
-          <Button type="text"><FontAwesomeIcon icon={faBell} /></Button>
+          <Button type="text"><Bell className='notify__icon' /></Button>
         </Badge>
       </Dropdown>
     </>

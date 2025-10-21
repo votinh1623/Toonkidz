@@ -1,12 +1,9 @@
 import { postPublic } from "@/utils/publicRequest";
 import { get, post } from "@/utils/request";
+import { putFormData } from "../utils/request";
 
 export const login = async (userData) => {
   return await postPublic(`auth/login`, userData);
-};
-
-export const getProfile = async () => {
-  return await get(`auth/profile`);
 };
 
 export const logout = async () => {

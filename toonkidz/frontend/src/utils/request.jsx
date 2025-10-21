@@ -67,7 +67,7 @@ export const postFormData = async (path, formData) => {
 
 export const putFormData = async (path, formData) => {
   const res = await fetch(buildUrl(path), {
-    method: "PUT", // Sử dụng method PUT
+    method: "PUT",
     body: formData,
     credentials: "include",
   });

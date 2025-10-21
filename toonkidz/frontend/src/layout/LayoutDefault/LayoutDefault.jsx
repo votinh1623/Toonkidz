@@ -1,8 +1,8 @@
+// src/layout/LayoutDefault/LayoutDefault.jsx
 import { Outlet } from "react-router-dom";
 import Header from "../../components/Header/Header";
 import { Layout, Grid, Drawer } from "antd";
 import SiderContent from "../../components/SiderContent/SiderContent.jsx";
-import SiderMobileMenu from "../../components/SiderMobileMenu/SiderMobileMenu.jsx";
 import { useState } from "react";
 
 const { Sider, Content } = Layout;
@@ -11,7 +11,6 @@ const { useBreakpoint } = Grid;
 const LayoutDefault = () => {
   const screens = useBreakpoint();
   const [drawerVisible, setDrawerVisible] = useState(false);
-  const role = "USER";
 
   const toggleDrawer = () => setDrawerVisible(!drawerVisible);
 
@@ -19,27 +18,25 @@ const LayoutDefault = () => {
     <Layout className="layout-default">
       <Header onToggleSider={toggleDrawer} />
       <Layout className="layout-child">
-        {/* Desktop Sider */}
         {screens.md && (
           <Sider
             theme="light"
-            width={250}
-            style={{ minWidth: 210 }}
+            width={256}
+            className="layout-default-sider"
           >
             <SiderContent />
           </Sider>
         )}
 
-        {/* Mobile Drawer */}
         {!screens.md && (
           <Drawer
             placement="left"
             onClose={() => setDrawerVisible(false)}
             open={drawerVisible}
-            width={250}
+            width={256}
+            bodyStyle={{ padding: 0 }}
           >
-            <SiderMobileMenu onClose={() => setDrawerVisible(false)} />
-            <SiderContent />
+            <SiderContent onClose={() => setDrawerVisible(false)} />
           </Drawer>
         )}
 

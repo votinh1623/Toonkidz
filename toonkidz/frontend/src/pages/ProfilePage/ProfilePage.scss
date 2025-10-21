@@ -1,315 +1,266 @@
-  .profile-page {
-    font-family: 'Poppins', sans-serif;
+.profile-page {
+  font-family: 'Poppins', sans-serif;
+  color: #333;
 
-    .main-content {
-      padding: 2rem;
+  @media (max-width: 768px) {
+    padding: 1.5rem;
+  }
+
+  .profile-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 50vh;
+  }
+
+  .profile-container {
+    background-color: #fff;
+    padding: 24px 32px;
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.07);
+
+    @media (max-width: 768px) {
+      padding: 16px;
     }
+  }
 
-    .profile-title {
-      font-size: 2rem;
-      color: #333;
-      margin-bottom: 2rem;
-    }
+  .profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #f0f0f0;
+  }
 
-    .profile-container {
-      background-color: #f9f9f9;
-      padding: 2rem;
-      border-radius: 8px;
-    }
+  .profile-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
 
-    .profile-header {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 2rem;
-    }
-
-    .profile-info {
-      display: flex;
-      align-items: center; /* 🔹 Căn giữa avatar và chữ theo trục dọc */
-      gap: 1.5rem; 
-    }
-
-    .avatar {
-      background: linear-gradient(135deg, #3a8d99, #6a62e1);
-  border-radius: 50%; /* 🔹 Làm tròn avatar */
-  width: 80px;        /* 🔹 Đảm bảo tỉ lệ 1:1 */
-  height: 80px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0; 
-    }
-
-    .avatar-icon {
-      font-size: 3rem;
-      color: white;
+    .avatar-img {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid #6c63ff;
     }
 
     .username {
-      font-size: 1.5rem;
-      font-weight: 600;
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin: 0;
     }
 
     .follower-info {
       font-size: 1rem;
-      color: #888;
-    }
-
-    .edit-button {
-      background: linear-gradient(135deg, #3a8d99, #6a62e1);
-      color: #fff;
-      padding: 0.6rem 3rem; /* Giảm padding để nút nhỏ hơn */
-      font-size: 0.8rem; /* Chữ nhỏ hơn */
-      border-radius: 12px;
-      border: none;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      align-self: center; /* Giúp nút căn giữa nếu nằm trong flex container */
-
-      &:hover {
-        opacity: 0.9;
-        transform: scale(1.05);
-      }
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2rem;
-    }
-
-    .label {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #555;
-      margin-bottom: 0.5rem;
-    }
-
-    .form-input {
-      width: 100%;
-      padding: 0.75rem;
-      border-radius: 8px;
-      border: 1px solid #ddd;
-      font-size: 1rem;
-      transition: border-color 0.3s ease;
-
-      &:focus {
-        border-color: #a663cc;
-      }
-    }
-
-    .email-container {
-      margin-top: 2rem;
-    }
-
-    .email {
-      font-size: 1rem;
-      color: #555;
-    }
-
-    /* Nút đổi mật khẩu */
-    .change-password-container {
+      color: #777;
       display: flex;
-      justify-content: flex-start;
-      margin-top: 2rem;
+      gap: 16px;
+      margin-top: 4px;
     }
+  }
 
-    .change-password-button {
-      background: linear-gradient(135deg, #3a8d99, #6a62e1); /* 🔹 Đồng màu avatar */
-      color: #fff;
-      padding: 0.4rem 1.2rem;
-      border-radius: 20px;
-      border: none;
-      cursor: pointer;
-      font-size: 0.9rem;
-      font-weight: 500;
-      transition: all 0.3s ease;
+  .profile-actions {
+    display: flex;
+    gap: 12px;
+    align-self: center;
+    flex-wrap: wrap;
 
-      &:hover {
-        opacity: 0.9;
-        transform: scale(1.05);
-      }
-    }
-
-    /* ===========================
-      POPUP CHỈNH SỬA THÔNG TIN
-    ============================ */
-    .popup-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.4);
+    .profile-btn {
       display: flex;
-      justify-content: center;
       align-items: center;
-      z-index: 999;
-    }
-
-    .popup-container {
-      background: #fff;
+      gap: 8px;
+      padding: 10px 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
       border-radius: 10px;
-      width: 700px;
-      padding: 2rem;
-      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
-      position: relative;
-      animation: fadeIn 0.3s ease;
-    }
+      border: 1px solid #ddd;
+      background-color: #f9f9f9;
+      cursor: pointer;
+      transition: all 0.2s ease;
 
-    .popup-container h2 {
-      text-align: center;
-      margin-bottom: 1.5rem;
-      color: #333;
-      font-weight: 600;
-    }
-
-    .popup-form {
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-    }
-
-    .popup-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.5rem;
-    }
-
-    .popup-row div {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .popup-row label {
-      font-weight: 600;
-      color: #333;
-      margin-bottom: 0.4rem;
-    }
-
-    .popup-row input,
-    .popup-row select {
-      background-color: #e6faff;
-      border: 1px solid #cce7f0;
-      padding: 0.6rem;
-      border-radius: 8px;
-      font-size: 1rem;
-      outline: none;
-      transition: border-color 0.3s ease;
-
-      &:focus {
-        border-color: #007bff;
-      }
-    }
-
-    .popup-avatar {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-
-      label {
-        font-weight: 600;
-        color: #333;
-        margin-bottom: 0.5rem;
+      &:hover {
+        background-color: #f0f0f0;
+        border-color: #ccc;
       }
 
-      .avatar-box {
-        width: 120px;
-        height: 120px;
-        border: 1px solid #a3d5f5;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #e6faff;
-        margin-bottom: 0.5rem;
-      }
-
-      .change-avatar {
-        background-color: #dbefff;
-        color: #007bff;
-        border: 1px solid #b6e0ff;
-        border-radius: 8px;
-        padding: 0.4rem 0.8rem;
-        cursor: pointer;
-        font-size: 0.9rem;
-        transition: background-color 0.3s;
+      &.edit-btn,
+      &.follow-btn {
+        background: #6c63ff;
+        color: #fff;
+        border: none;
+        box-shadow: 0 4px 12px rgba(108, 99, 255, 0.3);
 
         &:hover {
-          background-color: #c7e7ff;
+          background: #5a52d3;
+          box-shadow: 0 6px 16px rgba(108, 99, 255, 0.4);
         }
       }
     }
+  }
 
-    .popup-submit {
-      width: 100%;
-      padding: 0.8rem;
-      background-color: #5ca9ff;
-      color: white;
-      font-size: 1rem;
+  .profile-collapse {
+    background-color: #fff;
+    border: none;
+    margin-top: 16px;
+
+    .ant-collapse-item {
+      border-bottom: 1px solid #f0f0f0 !important;
+    }
+
+    .ant-collapse-header {
+      padding-left: 0 !important;
+      padding-bottom: 16px !important;
+    }
+
+    .ant-collapse-header-text {
       font-weight: 600;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-      margin-top: 0.5rem;
+      font-size: 1rem;
+      color: #555;
+    }
 
-      &:hover {
-        background-color: #3a8cff;
+    .ant-collapse-content-box {
+      padding: 16px 0 24px 0 !important;
+    }
+
+    .toggle-icon {
+      transition: transform 0.3s ease;
+
+      &.open {
+        transform: rotate(180deg);
       }
     }
+  }
 
-    .password-popup {
-    width: 400px;
-    h2 {
-      text-align: left;
-      margin-bottom: 1rem;
-      font-size: 1.3rem;
-      color: #333;
-    }
-
-    .popup-form {
+  .details-content {
+    .detail-item {
       display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    label {
-      font-weight: 600;
-      color: #333;
-      margin-bottom: 0.3rem;
-    }
-
-    .password-input {
-      width: 100%;
-      background-color: #e6fcff;
-      border: 1px solid #cce7f0;
-      border-radius: 8px;
-      padding: 0.6rem 0.8rem;
+      justify-content: space-between;
+      padding: 8px 0;
       font-size: 1rem;
-      outline: none;
-      transition: border-color 0.3s ease;
+      flex-wrap: wrap;
 
-      &:focus {
-        border-color: #5ca9ff;
+      .label {
+        font-weight: 600;
+        color: #555;
+      }
+
+      .value {
+        color: #333;
+        text-align: right;
       }
     }
+  }
 
-    .password-submit {
-      margin-top: 1rem;
-      background-color: #a8d4ff;
-      border: none;
-      color: #fff;
-      font-weight: 600;
-      font-size: 1rem;
-      border-radius: 8px;
-      padding: 0.7rem 0;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
+  .user-posts-section {
+    padding-top: 24px;
 
-      &:hover {
-        background-color: #7dbdff;
-      }
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    // .story-list {
+    //   gap: 16px;
+    //   display: grid;
+    //   grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    // }
+
+    .story-card {
+      margin-bottom: 0;
+    }
+  }
+}
+
+// --- POPUP STYLES ---
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.popup-container {
+  .ant-modal-content {
+    border-radius: 16px;
+    padding: 16px;
+  }
+
+  .ant-modal-title {
+    font-weight: 700;
+    font-size: 20px;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  .popup-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .popup-form label {
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 8px;
+  }
+
+  .popup-form .ant-input,
+  .popup-form .ant-select-selector {
+    border-radius: 8px !important;
+  }
+
+  .popup-avatar {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+
+    .avatar-preview {
+      width: 100px;
+      height: 100px;
+      border-radius: 12px;
+      object-fit: cover;
+      background-color: #f0f0f0;
+    }
+  }
+
+  .popup-submit,
+  .password-submit {
+    width: 100%;
+    height: 44px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 10px;
+    margin-top: 16px;
+    background: #6c63ff;
+    border: none;
+
+    &:hover {
+      background: #5a52d3;
+    }
+  }
+}
+
+.password-popup {
+  .ant-modal-title {
+    text-align: left;
+  }
+
+  .password-submit {
+    background: #333;
+
+    &:hover {
+      background: #555;
     }
   }
 }

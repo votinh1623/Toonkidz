@@ -17,7 +17,7 @@
     .layout__content {
       flex: 1;
       background: #fafafa;
-      padding: 1.5rem;
+      // padding: 1.5rem;
       min-height: 100vh;
       transition: all 0.3s ease;
     }
@@ -26,12 +26,16 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-  .layout__content {
-    padding: 1rem;
-  }
+  // .layout__content {
+  //   // padding: 1rem;
+  // }
 
   .ant-layout-sider {
     position: relative;
     height: auto;
   }
+}
+
+.content__container {
+  padding: 0;
 }

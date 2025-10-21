@@ -1,147 +1,100 @@
-// src/components/Header/Header.jsx
-
-import React from "react";
-import "./Header.scss";
-import { Input, Dropdown, Space } from "antd";
-import { LogoutOutlined, SearchOutlined } from "@ant-design/icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUser, faBars } from "@fortawesome/free-solid-svg-icons";
-import { NavLink, useNavigate } from "react-router-dom";
-import Swal from "sweetalert2";
-import { logout } from "@/service/authService";
+import React, { useState } from "react";
+import { User, Search } from "lucide-react";
+import { useNavigate, NavLink } from "react-router-dom";
+import { toast } from "sonner";
+import { logout } from "../../service/authService";
 import Notify from "../Notify/Notify";
+import "./Header.scss";
 
 const Header = ({ onToggleSider }) => {
   const navigate = useNavigate();
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const handleLogout = async () => {
-    Swal.fire({
-      title: "Đăng xuất?",
-      text: "Bạn có chắc muốn đăng xuất?",
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Đăng xuất",
-      cancelButtonText: "Huỷ",
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          await logout();
-          // Clear cookies (if backend doesn't set httpOnly)
-          document.cookie = "accessToken=; Max-Age=0; path=/;";
-          document.cookie = "refreshToken=; Max-Age=0; path=/;";
-
-          Swal.fire({
-            title: "Đã đăng xuất!",
-            icon: "success",
-            timer: 1200,
-            showConfirmButton: false,
-          });
-          navigate("/login");
-        } catch (err) {
-          Swal.fire("Lỗi!", "Không thể đăng xuất. Thử lại sau!", "error");
-        }
+    if (window.confirm("Bạn có chắc muốn đăng xuất?")) {
+      try {
+        await logout();
+        document.cookie = "accessToken=; Max-Age=0; path=/;";
+        document.cookie = "refreshToken=; Max-Age=0; path=/;";
+        toast.success("Đã đăng xuất!");
+        navigate("/login");
+      } catch (err) {
+        toast.error("Không thể đăng xuất. Thử lại sau!");
       }
-    });
+    }
   };
 
-  const items = [
-    {
-      key: "1",
-      label: "Tài khoản",
-      disabled: true,
-    },
-    { type: "divider" },
-    {
-      key: "2",
-      label: "Hồ sơ",
-      onClick: () => navigate("/home/profile"),
-    },
-    {
-      key: "3",
-      label: "Đăng xuất",
-      icon: <LogoutOutlined />,
-      onClick: handleLogout,
-    },
-  ];
-
   return (
-    <div className="container__header">
+    <header className="header-container">
       <div className="header">
-        <div className="header__menu-toggle" onClick={onToggleSider}>
-          <FontAwesomeIcon icon={faBars} />
-        </div>
+        <button className="header__toggle" onClick={onToggleSider}>
+          <svg
+            className="icon"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          </svg>
+        </button>
 
         <div
           className="header__logo"
           onClick={() => navigate("/home/homepage")}
-          role="button"
-          tabIndex={0}
         >
-          Toon Kidz
+          TOON KIDZ
         </div>
 
         <div className="header__search">
-          <Input
-            placeholder="Tìm kiếm truyện"
-            prefix={<SearchOutlined style={{ color: "#aaa" }} />}
-          />
+          <input type="text" placeholder="Tìm kiếm truyện..." />
+          <Search className="search-icon" />
         </div>
 
-        <div className="header__menu">
-          <ul>
-            <li>
-              <NavLink
-                to="/home/homepage"
-                className={({ isActive }) => (isActive ? "active" : "")}
-              >
-                Trang chủ
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/discover"
-                className={({ isActive }) => (isActive ? "active" : "")}
-              >
-                Khám phá
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/home/learn-english"
-                className={({ isActive }) => (isActive ? "active" : "")}
-              >
-                Học Tiếng Anh
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/home/library"
-                className={({ isActive }) => (isActive ? "active" : "")}
-              >
-                Thư viện
-              </NavLink>
-            </li>
-          </ul>
-        </div>
+        <nav className="header__nav">
+          <NavLink to="/home/homepage">Trang chủ</NavLink>
+          <NavLink to="/discover">Khám phá</NavLink>
+          <NavLink to="/home/learn-english">Học Tiếng Anh</NavLink>
+          <NavLink to="/home/library">Thư viện</NavLink>
+        </nav>
 
-        <div className="header__account">
+        <div className="header__actions">
           <Notify />
-          <Dropdown menu={{ items }} trigger={["click"]}>
-            <a onClick={(e) => e.preventDefault()}>
-              <Space>
-                <FontAwesomeIcon icon={faUser} />
-              </Space>
-            </a>
-          </Dropdown>
-        </div>
 
-        <div className="header__button">
-          <NavLink to="/home/create-comic">
-            <button>Tạo truyện</button>
+          <div className="header__account">
+            <button
+              className="account-btn"
+              onClick={() => setShowDropdown(!showDropdown)}
+            >
+              <User className="account-icon" />
+            </button>
+
+            {showDropdown && (
+              <div className="account-dropdown">
+                <div className="account-dropdown__title">Tài khoản</div>
+                <button
+                  onClick={() => {
+                    navigate("/home/profile");
+                    setShowDropdown(false);
+                  }}
+                >
+                  Hồ sơ
+                </button>
+                <button onClick={handleLogout}>Đăng xuất</button>
+              </div>
+            )}
+          </div>
+
+          <NavLink to="/home/create-comic" className="header__create-btn">
+            Tạo truyện
           </NavLink>
         </div>
       </div>
-    </div>
+    </header>
   );
 };
 

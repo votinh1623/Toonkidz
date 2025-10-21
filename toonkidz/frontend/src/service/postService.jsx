@@ -1,6 +1,5 @@
 // src/service/postService.js
-import { get, post, put } from "@/utils/request";
-import { del } from "../utils/request";
+import { get, post, put, del } from "@/utils/request";
 
 export const getPosts = async (page = 1, limit = 10) => {
   try {
@@ -58,6 +57,16 @@ export const createPost = async (data) => {
     return res;
   } catch (err) {
     console.error("Error creating post:", err);
+    throw err;
+  }
+};
+
+export const getPostsByUserId = async (userId) => {
+  try {
+    const res = await get(`posts/user/${userId}`);
+    return res;
+  } catch (err) {
+    console.error("Error fetching user's posts:", err);
     throw err;
   }
 };

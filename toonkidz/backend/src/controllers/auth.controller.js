@@ -1,12 +1,10 @@
-//auth.controller.js
-const User = require("../models/user.model.js");
-const { v2: cloudinary } = require('cloudinary');
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
-const redis = require("../lib/redis.js");
-const nodemailer = require("nodemailer");
-const crypto = require("crypto");
+// backend/src/controllers/auth.controller.js
+import User from "../models/user.model.js";
+import jwt from "jsonwebtoken";
+import redis from "../lib/redis.js";
+import nodemailer from "nodemailer";
 
+// --- CÁC HÀM HELPERS (giữ nguyên) ---
 const generateTokens = (userId) => {
   const accessToken = jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET, {
     expiresIn: "15m",
@@ -18,51 +16,25 @@ const generateTokens = (userId) => {
 };
 
 const storeRefreshToken = async (userId, refreshToken) => {
-  await redis.set(`refresh_token:${userId}`, refreshToken, "EX", 7 * 24 * 60 * 60); // 7days
+  await redis.set(`refresh_token:${userId}`, refreshToken, "EX", 7 * 24 * 60 * 60);
 };
 
 const setCookies = (res, accessToken, refreshToken) => {
   res.cookie("accessToken", accessToken, {
-    httpOnly: false, // prevent XSS attacks, cross site scripting attack
+    httpOnly: false,
     secure: process.env.NODE_ENV === "production",
-    //sameSite: "strict", // prevents CSRF attack, cross-site request forgery attack
     sameSite: "lax",
-    maxAge: 150 * 60 * 1000, // 150 minutes
+    maxAge: 6000 * 60 * 1000, //set access time
   });
   res.cookie("refreshToken", refreshToken, {
-    httpOnly: false, // prevent XSS attacks, cross site scripting attack
+    httpOnly: false,
     secure: process.env.NODE_ENV === "production",
-    //sameSite: "strict", // prevents CSRF attack, cross-site request forgery attack
     sameSite: "lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 };
 
-const signup = async (req, res) => {
-  const { email, password, name } = req.body;
-  try {
-    const userExists = await User.findOne({ email: email.toLowerCase() });
-    if (userExists) {
-      return res.status(400).json({ message: "User already exists" });
-    }
-    const user = await User.create({ name, email: email.toLowerCase(), password });
-    // authenticate
-    const { accessToken, refreshToken } = generateTokens(user._id);
-    await storeRefreshToken(user._id, refreshToken);
-    setCookies(res, accessToken, refreshToken);
-    res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    });
-  } catch (error) {
-    console.log("Error in signup controller", error.message);
-    res.status(500).json({ message: error.message });
-  }
-};
-
-const login = async (req, res) => {
+export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
@@ -87,10 +59,9 @@ const login = async (req, res) => {
   }
 };
 
-const logout = async (req, res) => {
+export const logout = async (req, res) => {
   try {
     const refreshToken = req.cookies.refreshToken;
-
     if (refreshToken) {
       const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
       await redis.del(`refresh_token:${decoded.userId}`);
@@ -107,8 +78,7 @@ const logout = async (req, res) => {
   }
 };
 
-// this will refresh the access token
-const refreshToken = async (req, res) => {
+export const refreshToken = async (req, res) => {
   try {
     const refreshToken = req.cookies.refreshToken;
     if (!refreshToken) {
@@ -133,94 +103,20 @@ const refreshToken = async (req, res) => {
   }
 };
 
-const getProfile = async (req, res) => {
-  try {
-    // The user is already attached to req.user by the auth middleware
-    const user = req.user;
-
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      pfp: user.pfp,
-      lastOnline: user.lastOnline,
-      createdAt: user.createdAt,
-      bio: user.bio || '',
-      storiesCreated: user.storiesCreated || 0,
-      favoriteGenres: user.favoriteGenres || []
-    });
-  } catch (error) {
-    console.log("Error in getProfile controller", error.message);
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
-
-const changePassword = async (req, res) => {
-  try {
-    const { currentPassword, newPassword } = req.body;
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({ message: "Please provide both current and new passwords" });
-    }
-    const user = await User.findById(req.user._id).select("+password");
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    const isMatch = await bcrypt.compare(currentPassword, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Current password is incorrect" });
-    }
-    user.password = newPassword;
-    await user.save();
-    res.json({ message: "Password changed successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
-
-const updateProfile = async (req, res) => {
-  try {
-    const { name } = req.body;
-    let pfpUrl = req.user.pfp;
-    if (!name) {
-      return res.status(400).json({ message: "Name is required" });
-    }
-    if (req.files && req.files.pfp) {
-      const result = await cloudinary.uploader.upload(req.files.pfp.tempFilePath, {
-        folder: "profile_pictures",
-      });
-      pfpUrl = result.secure_url;
-    }
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user._id,
-      { name, pfp: pfpUrl },
-      { new: true }
-    ).select("-password");
-    res.json({ message: "Profile updated successfully", user: updatedUser });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
-
-const sendOtp = async (req, res) => {
+export const sendOtp = async (req, res) => {
   const { email } = req.body;
-
   try {
     if (!email) {
       return res.status(400).json({ message: "Email is required" });
     }
-
     const userExists = await User.findOne({ email: email.toLowerCase() });
     if (userExists) {
       return res.status(400).json({ message: "Email already registered" });
     }
-
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const key = `otp:${email.toLowerCase()}`;
-    console.log("sendOtp email:", email.toLowerCase(), "OTP:", otp);
     await redis.set(key, otp, "EX", 300);
 
-    // Gửi mail
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -246,20 +142,14 @@ const sendOtp = async (req, res) => {
   }
 };
 
-const verifyOtpAndSignup = async (req, res) => {
+export const verifyOtpAndSignup = async (req, res) => {
   const { email, name, password, otp } = req.body;
-
   try {
     if (!email || !name || !password || !otp) {
       return res.status(400).json({ success: false, message: "Missing required fields" });
     }
-
     const key = `otp:${email.toLowerCase()}`;
     const storedOtp = await redis.get(key);
-
-    console.log("verify email:", email.toLowerCase());
-    console.log("storedOtp in Redis:", storedOtp);
-    console.log("received OTP from FE:", otp);
 
     if (!storedOtp) {
       return res.status(400).json({ success: false, message: "OTP expired or invalid" });
@@ -299,16 +189,4 @@ const verifyOtpAndSignup = async (req, res) => {
     console.error("Error verifying OTP:", error);
     return res.status(500).json({ success: false, message: "Signup failed" });
   }
-};
-
-module.exports = {
-  signup,
-  login,
-  logout,
-  refreshToken,
-  getProfile,
-  changePassword,
-  updateProfile,
-  sendOtp,
-  verifyOtpAndSignup,
 };

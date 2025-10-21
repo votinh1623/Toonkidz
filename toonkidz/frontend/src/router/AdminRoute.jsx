@@ -1,8 +1,8 @@
 // src/router/AdminRoute.jsx
 import React, { useState, useEffect } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import { getProfile } from '../service/authService';
 import { Spin } from 'antd';
+import { getProfile } from '../service/userService';
 
 const AdminRoute = () => {
   const [isAdmin, setIsAdmin] = useState(false);

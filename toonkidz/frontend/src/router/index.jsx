@@ -20,6 +20,7 @@ import EditStory from "../components/EditStory/EditStory";
 import ReportingAndCensorship from "../pages/Admin/ReportingAndCensorship/ReportingAndCensorship";
 import ProfilePage from "../pages/ProfilePage/ProfilePage";
 import Discover from "../pages/Discover/Discover";
+import AvailableStoriesPage from "../pages/AvailableStoriesPage/AvailableStoriesPage";
 
 import PrivateRoute from "./PrivateRoute";
 import AdminRoute from "./AdminRoute";
@@ -36,10 +37,8 @@ export const route = [
         path: "",
         element: <LayoutDefault />,
         children: [
-          // default redirect to homepage
           { index: true, element: <Navigate to="home/homepage" replace /> },
 
-          // Home area (uses nested "home" path to match previous structure)
           {
             path: "home",
             children: [
@@ -48,13 +47,13 @@ export const route = [
               { path: "create-comic", element: <CreateComic /> },
               { path: "learn-english", element: <LearnEnglish /> },
               { path: "library", element: <LibraryPage /> },
+              { path: "library-favorites", element: <AvailableStoriesPage /> },
               { path: "profile", element: <ProfilePage /> },
               { path: "story/:storyId", element: <StoryViewPage /> },
               { path: "edit-story/:storyId", element: <EditStory /> },
             ],
           },
 
-          // Discover as a top-level page using the main layout
           {
             path: "discover",
             children: [
@@ -64,7 +63,6 @@ export const route = [
         ],
       },
 
-      // Admin routes protected by AdminRoute
       {
         path: "admin",
         element: <AdminRoute />,
@@ -86,6 +84,5 @@ export const route = [
     ],
   },
 
-  // fallback - redirect unknown paths to root (which is protected by PrivateRoute)
   { path: "*", element: <Navigate to="/" replace /> },
 ];

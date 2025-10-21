@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Spin, message, Dropdown, Modal, Menu, Rate } from "antd";
 import { FaHeart, FaCommentAlt, FaShareAlt, FaStar, FaPaperPlane } from "react-icons/fa";
-import { getProfile } from "../../service/authService";
 import { getPosts, likePost, addComment, editComment, deleteComment } from "../../service/postService";
 import StoryDetailModal from "../../components/StoryDetailModal/StoryDetailModal";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import Swal from 'sweetalert2';
 import 'sweetalert2/src/sweetalert2.scss';
 import "./Discover.scss";
+import { getProfile } from "../../service/userService";
 
 const Discover = () => {
     const [posts, setPosts] = useState([]);

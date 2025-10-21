@@ -115,7 +115,7 @@ const updateStoryRating = async (storyId) => {
 
 export const addComment = async (req, res) => {
   try {
-    const { postId } = req.params; // Sửa `id` thành `postId` cho khớp với route
+    const { postId } = req.params;
     const userId = req.user._id;
     const { text, rating } = req.body;
 
@@ -207,5 +207,24 @@ export const deleteComment = async (req, res) => {
     res.json({ success: true, post: updatedPost });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+
+export const getPostsByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const posts = await Post.find({ userId: userId })
+      .populate('userId', 'name pfp')
+      .populate('storyId')
+      .populate({
+        path: 'comments',
+        populate: { path: 'userId', select: 'name pfp' }
+      })
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, posts });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 };

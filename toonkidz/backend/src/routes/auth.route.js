@@ -1,27 +1,20 @@
-//auth.route.js
-const express = require('express');
-const router = express.Router();
-const {
-  signup,
+// backend/src/routes/auth.route.js
+import express from 'express';
+import { auth } from '../middleware/auth.middleware.js';
+import {
   login,
   logout,
   refreshToken,
-  getProfile,
-  changePassword,
-  updateProfile,
   sendOtp,
   verifyOtpAndSignup
-} = require('../controllers/auth.controller.js');
-const { auth } = require('../middleware/auth.middleware.js');
+} from '../controllers/auth.controller.js';
 
-router.post('/signup', signup);
+const router = express.Router();
+
 router.post('/login', login);
 router.post('/logout', auth, logout);
 router.post('/refresh-token', refreshToken);
-router.get('/profile', auth, getProfile);
-router.post('/change-password', auth, changePassword);
-router.put('/update-profile', auth, updateProfile);
-router.post("/send-otp", sendOtp);
-router.post("/verify-otp", verifyOtpAndSignup);
+router.post('/send-otp', sendOtp);
+router.post('/verify-otp', verifyOtpAndSignup);
 
-module.exports = router;
+export default router;

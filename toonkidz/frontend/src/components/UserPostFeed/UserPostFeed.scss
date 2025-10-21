@@ -1,0 +1,334 @@
+.story-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.story-card {
+  display: flex;
+  flex-wrap: wrap;
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  .story-content {
+    flex: 1;
+    min-width: 300px;
+    padding-right: 24px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .story-image-container {
+    width: 320px;
+    flex-shrink: 0;
+    position: relative;
+
+    .story-rating-overlay {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 2;
+      background-color: rgba(0, 0, 0, 0.65);
+      color: #fff;
+      padding: 5px 12px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+
+      svg {
+        color: #f5b301;
+        font-size: 0.8rem;
+      }
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+
+      &:hover {
+        transform: scale(1.03);
+      }
+    }
+  }
+
+  .author-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+
+    .avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background-color: #eee;
+      object-fit: cover;
+      margin-right: 12px;
+    }
+
+    .author-details {
+      h4 {
+        margin: 0;
+        font-weight: 600;
+        font-size: 1rem;
+        color: #111;
+      }
+
+      p {
+        margin: 0;
+        color: #888;
+        font-size: 0.85rem;
+      }
+    }
+  }
+
+  .story-caption {
+    font-size: 1rem;
+    color: #333;
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+
+  .story-meta {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 20px;
+    font-size: 0.95rem;
+
+    p {
+      margin: 6px 0;
+      color: #555;
+
+      strong {
+        color: #111;
+      }
+
+      .meta-theme {
+        background-color: #eef2ff;
+        color: #4338ca;
+        padding: 2px 8px;
+        border-radius: 5px;
+        font-weight: 500;
+        text-transform: capitalize;
+      }
+    }
+  }
+
+  .read-btn {
+    margin-top: auto; // Đẩy nút xuống dưới cùng
+    background-color: #f0fdf4;
+    color: #16a34a;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    padding: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: #dcfce7;
+      border-color: #86efac;
+    }
+  }
+
+  .story-actions {
+    display: flex;
+    gap: 24px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #f1f1f1;
+
+    .action-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: #555;
+      font-size: 15px;
+      font-weight: 500;
+      transition: color 0.2s, transform 0.2s;
+
+      svg {
+        font-size: 1.1rem;
+      }
+
+      &:hover {
+        color: #000;
+        transform: scale(1.05);
+      }
+
+      &.like.liked {
+        color: #e74c3c;
+      }
+
+      &.comment.open {
+        color: #3b82f6;
+      }
+    }
+  }
+
+  // Phần bình luận (chiếm toàn bộ chiều rộng)
+  .comments-inline {
+    width: 100%;
+    margin-top: 20px;
+    animation: fadeIn 0.5s ease;
+    background: #fbfbfc;
+    border-radius: 10px;
+    padding: 14px;
+    border: 1px solid #eee;
+
+    .existing-comments {
+      max-height: 300px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .comment-row {
+      display: flex;
+      gap: 12px;
+      padding: 12px 6px;
+      border-bottom: 1px solid #f1f1f1;
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    .c-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .c-avatar.small {
+      width: 36px;
+      height: 36px;
+    }
+
+    .c-body {
+      flex: 1;
+
+      .c-top {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 6px;
+
+        .c-user {
+          font-weight: 600;
+          color: #333;
+        }
+
+        .c-date {
+          color: #999;
+          font-size: 0.85rem;
+        }
+      }
+
+      .c-stars {
+        display: flex;
+        margin-bottom: 8px;
+
+        .ant-rate {
+          font-size: 1rem;
+          color: #ddd;
+
+          .ant-rate-star-full {
+            color: #f5b301;
+          }
+        }
+      }
+
+      .c-text {
+        color: #444;
+        font-size: 0.95rem;
+      }
+    }
+
+    .comment-compose {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #eee;
+
+      .compose-box {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        textarea {
+          width: 100%;
+          min-height: 40px;
+          resize: vertical;
+          padding: 10px 12px;
+          border-radius: 8px;
+          border: 1px solid #ddd;
+          outline: none;
+          font-size: 0.95rem;
+
+          &:focus {
+            border-color: #6c63ff;
+            box-shadow: 0 0 0 2px rgba(108, 99, 255, 0.2);
+          }
+        }
+
+        .compose-bottom {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+
+          .rating {
+            .ant-rate {
+              font-size: 1.2rem;
+              color: #f5b301;
+            }
+          }
+
+          .send-circle {
+            background: #6c63ff;
+            border: none;
+            color: #fff;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: transform 0.2s;
+
+            &:hover {
+              transform: scale(1.1);
+            }
+          }
+        }
+      }
+    }
+  }
+}
