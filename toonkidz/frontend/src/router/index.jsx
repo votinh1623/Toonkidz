@@ -49,6 +49,7 @@ export const route = [
               { path: "library", element: <LibraryPage /> },
               { path: "library-favorites", element: <AvailableStoriesPage /> },
               { path: "profile", element: <ProfilePage /> },
+              { path: "profile/:userId", element: <ProfilePage /> },
               { path: "story/:storyId", element: <StoryViewPage /> },
               { path: "edit-story/:storyId", element: <EditStory /> },
             ],

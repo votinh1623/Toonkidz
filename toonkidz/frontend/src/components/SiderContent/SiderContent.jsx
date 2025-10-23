@@ -12,15 +12,11 @@ import {
   Sparkles,
   Bell,
 } from "lucide-react";
-// ✅ 1. Import NavLink thay cho useNavigate
 import { NavLink, useNavigate } from "react-router-dom";
 import "./SiderContent.scss";
 
-// ✅ 2. Biến NavItem thành NavLink
-// Component này sẽ nhận prop `to` thay vì `onClick`
 const NavItem = ({ to, icon, label, badge, onClose }) => {
   const handleNavigate = () => {
-    // Tự động đóng Drawer (menu mobile) khi nhấn
     if (onClose) {
       onClose();
     }
@@ -30,7 +26,6 @@ const NavItem = ({ to, icon, label, badge, onClose }) => {
     <NavLink
       to={to}
       onClick={handleNavigate}
-      // NavLink tự động thêm class "active" khi URL khớp
       className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
     >
       {icon}
@@ -40,10 +35,18 @@ const NavItem = ({ to, icon, label, badge, onClose }) => {
   );
 };
 
-const SiderContent = ({ onClose }) => {
+const getInitials = (name) => {
+  if (!name) return "?";
+  const words = name.split(' ');
+  if (words.length > 1) {
+    return `${words[0][0]}${words[words.length - 1][0]}`.toUpperCase();
+  }
+  return name.substring(0, 2).toUpperCase();
+};
+
+const SiderContent = ({ onClose, user }) => {
   const navigate = useNavigate();
 
-  // Hàm này chỉ dùng cho các nút không phải NavLink (như nút Tạo truyện)
   const handleNavigate = (path) => {
     navigate(path);
     if (onClose) {
@@ -62,7 +65,6 @@ const SiderContent = ({ onClose }) => {
           <span>Tạo truyện AI</span>
         </button>
 
-        {/* ✅ 3. Sử dụng NavItem (giờ là NavLink) với prop `to` và `onClose` */}
         <NavItem
           to="/home/homepage"
           icon={<Home className="icon" />}
@@ -121,10 +123,16 @@ const SiderContent = ({ onClose }) => {
       </nav>
 
       <div className="sider__profile" onClick={() => handleNavigate("/home/profile")}>
-        <div className="avatar">PH</div>
+        {user && user.pfp ? (
+          <img src={user.pfp} alt="Avatar" className="avatar-img" />
+        ) : (
+          <div className="avatar-initials">
+            {getInitials(user?.name)}
+          </div>
+        )}
         <div className="profile-info">
-          <p className="name">Phụ huynh</p>
-          <p className="email">parent@email.com</p>
+          <p className="name">{user ? user.name : "..."}</p>
+          <p className="email">{user ? user.email : "..."}</p>
         </div>
       </div>
     </aside>

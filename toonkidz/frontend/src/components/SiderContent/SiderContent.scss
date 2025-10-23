@@ -1,8 +1,7 @@
 // src/components/SiderContent/SiderContent.scss
-
 .sider {
-  width: 100%; // ✅ Tự động chiếm 100% chiều rộng của container (Sider hoặc Drawer)
-  height: 100%; // ✅ Tự động chiếm 100% chiều cao
+  width: 100%;
+  height: 100%;
   background: #fff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   display: flex;
@@ -110,6 +109,26 @@
 
     &:hover {
       background: #fafafa;
+    }
+
+    .avatar-img,
+    .avatar-initials {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: white;
+    }
+
+    .avatar-img {
+      object-fit: cover;
+    }
+
+    .avatar-initials {
+      background: linear-gradient(to bottom right, #a78bfa, #ec4899);
     }
 
     .avatar {

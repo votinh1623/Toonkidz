@@ -44,7 +44,8 @@
       height: 90px;
       border-radius: 50%;
       object-fit: cover;
-      border: 4px solid #6c63ff;
+      // border: 1px solid #6c63ff;
+      border: none;
     }
 
     .username {
@@ -97,6 +98,18 @@
           background: #5a52d3;
           box-shadow: 0 6px 16px rgba(108, 99, 255, 0.4);
         }
+      }
+    }
+
+    .profile-btn.unfollow-btn {
+      background: #f0f0f0;
+      color: #555;
+      border: 1px solid #ddd;
+      box-shadow: none;
+
+      &:hover {
+        background: #e5e5e5;
+        color: #333;
       }
     }
   }
@@ -163,19 +176,12 @@
       margin-bottom: 20px;
     }
 
-    // .story-list {
-    //   gap: 16px;
-    //   display: grid;
-    //   grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-    // }
-
     .story-card {
       margin-bottom: 0;
     }
   }
 }
 
-// --- POPUP STYLES ---
 .popup-overlay {
   position: fixed;
   top: 0;

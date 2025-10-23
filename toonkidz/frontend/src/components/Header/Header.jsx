@@ -1,12 +1,22 @@
 import React, { useState } from "react";
-import { User, Search } from "lucide-react";
+import { User, Search, Bell, Menu as MenuIcon } from "lucide-react";
 import { useNavigate, NavLink } from "react-router-dom";
 import { toast } from "sonner";
 import { logout } from "../../service/authService";
 import Notify from "../Notify/Notify";
 import "./Header.scss";
+import { Spin } from "antd";
 
-const Header = ({ onToggleSider }) => {
+const getInitials = (name) => {
+  if (!name) return "?";
+  const words = name.split(' ');
+  if (words.length > 1) {
+    return `${words[0][0]}${words[words.length - 1][0]}`.toUpperCase();
+  }
+  return name.substring(0, 2).toUpperCase();
+};
+
+const Header = ({ onToggleSider, user, loading }) => {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -70,7 +80,13 @@ const Header = ({ onToggleSider }) => {
               className="account-btn"
               onClick={() => setShowDropdown(!showDropdown)}
             >
-              <User className="account-icon" />
+              {loading ? (
+                <Spin size="small" />
+              ) : user && user.pfp ? (
+                <img src={user.pfp} alt="Avatar" className="header__account__avatar" />
+              ) : (
+                <User className="account-icon" />
+              )}
             </button>
 
             {showDropdown && (
