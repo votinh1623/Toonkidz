@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Spin, message, Button, Collapse } from 'antd';
-import { Edit, UserPlus, MessageCircle, ChevronDown } from 'lucide-react';
-import { getProfile, getUserById } from '../../service/userService';
+import { Edit, UserPlus, MessageCircle, ChevronDown, UserCheck } from 'lucide-react';
+import { followUser, getProfile, getUserById } from '../../service/userService';
 import { getPostsByUserId } from '../../service/postService';
 import './ProfilePage.scss';
 import UserPostFeed from '../../components/UserPostFeed/UserPostFeed';
@@ -24,6 +24,9 @@ const ProfilePage = () => {
 
     const [editVisible, setEditVisible] = useState(false);
     const [passwordVisible, setPasswordVisible] = useState(false);
+
+    const [isFollowing, setIsFollowing] = useState(false);
+    const [followLoading, setFollowLoading] = useState(false);
 
     const fetchUserPosts = useCallback(async (id) => {
         setLoadingPosts(true);
@@ -54,7 +57,13 @@ const ProfilePage = () => {
                 if (profileRes.success) {
                     setProfileUser(profileRes.user);
                     setIsOwner(meRes._id === profileRes.user._id);
-                    // Sau khi có profile, fetch bài đăng của họ
+
+                    if (profileRes.user.followers?.includes(meRes._id)) {
+                        setIsFollowing(true);
+                    } else {
+                        setIsFollowing(false);
+                    }
+
                     fetchUserPosts(profileRes.user._id);
                 } else {
                     message.error("Không tìm thấy người dùng này.");
@@ -69,6 +78,38 @@ const ProfilePage = () => {
         };
         fetchData();
     }, [userId, fetchUserPosts]);
+
+    const handleFollowToggle = async () => {
+        if (followLoading) return;
+        setFollowLoading(true);
+        const originalFollowState = isFollowing;
+        const originalProfileUser = { ...profileUser };
+
+        setIsFollowing(!originalFollowState);
+        setProfileUser(prev => ({
+            ...prev,
+            followers: originalFollowState
+                ? prev.followers.filter(id => id !== currentUser._id)
+                : [...prev.followers, currentUser._id]
+        }));
+
+        try {
+            const res = await followUser(profileUser._id);
+            if (res.success) {
+                message.success(res.message);
+            } else {
+                setIsFollowing(originalFollowState);
+                setProfileUser(originalProfileUser);
+                message.error(res.error || "Thao tác thất bại.");
+            }
+        } catch (error) {
+            setIsFollowing(originalFollowState);
+            setProfileUser(originalProfileUser);
+            message.error("Đã xảy ra lỗi.");
+        } finally {
+            setFollowLoading(false);
+        }
+    };
 
     if (loading) {
         return <div className="profile-loading"><Spin size="large" /></div>;
@@ -108,8 +149,13 @@ const ProfilePage = () => {
                             </>
                         ) : (
                             <>
-                                <Button className="profile-btn follow-btn" icon={<UserPlus size={16} />}>
-                                    Theo dõi
+                                <Button
+                                    className={`profile-btn ${isFollowing ? 'unfollow-btn' : 'follow-btn'}`}
+                                    icon={isFollowing ? <UserCheck size={16} /> : <UserPlus size={16} />}
+                                    onClick={handleFollowToggle}
+                                    loading={followLoading}
+                                >
+                                    {isFollowing ? 'Đang theo dõi' : 'Theo dõi'}
                                 </Button>
                                 <Button className="profile-btn" icon={<MessageCircle size={16} />}>
                                     Nhắn tin

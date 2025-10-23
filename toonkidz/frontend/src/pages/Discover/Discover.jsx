@@ -8,6 +8,7 @@ import Swal from 'sweetalert2';
 import 'sweetalert2/src/sweetalert2.scss';
 import "./Discover.scss";
 import { getProfile } from "../../service/userService";
+import { useNavigate } from "react-router-dom";
 
 const Discover = () => {
     const [posts, setPosts] = useState([]);
@@ -18,6 +19,7 @@ const Discover = () => {
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [selectedStory, setSelectedStory] = useState(null);
     const [editingComment, setEditingComment] = useState(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -39,6 +41,14 @@ const Discover = () => {
         };
         fetchData();
     }, []);
+
+    const handleNavigateToProfile = (authorId) => {
+        if (currentUser && currentUser._id === authorId) {
+            navigate('/home/profile');
+        } else {
+            navigate(`/home/profile/${authorId}`);
+        }
+    };
 
     const updatePostInState = (updatedPost) => {
         setPosts(prevPosts => prevPosts.map(p => p._id === updatedPost._id ? updatedPost : p));
@@ -214,7 +224,7 @@ const Discover = () => {
                         return (
                             <div key={post._id} className="story-card">
                                 <div className="story-content">
-                                    <div className="author-info">
+                                    <div className="author-info" onClick={() => handleNavigateToProfile(author._id)}>
                                         <img className="avatar" src={author.pfp || 'https://www.svgrepo.com/show/452030/avatar-default.svg'} alt={author.name} />
                                         <div className="author-details">
                                             <h4>{author.name}</h4>

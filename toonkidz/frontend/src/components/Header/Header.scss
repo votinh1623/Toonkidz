@@ -132,6 +132,11 @@
   .header__account {
     position: relative;
 
+    &__avatar {
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
     .account-btn {
       width: 32px;
       height: 32px;
