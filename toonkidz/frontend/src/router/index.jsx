@@ -24,6 +24,7 @@ import AvailableStoriesPage from "../pages/AvailableStoriesPage/AvailableStories
 
 import PrivateRoute from "./PrivateRoute";
 import AdminRoute from "./AdminRoute";
+import Chat from "../pages/Chat/Chat";
 
 export const route = [
   { path: "/login", element: <Login /> },
@@ -49,6 +50,7 @@ export const route = [
               { path: "library", element: <LibraryPage /> },
               { path: "library-favorites", element: <AvailableStoriesPage /> },
               { path: "profile", element: <ProfilePage /> },
+              { path: "chat", element: <Chat /> },
               { path: "profile/:userId", element: <ProfilePage /> },
               { path: "story/:storyId", element: <StoryViewPage /> },
               { path: "edit-story/:storyId", element: <EditStory /> },

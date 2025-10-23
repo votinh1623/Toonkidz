@@ -17,19 +17,18 @@
     .layout__content {
       flex: 1;
       background: #fafafa;
-      // padding: 1.5rem;
+      padding: 24px;
       min-height: 100vh;
       transition: all 0.3s ease;
+
+      &.layout__content--full-bleed {
+        padding: 0;
+      }
     }
   }
 }
 
-/* Responsive */
 @media (max-width: 768px) {
-  // .layout__content {
-  //   // padding: 1rem;
-  // }
-
   .ant-layout-sider {
     position: relative;
     height: auto;

@@ -1,5 +1,5 @@
 // src/layout/LayoutDefault/LayoutDefault.jsx
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import Header from "../../components/Header/Header";
 import { Layout, Grid, Drawer, Spin } from "antd";
 import SiderContent from "../../components/SiderContent/SiderContent.jsx";
@@ -10,12 +10,20 @@ import { getProfile } from "../../service/userService.jsx";
 const { Sider, Content } = Layout;
 const { useBreakpoint } = Grid;
 
+const fullBleedPaths = [
+  '/home/chat'
+];
+
 const LayoutDefault = () => {
   const screens = useBreakpoint();
   const [drawerVisible, setDrawerVisible] = useState(false);
 
   const [currentUser, setCurrentUser] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
+
+  const location = useLocation();
+
+  const isFullBleed = fullBleedPaths.includes(location.pathname);
 
   const toggleDrawer = () => setDrawerVisible(!drawerVisible);
 
@@ -32,8 +40,6 @@ const LayoutDefault = () => {
     };
     fetchProfile();
   }, []);
-
-  console.log(currentUser);
 
   return (
     <Layout className="layout-default">
@@ -70,10 +76,8 @@ const LayoutDefault = () => {
           </Drawer>
         )}
 
-        <Content className="layout__content">
-          <div className="content__container">
-            <Outlet />
-          </div>
+        <Content className={`layout__content ${isFullBleed ? 'layout__content--full-bleed' : ''}`}>
+          <Outlet />
         </Content>
       </Layout>
     </Layout>
