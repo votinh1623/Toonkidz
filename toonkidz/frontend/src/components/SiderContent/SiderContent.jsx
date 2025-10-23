@@ -92,7 +92,7 @@ const SiderContent = ({ onClose, user }) => {
         />
 
         <NavItem
-          to="/home/messages"
+          to="/home/chat"
           icon={<MessageCircle className="icon" />}
           label="Tin nhắn"
           badge="3"
