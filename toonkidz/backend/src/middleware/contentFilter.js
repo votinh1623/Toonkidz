@@ -1,4 +1,3 @@
-//middleware/contentFilter.js
 const BLOCKED_KEYWORDS = [
   'violence', 'weapon', 'kill', 'death', 'blood', 'gore',
   'scary', 'horror', 'frightening', 'monster', 'ghost',
@@ -11,7 +10,6 @@ const contentFilter = (req, res, next) => {
 
   if (!prompt) return next();
 
-  // Check for blocked keywords
   const lowerPrompt = prompt.toLowerCase();
   const foundKeyword = BLOCKED_KEYWORDS.find(keyword =>
     lowerPrompt.includes(keyword)
@@ -27,4 +25,4 @@ const contentFilter = (req, res, next) => {
   next();
 };
 
-module.exports = contentFilter;
+export default contentFilter;

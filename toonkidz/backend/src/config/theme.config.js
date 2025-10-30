@@ -7,7 +7,7 @@
  *   vi – Vietnamese translation
  */
 
-module.exports = {
+const themes = {
   fairytale: {
     easy: [
       { en: "castle", vi: "lâu đài" },
@@ -608,3 +608,4 @@ module.exports = {
     ]
   }
 };
+export default themes;

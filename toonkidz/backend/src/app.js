@@ -32,7 +32,7 @@ const app = express();
 console.log('Environment variables loaded:');
 console.log('ACCESS_TOKEN_SECRET:', process.env.ACCESS_TOKEN_SECRET ? '***SET***' : '***NOT SET***');
 console.log('REFRESH_TOKEN_SECRET:', process.env.REFRESH_TOKEN_SECRET ? '***SET***' : '***NOT SET***');
-
+console.log('Mongo: ' , process.env.MONGO_URI);
 // Middleware
 app.use(helmet());
 app.use(cors(config.cors));
@@ -66,7 +66,7 @@ cloudinary.config({
 });
 
 // Routes
-app.get('/health', healthController.healthCheck);
+app.get('/health', healthController);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/stories', storyRoutes);

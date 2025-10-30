@@ -1,8 +1,7 @@
-//lib/database.js
-const mongoose = require('mongoose');
-const redis = require('redis');
-const { promisify } = require('util');
-const config = require('../config/database.config');
+import mongoose from "mongoose";
+import redis from "redis";
+import { promisify } from "util";
+import config from "../config/database.config.js";
 
 class DatabaseConnection {
   constructor() {
@@ -14,11 +13,14 @@ class DatabaseConnection {
     if (this.mongoConnection) return this.mongoConnection;
 
     try {
-      this.mongoConnection = await mongoose.connect(config.mongo.uri, config.mongo.options);
-      console.log('MongoDB connected successfully');
+      this.mongoConnection = await mongoose.connect(
+        config.mongo.uri,
+        config.mongo.options
+      );
+      console.log("MongoDB connected successfully");
       return this.mongoConnection;
     } catch (error) {
-      console.error('MongoDB connection error:', error);
+      console.error("MongoDB connection error:", error);
       throw error;
     }
   }
@@ -29,19 +31,17 @@ class DatabaseConnection {
     try {
       this.redisClient = redis.createClient({ url: config.redis.url });
 
-      // Promisify Redis methods
       this.redisClient.get = promisify(this.redisClient.get).bind(this.redisClient);
       this.redisClient.set = promisify(this.redisClient.set).bind(this.redisClient);
       this.redisClient.del = promisify(this.redisClient.del).bind(this.redisClient);
 
       await this.redisClient.connect();
-      console.log('Redis connected successfully');
+      console.log("Redis connected successfully");
       return this.redisClient;
     } catch (error) {
-      console.error('Redis connection error:', error);
+      console.error("Redis connection error:", error);
       throw error;
     }
-
   }
 
   async disconnect() {
@@ -57,4 +57,4 @@ class DatabaseConnection {
   }
 }
 
-module.exports = new DatabaseConnection();
+export default new DatabaseConnection();

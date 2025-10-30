@@ -1,6 +1,8 @@
 //redis.js
-const { createClient } = require('redis');
-const config = require('../config/database.config');
+import config from '../config/database.config.js';
+import { createClient } from 'redis';
+
+const { redis } = config;
 
 class RedisConnection {
   constructor() {
@@ -9,10 +11,8 @@ class RedisConnection {
 
   async connect() {
     if (this.client && this.client.isOpen) return this.client;
-
     try {
-      this.client = createClient({ url: config.redis.url });
-
+      this.client = createClient({ url: redis.url });
       this.client.on('error', (err) => console.error('Redis error:', err));
       this.client.on('connect', () => console.log('Redis connected'));
 
@@ -33,17 +33,23 @@ class RedisConnection {
   }
 
   async set(key, value, mode, duration) {
-    await this.connect();
-    try {
-      if (mode && duration) {
-        return await this.client.set(key, value, { [mode]: duration });
-      }
+  await this.connect();
+  try {
+    // Support both old-style (mode, duration) and object-style
+    if (mode && duration) {
+      // Translate "EX", "PX", etc. to proper option key
+      const opts = {};
+      opts[mode] = duration;
+      return await this.client.set(key, value, opts);
+    } else {
       return await this.client.set(key, value);
-    } catch (error) {
-      console.error('Redis set error:', error);
-      return null;
     }
+  } catch (error) {
+    console.error("Redis set error:", error);
+    return null;
   }
+}
+
 
   async get(key) {
     await this.connect();
@@ -66,4 +72,5 @@ class RedisConnection {
   }
 }
 
-module.exports = new RedisConnection();
+const redisInstance = new RedisConnection();
+export default redisInstance;

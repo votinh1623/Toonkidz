@@ -1,5 +1,5 @@
 //health.controller.js
-exports.healthCheck = (req, res) => {
+const healthController = (req, res) => {
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
@@ -7,3 +7,5 @@ exports.healthCheck = (req, res) => {
     environment: process.env.NODE_ENV
   });
 };
+
+export default healthController;

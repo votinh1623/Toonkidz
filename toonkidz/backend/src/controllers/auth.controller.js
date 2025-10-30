@@ -115,7 +115,8 @@ export const sendOtp = async (req, res) => {
     }
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const key = `otp:${email.toLowerCase()}`;
-    await redis.set(key, otp, "EX", 300);
+     await redis.set(key, otp, "EX", 300);
+     console.log("Stored OTP:", await redis.get(key));
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
@@ -144,17 +145,25 @@ export const sendOtp = async (req, res) => {
 
 export const verifyOtpAndSignup = async (req, res) => {
   const { email, name, password, otp } = req.body;
+  console.log("Verify request body:", req.body); // 👈 log what frontend sends
+
   try {
     if (!email || !name || !password || !otp) {
+      console.log("❌ Missing fields");
       return res.status(400).json({ success: false, message: "Missing required fields" });
     }
+
     const key = `otp:${email.toLowerCase()}`;
     const storedOtp = await redis.get(key);
+    console.log("Stored OTP in Redis:", storedOtp);
+    console.log("Received OTP from frontend:", otp);
 
     if (!storedOtp) {
+      console.log("❌ OTP expired or invalid");
       return res.status(400).json({ success: false, message: "OTP expired or invalid" });
     }
     if (storedOtp.trim() !== otp.trim()) {
+      console.log("❌ OTP mismatch");
       return res.status(400).json({ success: false, message: "Incorrect OTP" });
     }
 
