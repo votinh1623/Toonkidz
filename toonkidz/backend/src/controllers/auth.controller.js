@@ -4,7 +4,6 @@ import jwt from "jsonwebtoken";
 import redis from "../lib/redis.js";
 import nodemailer from "nodemailer";
 
-// --- CÁC HÀM HELPERS (giữ nguyên) ---
 const generateTokens = (userId) => {
   const accessToken = jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET, {
     expiresIn: "15m",
@@ -24,7 +23,7 @@ const setCookies = (res, accessToken, refreshToken) => {
     httpOnly: false,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: 6000 * 60 * 1000, //set access time
+    maxAge: 60 * 60 * 1000, //set access time
   });
   res.cookie("refreshToken", refreshToken, {
     httpOnly: false,
@@ -115,8 +114,8 @@ export const sendOtp = async (req, res) => {
     }
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const key = `otp:${email.toLowerCase()}`;
-     await redis.set(key, otp, "EX", 300);
-     console.log("Stored OTP:", await redis.get(key));
+    await redis.set(key, otp, "EX", 300);
+    console.log("Stored OTP:", await redis.get(key));
 
     const transporter = nodemailer.createTransport({
       service: "gmail",

@@ -1,3 +1,4 @@
+//LayoutDefault.scss
 .layout-default {
   min-height: 100vh;
 
@@ -17,8 +18,8 @@
     .layout__content {
       flex: 1;
       background: #fafafa;
-      padding: 24px;
-      min-height: 100vh;
+      padding: 2.5rem;
+      min-height: calc(100vh - 64px);
       transition: all 0.3s ease;
 
       &.layout__content--full-bleed {
@@ -36,5 +37,9 @@
 }
 
 .content__container {
+  padding: 0;
+}
+
+.ant-layout-content {
   padding: 0;
 }

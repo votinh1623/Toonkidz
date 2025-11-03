@@ -1,3 +1,4 @@
+// src/layout/AdminLayout/AdminLayout.jsx
 import { useState } from "react";
 import { Layout, Grid, Drawer } from "antd";
 import Header from "../../components/Header/Header";
@@ -15,23 +16,21 @@ const AdminLayout = () => {
   const toggleDrawer = () => setDrawerVisible(!drawerVisible);
 
   return (
-    <Layout className="layout-default">
-      {/* Header chung (dùng luôn Header cũ nếu có icon menu) */}
+    <Layout className="admin-layout-wrapper">
       <Header onToggleSider={toggleDrawer} />
 
       <Layout className="layout-child">
-        {/* SIDEBAR cho desktop */}
         {screens.md && (
           <Sider
             theme="light"
             width={250}
             style={{ minWidth: 210 }}
+            className="admin-layout-sider"
           >
             <AdminSiderContent />
           </Sider>
         )}
 
-        {/* DRAWER cho mobile */}
         {!screens.md && (
           <Drawer
             placement="left"
@@ -44,9 +43,8 @@ const AdminLayout = () => {
           </Drawer>
         )}
 
-        {/* Nội dung chính */}
-        <Content className="layout__content">
-          <div className="content__container">
+        <Content className="admin__content">
+          <div className="admin__content-container">
             <Outlet />
           </div>
         </Content>

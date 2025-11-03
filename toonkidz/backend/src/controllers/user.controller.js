@@ -184,3 +184,85 @@ export const followUser = async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
+export const getAllUsers = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search || "";
+    const role = req.query.role || "";
+
+    const query = {
+      $or: [
+        { name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ],
+    };
+
+    if (role) {
+      query.role = role;
+    }
+
+    const users = await User.find(query)
+      .select('-password')
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    const totalUsers = await User.countDocuments(query);
+
+    res.json({
+      success: true,
+      users,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalUsers / limit),
+        totalUsers
+      }
+    });
+
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to fetch users' });
+  }
+};
+
+export const updateUserById = async (req, res) => {
+  try {
+    const { name, email, role, isActive } = req.body;
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    user.name = name || user.name;
+    user.email = email || user.email;
+    user.role = role || user.role;
+    user.isActive = isActive;
+
+    const updatedUser = await user.save();
+    updatedUser.password = undefined;
+    res.json({ success: true, user: updatedUser });
+
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ success: false, error: "Email đã tồn tại" });
+    }
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+export const deleteUserById = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    await user.deleteOne();
+    res.json({ success: true, message: 'User deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to delete user' });
+  }
+};

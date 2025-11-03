@@ -1,0 +1,74 @@
+.user-management {
+  padding: 24px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 24px;
+
+    h2 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 600;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    .filter-select {
+      width: 180px;
+    }
+  }
+
+  .user-avatar-sm {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid #f0f0f0;
+  }
+
+  .action-btn {
+    border-radius: 6px;
+
+    &.view {
+      color: #1677ff;
+      border-color: #1677ff;
+
+      &:hover {
+        background: #f0f6ff;
+      }
+    }
+
+    &.edit {
+      color: #faad14;
+      border-color: #faad14;
+
+      &:hover {
+        background: #fffbe6;
+      }
+    }
+
+    &.delete {
+      color: #ff4d4f;
+      border-color: #ff4d4f;
+
+      &:hover {
+        background: #fff1f0;
+      }
+    }
+  }
+
+  .ant-table-pagination.ant-pagination {
+    margin-top: 24px;
+  }
+}

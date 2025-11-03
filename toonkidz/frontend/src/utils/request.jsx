@@ -4,7 +4,6 @@ const API_DOMAIN = "http://localhost:3000/api";
 const buildUrl = (path) =>
   `${API_DOMAIN.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
 
-// Nếu dùng cookie-based auth:
 const getAuthHeaders = () => ({});
 
 export const get = async (path) => {

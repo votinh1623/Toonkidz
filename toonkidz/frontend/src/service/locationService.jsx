@@ -1,5 +1,5 @@
 // src/service/locationService.js
-const API_URL = "https://provinces.open-api.vn/api/p/";
+const API_URL = "http://provinces.open-api.vn/api/p/";
 
 export const getProvinces = async () => {
   try {
