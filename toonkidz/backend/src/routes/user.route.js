@@ -1,6 +1,5 @@
-// backend/src/routes/user.route.js
 import express from 'express';
-import { auth } from '../middleware/auth.middleware.js';
+import { adminAuth, auth } from '../middleware/auth.middleware.js';
 import {
   toggleFavoriteStory,
   getFavoriteStories,
@@ -8,21 +7,34 @@ import {
   updateProfile,
   changePassword,
   followUser,
-  getProfile
+  getProfile,
+  getAllUsers,
+  updateUserById,
+  deleteUserById
 } from '../controllers/user.controller.js';
 import multer from 'multer';
 
 const upload = multer({ dest: 'uploads/' });
 const router = express.Router();
 
+router.route('/')
+  .get(auth, adminAuth, getAllUsers);
+
 router.get('/profile', auth, getProfile);
+
 router.put('/profile', auth, upload.single('pfp'), updateProfile);
+
 router.post('/change-password', auth, changePassword);
 
 router.get('/favorites', auth, getFavoriteStories);
+
 router.post('/toggle-favorite/:storyId', auth, toggleFavoriteStory);
 
-router.get('/:id', auth, getUserById);
+router.route('/:id')
+  .get(auth, getUserById)
+  .put(auth, adminAuth, updateUserById)
+  .delete(auth, adminAuth, deleteUserById);
+
 router.post('/:id/follow', auth, followUser);
 
 export default router;

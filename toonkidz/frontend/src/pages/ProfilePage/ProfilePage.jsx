@@ -1,5 +1,4 @@
 // src/pages/ProfilePage/ProfilePage.jsx
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Spin, message, Button, Collapse } from 'antd';
@@ -10,6 +9,7 @@ import './ProfilePage.scss';
 import UserPostFeed from '../../components/UserPostFeed/UserPostFeed';
 import EditProfileModal from '../../components/EditProfileModal/EditProfileModal';
 import ChangePasswordPopup from '../../components/ChangePasswordPopup/ChangePasswordPopup';
+import { findOrCreateConversation } from '../../service/messageService';
 
 const { Panel } = Collapse;
 
@@ -27,6 +27,9 @@ const ProfilePage = () => {
 
     const [isFollowing, setIsFollowing] = useState(false);
     const [followLoading, setFollowLoading] = useState(false);
+
+    const [chatLoading, setChatLoading] = useState(false);
+    const navigate = useNavigate();
 
     const fetchUserPosts = useCallback(async (id) => {
         setLoadingPosts(true);
@@ -111,6 +114,22 @@ const ProfilePage = () => {
         }
     };
 
+    const handleStartChat = async () => {
+        setChatLoading(true);
+        try {
+            const res = await findOrCreateConversation(profileUser._id);
+            if (res.success) {
+                navigate('/home/chat');
+            } else {
+                message.error(res.error || "Không thể bắt đầu trò chuyện.");
+            }
+        } catch (error) {
+            message.error("Đã xảy ra lỗi khi tạo cuộc trò chuyện.");
+        } finally {
+            setChatLoading(false);
+        }
+    };
+
     if (loading) {
         return <div className="profile-loading"><Spin size="large" /></div>;
     }
@@ -157,7 +176,12 @@ const ProfilePage = () => {
                                 >
                                     {isFollowing ? 'Đang theo dõi' : 'Theo dõi'}
                                 </Button>
-                                <Button className="profile-btn" icon={<MessageCircle size={16} />}>
+                                <Button
+                                    className="profile-btn"
+                                    icon={<MessageCircle size={16} />}
+                                    onClick={handleStartChat}
+                                    loading={chatLoading}
+                                >
                                     Nhắn tin
                                 </Button>
                             </>

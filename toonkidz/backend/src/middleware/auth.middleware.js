@@ -15,12 +15,12 @@ export const auth = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-
     const user = await User.findById(decoded.userId).select('-password');
 
     if (!user || !user.isActive) {
       return res.status(401).json({ message: 'Invalid token.' });
     }
+
     req.user = user;
     next();
   } catch (error) {

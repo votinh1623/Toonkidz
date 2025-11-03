@@ -1,6 +1,6 @@
 // src/service/userService.js
 import { get, post } from "@/utils/request";
-import { putFormData } from "../utils/request";
+import { del, put, putFormData } from "../utils/request";
 
 export const toggleFavorite = async (storyId) => {
   try {
@@ -41,4 +41,36 @@ export const changePassword = async (data) => {
 
 export const getProfile = async () => {
   return await get(`users/profile`);
+};
+
+export const getAllUsers = async (page = 1, limit = 10, search = "", role = "") => {
+  try {
+    const params = new URLSearchParams({ page, limit, search });
+    if (role) params.append('role', role);
+    const res = await get(`users?${params.toString()}`);
+    return res;
+  } catch (err) {
+    console.error("Error fetching users:", err);
+    throw err;
+  }
+};
+
+export const adminUpdateUser = async (userId, data) => {
+  try {
+    const res = await put(`users/${userId}`, data);
+    return res;
+  } catch (err) {
+    console.error("Error updating user:", err);
+    throw err;
+  }
+};
+
+export const adminDeleteUser = async (userId) => {
+  try {
+    const res = await del(`users/${userId}`);
+    return res;
+  } catch (err) {
+    console.error("Error deleting user:", err);
+    throw err;
+  }
 };

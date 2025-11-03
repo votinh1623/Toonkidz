@@ -9,19 +9,27 @@ import rateLimit from "express-rate-limit";
 import cookieParser from "cookie-parser";
 import path from "path";
 import fs from "fs";
-import { fileURLToPath } from "url"; // Add this import
+import { fileURLToPath } from "url";
 import config from "./config/server.config.js";
 import imageRoutes from "./routes/image.route.js";
 import themeRoutes from "./routes/theme.route.js"
 import healthController from "./controllers/health.controller.js";
 import database from "./lib/database.js";
 import { exec } from "child_process";
+
+import { createServer } from "http";
+import { Server } from "socket.io";
+
 import authRoutes from "./routes/auth.route.js";
 import storyRoutes from './routes/story.route.js';
 import axios from "axios";
 import { v2 as cloudinary } from "cloudinary";
 import userRoutes from './routes/user.route.js';
 import postRoutes from './routes/post.route.js';
+
+import messageRoutes from './routes/message.route.js';
+import conversationRoutes from './routes/conversation.route.js';
+import { initializeSocketIO } from "./socket/socket.js";
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -32,7 +40,7 @@ const app = express();
 console.log('Environment variables loaded:');
 console.log('ACCESS_TOKEN_SECRET:', process.env.ACCESS_TOKEN_SECRET ? '***SET***' : '***NOT SET***');
 console.log('REFRESH_TOKEN_SECRET:', process.env.REFRESH_TOKEN_SECRET ? '***SET***' : '***NOT SET***');
-console.log('Mongo: ' , process.env.MONGO_URI);
+console.log('Mongo: ', process.env.MONGO_URI);
 // Middleware
 app.use(helmet());
 app.use(cors(config.cors));
@@ -73,6 +81,8 @@ app.use('/api/stories', storyRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/themes', themeRoutes);
 app.use('/api/images', imageRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/conversations', conversationRoutes);
 
 // TTS Status Check Endpoint
 app.get('/api/tts-status', async (req, res) => {
@@ -90,7 +100,6 @@ app.get('/api/tts-status', async (req, res) => {
   }
 });
 
-// TTS Generation Endpoint
 app.post('/api/generate-tts', async (req, res) => {
   try {
     const { text, voice = 'vi-VN-HoaiMyNeural' } = req.body;
@@ -101,18 +110,16 @@ app.post('/api/generate-tts', async (req, res) => {
 
     console.log('Generating TTS for text:', text);
 
-    // Call Edge TTS server
     const response = await axios.post('http://localhost:5001/tts', {
       text,
       voice
     }, {
       responseType: 'arraybuffer',
-      timeout: 30000 // 30 second timeout
+      timeout: 30000
     });
 
     console.log('TTS generated successfully');
 
-    // Set appropriate headers for audio response
     res.set('Content-Type', 'audio/mpeg');
     res.set('Content-Length', response.data.byteLength);
     res.send(response.data);
@@ -132,13 +139,23 @@ app.post('/api/generate-tts', async (req, res) => {
   }
 });
 
-// Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
+const server = createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"]
+  }
+});
+
+initializeSocketIO(io);
+
 const PORT = config.port;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+server.listen(PORT, () => {
+  console.log(`Server (Express + Socket.IO) đang chạy trên port ${PORT}`);
 });
