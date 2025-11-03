@@ -131,6 +131,12 @@ const Chat = () => {
     }, 50);
   }, [selectedConvo]);
 
+  useEffect(() => {
+    if (messageAreaRef.current) {
+      messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
+
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (newMessage.trim() === "" || !socketRef.current || !currentUser || !selectedConvo) return;
@@ -157,9 +163,9 @@ const Chat = () => {
     setMessages(prev => [...prev, optimisticMessage]);
     setNewMessage("");
 
-    setTimeout(() => {
-      messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 50);
+    // setTimeout(() => {
+    //   messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // }, 50);
   };
 
   const isPartnerOnline = selectedConvo && onlineUsers.has(selectedConvo.partner._id);

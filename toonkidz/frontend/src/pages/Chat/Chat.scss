@@ -9,8 +9,7 @@ $online-color: #2ecc71;
 
 .chat-layout {
   display: flex;
-  // height: calc(100vh - 120px);
-  height: 100%;
+  height: calc(100vh - 65px);
   background: #fff;
   font-family: "Poppins", sans-serif;
   border-top: 1px solid $border-color;

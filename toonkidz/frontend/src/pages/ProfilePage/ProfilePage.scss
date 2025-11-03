@@ -1,6 +1,7 @@
 .profile-page {
   font-family: 'Poppins', sans-serif;
   color: #333;
+  background-color: #fff;
 
   @media (max-width: 768px) {
     padding: 1.5rem;
@@ -16,7 +17,6 @@
   .profile-container {
     background-color: #fff;
     padding: 24px 32px;
-    border-radius: 16px;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.07);
 
     @media (max-width: 768px) {
