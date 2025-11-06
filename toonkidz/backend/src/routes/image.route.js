@@ -4,7 +4,6 @@ import contentFilter from "../middleware/contentFilter.js";
 
 const router = express.Router();
 
-// Image generation endpoint
 router.post("/generate-image", contentFilter, async (req, res) => {
   try {
     console.log("Request body:", req.body);

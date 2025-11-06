@@ -1,0 +1,31 @@
+// src/pages/Admin/FeedbackManagement/FeedbackManagement.scss
+.feedback-management {
+
+  p {
+    margin-bottom: 10px;
+  }
+
+  .feedback-table-card {
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: none;
+  }
+
+  .content-box {
+    background: #f0f4f8;
+    border: 1px solid #e0e7ee;
+    margin-bottom: 20px;
+    font-style: italic;
+    color: #444;
+  }
+
+  .ant-btn-primary {
+    background-color: #6c63ff;
+    border-color: #6c63ff;
+
+    &:hover {
+      background-color: #5a52d3;
+      border-color: #5a52d3;
+    }
+  }
+}

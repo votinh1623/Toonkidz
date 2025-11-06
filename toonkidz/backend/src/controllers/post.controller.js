@@ -2,6 +2,7 @@
 import mongoose from 'mongoose';
 import Post from '../models/post.model.js';
 import Story from '../models/story.model.js';
+import { createNotification } from './notification.controller.js';
 
 export const createPost = async (req, res) => {
   try {
@@ -63,28 +64,91 @@ export const likePost = async (req, res) => {
   try {
     const postId = req.params.id;
     const userId = req.user._id;
-    const post = await Post.findById(postId);
+
+    const post = await Post.findById(postId).populate('userId', 'name pfp');
 
     if (!post) {
       return res.status(404).json({ success: false, error: "Post not found" });
+    }
+    if (!post.userId || !post.userId._id) {
+      console.error(`Post ${postId} thiếu chủ sở hữu.`);
     }
 
     const isLiked = post.likes.includes(userId);
 
     if (isLiked) {
-      // Bỏ thích
       await Post.updateOne({ _id: postId }, { $pull: { likes: userId } });
     } else {
-      // Thích
       await Post.updateOne({ _id: postId }, { $addToSet: { likes: userId } });
+
+      try {
+        const response = createNotification({
+          recipientId: post.userId._id,
+          senderId: userId,
+          type: 'like_post',
+          entityId: postId,
+          message: `${req.user.name} đã thích bài đăng của bạn.`
+        });
+        console.log(response);
+      } catch (e) {
+        console.error("Lỗi thông báo Like, tiếp tục xử lý chính:", e.message);
+      }
     }
 
     const updatedPost = await Post.findById(postId);
     res.json({ success: true, likes: updatedPost.likes });
   } catch (error) {
+    console.error("Error in likePost controller (Uncaught):", error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
+export const addComment = async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const userId = req.user._id;
+    const { text, rating } = req.body;
+
+    if (!text || !rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ success: false, error: "Cần có nội dung và đánh giá (1-5 sao)." });
+    }
+    const post = await Post.findById(postId).populate('userId', 'name');
+    if (!post) {
+      return res.status(404).json({ success: false, error: "Không tìm thấy bài đăng." });
+    }
+
+    post.comments.push({ userId, text, rating });
+    await post.save();
+
+    await updateStoryRating(post.storyId);
+    try {
+      createNotification({
+        recipientId: post.userId._id,
+        senderId: userId,
+        type: 'comment_post',
+        entityId: post._id,
+        message: `${req.user.name} đã bình luận: "${text.substring(0, 30)}..."`
+      });
+    } catch (e) {
+      console.error("Lỗi thông báo Comment, tiếp tục xử lý chính:", e.message);
+    }
+
+    const updatedPost = await Post.findById(postId)
+      .populate('userId', 'name pfp')
+      .populate('storyId')
+      .populate({
+        path: 'comments',
+        populate: { path: 'userId', select: 'name pfp' }
+      });
+
+    res.status(201).json({ success: true, post: updatedPost });
+
+  } catch (error) {
+    console.error("Error adding comment (Uncaught):", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 
 const updateStoryRating = async (storyId) => {
   if (!storyId) return;
@@ -113,41 +177,6 @@ const updateStoryRating = async (storyId) => {
   await story.save();
 };
 
-export const addComment = async (req, res) => {
-  try {
-    const { postId } = req.params;
-    const userId = req.user._id;
-    const { text, rating } = req.body;
-
-    if (!text || !rating || rating < 1 || rating > 5) {
-      return res.status(400).json({ success: false, error: "Cần có nội dung và đánh giá (1-5 sao)." });
-    }
-
-    const post = await Post.findById(postId);
-    if (!post) {
-      return res.status(404).json({ success: false, error: "Không tìm thấy bài đăng." });
-    }
-
-    post.comments.push({ userId, text, rating });
-    await post.save();
-
-    await updateStoryRating(post.storyId);
-
-    const updatedPost = await Post.findById(postId)
-      .populate('userId', 'name pfp')
-      .populate('storyId') // Populate lại story để lấy ratingAvg mới
-      .populate({
-        path: 'comments',
-        populate: { path: 'userId', select: 'name pfp' }
-      });
-
-    res.status(201).json({ success: true, post: updatedPost });
-
-  } catch (error) {
-    console.error("Error adding comment:", error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-};
 
 export const editComment = async (req, res) => {
   try {

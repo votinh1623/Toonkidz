@@ -16,7 +16,7 @@ const getInitials = (name) => {
   return name.substring(0, 2).toUpperCase();
 };
 
-const Header = ({ onToggleSider, user, loading }) => {
+const Header = ({ onToggleSider, user, loading, socket, totalUnreadMessages }) => {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -73,7 +73,10 @@ const Header = ({ onToggleSider, user, loading }) => {
         </nav>
 
         <div className="header__actions">
-          <Notify />
+          <Notify
+            socket={socket}
+            totalUnreadMessages={totalUnreadMessages}
+          />
 
           <div className="header__account">
             <button

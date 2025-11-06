@@ -14,6 +14,8 @@ import config from "./config/server.config.js";
 import imageRoutes from "./routes/image.route.js";
 import themeRoutes from "./routes/theme.route.js"
 import healthController from "./controllers/health.controller.js";
+import feedbackRoutes from './routes/feedback.route.js';
+import notificationRoutes from './routes/notification.route.js';
 import database from "./lib/database.js";
 import { exec } from "child_process";
 
@@ -81,8 +83,10 @@ app.use('/api/stories', storyRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/themes', themeRoutes);
 app.use('/api/images', imageRoutes);
+app.use('/api/feedback', feedbackRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/conversations', conversationRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // TTS Status Check Endpoint
 app.get('/api/tts-status', async (req, res) => {

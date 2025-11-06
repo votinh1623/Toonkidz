@@ -1,21 +1,28 @@
 // backend/src/socket/socket.js
 import Message from '../models/message.model.js';
 import Conversation from '../models/conversation.model.js';
+import User from '../models/user.model.js';
 import mongoose from 'mongoose';
 
 const userSocketMap = {};
+
+export let io;
+global.userSocketMap = userSocketMap;
+
 const getOnlineUserIds = () => Object.keys(userSocketMap);
 
-export const initializeSocketIO = (io) => {
+export const initializeSocketIO = (socketServer) => {
 
-  io.on('connection', (socket) => {
+  global.io = socketServer;
+
+  global.io.on('connection', (socket) => {
     const userId = socket.handshake.query.userId;
     if (userId && userId !== "undefined") {
       console.log(`Một người dùng đã kết nối: ${socket.id}, userId: ${userId}`);
       userSocketMap[userId] = socket.id;
     }
 
-    io.emit('getOnlineUsers', getOnlineUserIds());
+    global.io.emit('getOnlineUsers', getOnlineUserIds());
 
     socket.on('sendMessage', async (data) => {
       try {
@@ -23,12 +30,33 @@ export const initializeSocketIO = (io) => {
 
         const receiverSocketId = userSocketMap[data.receiverId];
         if (receiverSocketId) {
-          io.to(receiverSocketId).emit('receiveMessage', message);
+          global.io.to(receiverSocketId).emit('receiveMessage', message);
         }
         socket.emit('messageSent', message);
       } catch (error) {
         console.error("Error handling message:", error.message);
         socket.emit('messageError', { error: "Failed to send message" });
+      }
+    });
+
+    socket.on('sendGuestMessage', async (data) => {
+      try {
+        console.log(`[Guest Message] - From: ${data.name} (${data.email}), Content: ${data.content}`);
+        const ADMIN_ID = process.env.PRIMARY_ADMIN_ID;
+        const adminSocketId = userSocketMap[ADMIN_ID];
+        if (adminSocketId) {
+          global.io.to(adminSocketId).emit('newGuestNotification', {
+            name: data.name,
+            content: data.content,
+            email: data.email,
+          });
+        }
+
+        socket.emit('guestMessageSent', { success: true, message: "Tin nhắn đã được gửi đến quản trị viên." });
+
+      } catch (error) {
+        console.error("Error handling guest message:", error.message);
+        socket.emit('guestMessageSent', { success: false, error: "Lỗi gửi tin nhắn." });
       }
     });
 
@@ -52,7 +80,7 @@ export const initializeSocketIO = (io) => {
       if (userId && userId !== "undefined") {
         delete userSocketMap[userId];
       }
-      io.emit('getOnlineUsers', getOnlineUserIds());
+      global.io.emit('getOnlineUsers', getOnlineUserIds());
     });
   });
 };

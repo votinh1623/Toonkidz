@@ -1,0 +1,75 @@
+// src/pages/Admin/Dashboard/Dashboard.scss
+.dashboard-page {
+
+  .dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+
+    .ant-picker {
+      border-radius: 8px;
+    }
+
+    .ant-select .ant-select-selector {
+      border-radius: 8px !important;
+      width: 200px;
+    }
+  }
+
+  .kpi-card {
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: none;
+
+    .ant-statistic-title {
+      font-weight: 500;
+      color: #888;
+    }
+
+    .ant-statistic-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .kpi-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &.users {
+        background: #e6f7ff;
+        color: #1890ff;
+      }
+
+      &.stories {
+        background: #fffbe6;
+        color: #faad14;
+      }
+
+      &.posts {
+        background: #f6ffed;
+        color: #52c41a;
+      }
+
+      &.likes {
+        background: #fff1f0;
+        color: #ff4d4f;
+      }
+    }
+  }
+
+  .ant-card {
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: none;
+  }
+}
