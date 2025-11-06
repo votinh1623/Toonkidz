@@ -1,0 +1,135 @@
+// src/components/GuestChatWidget/GuestChatWidget.scss
+@use "sass:color";
+
+$primary-color: #a663cc;
+$secondary-color: #a6c1ee;
+$background-gradient: linear-gradient(90deg, $primary-color, $secondary-color);
+$hover-gradient: linear-gradient(90deg, #a6c1ee, #fbc2eb);
+
+.chat-fab {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 56px;
+  height: 56px;
+
+  background: $background-gradient !important;
+  border: none !important;
+  z-index: 1001;
+  box-shadow: 0 4px 12px rgba(166, 193, 238, 0.4);
+
+  &:hover {
+    background: $hover-gradient !important;
+    transform: scale(1.05);
+  }
+
+  .lucide {
+    color: #fff;
+  }
+}
+
+.guest-chat-window {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 350px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: 'Poppins', sans-serif;
+  animation: fadeInUp 0.5s ease forwards;
+
+  .chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: $background-gradient;
+    color: #fff;
+
+    h3 {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .ant-btn {
+      color: #fff;
+    }
+  }
+
+  .chat-body {
+    padding: 15px;
+
+    .description {
+      color: #777;
+      font-size: 0.9rem;
+      margin-bottom: 15px;
+    }
+
+    .sent-success-message {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 30px 10px;
+      color: #555;
+
+      svg {
+        margin-bottom: 15px;
+        color: $primary-color !important;
+      }
+
+      p {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 500;
+      }
+    }
+
+    .ant-input,
+    .ant-input-textarea {
+      border-radius: 8px;
+      padding: 10px 12px;
+      border: 1px solid #eee;
+    }
+
+    .ant-input:focus,
+    .ant-input-textarea:focus {
+      border-color: $secondary-color;
+      box-shadow: 0 0 4px rgba($secondary-color, 0.5);
+    }
+
+    .ant-btn-primary {
+      margin-top: 15px;
+      border-radius: 8px;
+      height: 44px;
+      background: $background-gradient;
+      border: none;
+      font-weight: 600;
+      box-shadow: 0 4px 10px rgba($primary-color, 0.3);
+
+      &:hover:not(:disabled) {
+        background: $hover-gradient;
+        transform: translateY(-1px);
+      }
+    }
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

@@ -65,12 +65,12 @@ export const adminUpdateUser = async (userId, data) => {
   }
 };
 
-export const adminDeleteUser = async (userId) => {
+export const adminDeactivateUser = async (userId) => {
   try {
     const res = await del(`users/${userId}`);
     return res;
   } catch (err) {
-    console.error("Error deleting user:", err);
+    console.error("Error deactivating user:", err);
     throw err;
   }
 };

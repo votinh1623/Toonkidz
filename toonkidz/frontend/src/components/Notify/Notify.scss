@@ -1,87 +1,246 @@
+@use "sass:color";
+
+$primary: #6c63ff;
+$bg-light: #f7f9fc;
+$item-hover: #eef2fd;
+$unread-bg: #f8fbff;
+
+$icon-follow: #4f8cff;
+$icon-like: #ff6b6b;
+$icon-comment: #ffa94d;
+$icon-admin: #6c63ff;
+
+$text-primary: #222;
+$text-read: #666;
+$text-secondary: #777;
+$border-color: #eef1f5;
+
+
 .notify {
 
-  &__dropdown {
-    box-shadow:
-      0 6px 16px 0 rgba(0, 0, 0, 0.08),
-      0 3px 6px -4px rgba(0, 0, 0, 0.12),
-      0 9px 28px 8px rgba(0, 0, 0, 0.05);
-    background-color: #fff;
-    border-radius: 5px;
-    overflow: hidden;
-    min-width: 350px;
-  }
-
-  &__header {
+  .notify-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    transition: all 0.2s ease-in-out;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 10px 20px;
-    border-bottom: 1px solid #edf2f9;
+    justify-content: center;
+    border: none;
+    background-color: transparent;
 
-    .notify__header-title {
-      font-weight: 600;
+    &:hover {
+      background-color: #f0f0f0 !important;
+    }
+
+    .notify__icon {
+      color: $text-primary;
+      font-size: 20px;
     }
   }
 
-  &__body {
-    max-height: 300px;
-    overflow-y: auto;
+  &__dropdown {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    min-width: 380px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 
+    .notify__header {
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: $bg-light;
+      border-bottom: 1px solid $border-color;
+
+      .notify__header-title {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: $text-primary;
+        display: flex;
+        align-items: center;
+
+        .anticon {
+          margin-right: 8px;
+          color: $primary;
+          font-size: 1.2rem;
+        }
+      }
+
+      button.ant-btn-link {
+        padding: 0 4px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: $primary;
+
+        &:disabled {
+          color: #b8b8b8;
+          cursor: not-allowed;
+        }
+      }
+    }
+
+    .notify__body {
+      max-height: 200px;
+      overflow-y: auto;
+
+      &::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background-color: #dcdcdc;
+        border-radius: 3px;
+      }
+    }
+
+    // Item thông báo: Targets <div className="notify__item">
     .notify__item {
       display: flex;
       align-items: center;
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: background-color 0.2s, border-left 0.2s, padding-left 0.2s;
+      border-bottom: 1px solid $border-color;
 
-      .notify__item-icon {
-        border: none;
-        width: 30px;
-        height: 30px;
-        padding: 5px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border-radius: 50%;
-        background-color: rgba(63, 135, 245, 0.1);
-        color: #3f87f5;
-        margin-right: 15px;
+      &:last-child {
+        border-bottom: none;
       }
 
-      span {
-        font-size: 16px;
+      &:hover {
+        background-color: $item-hover;
       }
 
-      .notify__item-content {
+      // --- TRẠNG THÁI ĐÃ ĐỌC (READ) ---
+      .notify__item-title {
+        font-weight: 500;
+        color: $text-read;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      // --- TRẠNG THÁI CHƯA ĐỌC (UNREAD) ---
+      &.unread {
+        background-color: $unread-bg;
+        border-left: 4px solid $primary;
+        padding-left: 12px;
+
         .notify__item-title {
-          font-weight: 500;
+          font-weight: 700;
+          color: $text-primary;
         }
+      }
+
+      // Icon container: Targets <div className="notify__item-icon">
+      &-icon {
+        min-width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+        color: #fff;
+        font-size: 18px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+        &.icon-follow {
+          background: $icon-follow;
+        }
+
+        &.icon-like {
+          background: $icon-like;
+        }
+
+        &.icon-comment {
+          background: $icon-comment;
+        }
+
+        &.icon-admin {
+          background: $icon-admin;
+        }
+      }
+
+      // Nội dung: Targets <div className="notify__item-content">
+      &-content {
+        flex: 1;
+        overflow: hidden;
 
         .notify__item-time {
-          font-weight: 400;
-          color: #6b6b6b;
+          margin-top: 2px;
+          font-size: 0.75rem;
+          color: $text-secondary;
         }
       }
     }
 
-    .ant-dropdown-menu {
-      box-shadow: none;
+    // Footer: Targets <div className="notify__footer">
+    .notify__footer {
+      padding: 8px 10px;
+      background: #fff;
+      border-top: 1px solid $border-color;
 
-      .ant-dropdown-menu-item {
-        border-bottom: 1px solid #edf2f9;
-
-        &:last-child {
-          border-bottom: none;
-        }
-      }
-
-      .ant-dropdown-menu-title-content {
-        padding: 10px 0;
+      button.ant-btn-link {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: $primary;
+        height: 36px;
       }
     }
   }
+}
 
-  &__icon {
-    width: 20px;
-    height: 20px;
-    color: #818181;
-    font-weight: 300;
+
+.ant-modal-content {
+  border-radius: 16px !important;
+  padding: 24px !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+
+  .ant-modal-header {
+    border-bottom: none;
+    padding: 0;
+
+    .ant-modal-title {
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: $text-primary;
+    }
   }
+
+  .ant-modal-body {
+    padding-top: 10px;
+    font-size: 1rem;
+
+    .ant-space-item {
+      width: 100%;
+    }
+
+    .ant-typography-secondary {
+      color: #9ca3af !important;
+      font-size: 0.85rem;
+    }
+
+    .ant-typography-h4 {
+      margin-bottom: 12px !important;
+      line-height: 1.5;
+    }
+
+    .ant-typography p {
+      font-size: 1rem;
+      color: $text-primary;
+    }
+
+    .ant-typography-paragraph {
+      margin-bottom: 0 !important;
+    }
+  }
+}
+
+.ant-modal-mask {
+  background: rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: blur(4px);
 }

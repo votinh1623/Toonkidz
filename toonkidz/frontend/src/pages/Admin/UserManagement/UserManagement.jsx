@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Table, Tag, Input, Space, Tooltip, Modal, message, Button, Select, Switch, Form } from "antd";
 import { EditOutlined, DeleteOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
-import { getAllUsers, adminUpdateUser, adminDeleteUser } from "../../../service/userService";
+import { getAllUsers, adminUpdateUser, adminDeactivateUser } from "../../../service/userService";
 import { useDebounce } from "../../../hooks/useDebounce";
 import Swal from 'sweetalert2/dist/sweetalert2.js';
 import 'sweetalert2/src/sweetalert2.scss';
@@ -61,23 +61,23 @@ const UserManagement = () => {
 
   const handleDelete = (userId, name) => {
     Swal.fire({
-      title: `Bạn có chắc chắn muốn xóa?`,
-      html: `Bạn sẽ xóa người dùng: <strong>${name}</strong>`,
+      title: `Vô hiệu hóa tài khoản?`,
+      html: `Bạn sẽ **khóa quyền truy cập** của người dùng này:<br><strong>${name}</strong>`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#d33",
       cancelButtonColor: "#3085d6",
-      confirmButtonText: "Vâng, xóa!",
+      confirmButtonText: "Vâng, Vô hiệu hóa!",
       cancelButtonText: "Hủy"
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const res = await adminDeleteUser(userId);
+          const res = await adminDeactivateUser(userId);
           if (res.success) {
-            Swal.fire("Đã xóa!", "Người dùng đã được xóa.", "success");
+            Swal.fire("Đã vô hiệu hóa!", res.message || "Tài khoản đã bị khóa thành công.", "success");
             fetchUsers();
           } else {
-            Swal.fire("Lỗi!", res.error || "Xóa thất bại.", "error");
+            Swal.fire("Lỗi!", res.error || "Vô hiệu hóa thất bại.", "error");
           }
         } catch (error) {
           Swal.fire("Lỗi!", "Đã xảy ra lỗi kết nối.", "error");
@@ -169,7 +169,7 @@ const UserManagement = () => {
             <Button className="action-btn edit" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
           </Tooltip>
           <Tooltip title="Xoá">
-            <Button className="action-btn delete" icon={<DeleteOutlined />} onClick={() => handleDelete(record._id, record.name)} />
+            <Button className="action-btn delete" icon={<DeleteOutlined />} onClick={() => handleDelete(record._id, record.name)} disabled={!record.isActive} />
           </Tooltip>
         </Space>
       ),

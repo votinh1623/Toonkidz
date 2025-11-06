@@ -25,6 +25,7 @@ import AvailableStoriesPage from "../pages/AvailableStoriesPage/AvailableStories
 import PrivateRoute from "./PrivateRoute";
 import AdminRoute from "./AdminRoute";
 import Chat from "../pages/Chat/Chat";
+import FeedbackManagement from "../pages/Admin/FeedbackManagement/FeedbackManagement";
 
 export const route = [
   { path: "/login", element: <Login /> },
@@ -80,6 +81,7 @@ export const route = [
               { path: "stories-management/add", element: <AddStory /> },
               { path: "stories-management/edit/:storyId", element: <EditStory /> },
               { path: "reports", element: <ReportingAndCensorship /> },
+              { path: "feedback", element: <FeedbackManagement /> },
             ],
           },
         ],

@@ -10,7 +10,8 @@ import {
   getProfile,
   getAllUsers,
   updateUserById,
-  deleteUserById
+  deleteUserById,
+  deactivateUser
 } from '../controllers/user.controller.js';
 import multer from 'multer';
 
@@ -33,7 +34,7 @@ router.post('/toggle-favorite/:storyId', auth, toggleFavoriteStory);
 router.route('/:id')
   .get(auth, getUserById)
   .put(auth, adminAuth, updateUserById)
-  .delete(auth, adminAuth, deleteUserById);
+  .delete(auth, adminAuth, deactivateUser);
 
 router.post('/:id/follow', auth, followUser);
 

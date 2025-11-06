@@ -2,115 +2,60 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Input, Avatar, Spin, message } from 'antd';
 import { Search, Paperclip, Smile, Send, Phone, MoreVertical } from 'lucide-react';
-import { getProfile } from '../../service/userService';
-import { getConversations, getMessages } from '../../service/messageService';
-import io from 'socket.io-client';
+import { getMessages } from '../../service/messageService';
+import { useOutletContext } from 'react-router-dom';
 import './Chat.scss';
 
-const socket = io("http://localhost:3000", { autoConnect: false });
+const formatTimestamp = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+};
 
 const Chat = () => {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [conversations, setConversations] = useState([]);
+  const {
+    currentUser,
+    conversations,
+    setConversations,
+    onlineUsers,
+    socket,
+    loadingConvos,
+    setMessagesExternally
+  } = useOutletContext();
+
   const [selectedConvo, setSelectedConvo] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
-  const [loadingConvos, setLoadingConvos] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
-  const [onlineUsers, setOnlineUsers] = useState(new Set());
 
   const socketRef = useRef(socket);
   const messageEndRef = useRef(null);
   const messageAreaRef = useRef(null);
 
-  const selectedConvoRef = useRef(null);
   useEffect(() => {
-    selectedConvoRef.current = selectedConvo;
-  }, [selectedConvo]);
+    setMessagesExternally({
+      setter: setMessages,
+      convoId: selectedConvo?._id
+    });
+  }, [selectedConvo, setMessagesExternally]);
 
   useEffect(() => {
-    const fetchProfileAndConnect = async () => {
-      try {
-        const user = await getProfile();
-        setCurrentUser(user);
+    if (conversations.length > 0 && (!selectedConvo || !conversations.find(c => c._id === selectedConvo._id))) {
+      setSelectedConvo(conversations[0]);
+    }
+  }, [conversations, selectedConvo]);
 
-        socketRef.current.io.opts.query = { userId: user._id };
-        socketRef.current.connect();
-
-        socketRef.current.on('getOnlineUsers', (userIds) => {
-          setOnlineUsers(new Set(userIds));
-        });
-
-        socketRef.current.on('receiveMessage', (newMessage) => {
-          setMessages(prev => {
-            if (selectedConvoRef.current?._id === newMessage.conversationId) {
-              return [...prev, newMessage];
-            }
-            return prev;
-          });
-
-          setConversations(prevConvos => {
-            const isViewing = selectedConvoRef.current?._id === newMessage.conversationId;
-            const newConvos = prevConvos.map(convo => {
-              if (convo._id === newMessage.conversationId) {
-                const newUnread = isViewing ? 0 : (convo.unreadCount || 0) + 1;
-                return { ...convo, lastMessage: newMessage, unreadCount: newUnread };
-              }
-              return convo;
-            });
-            return newConvos.sort((a, b) => new Date(b.lastMessage?.createdAt || 0) - new Date(a.lastMessage?.createdAt || 0));
-          });
-        });
-
-        socketRef.current.on('unreadCountReset', ({ conversationId }) => {
-          setConversations(prevConvos =>
-            prevConvos.map(convo =>
-              convo._id === conversationId ? { ...convo, unreadCount: 0 } : convo
-            )
-          );
-        });
-
-      } catch (err) {
-        message.error("Lỗi kết nối, vui lòng tải lại trang.");
-      }
-    };
-
-    fetchProfileAndConnect();
-
-    return () => {
-      socketRef.current?.disconnect();
-      socketRef.current?.off('getOnlineUsers');
-      socketRef.current?.off('receiveMessage');
-      socketRef.current?.off('unreadCountReset');
-    };
-  }, []);
-  useEffect(() => {
-    if (!currentUser) return;
-
-    const fetchConversations = async () => {
-      setLoadingConvos(true);
-      try {
-        const res = await getConversations();
-        if (res.success) {
-          setConversations(res.conversations);
-          if (res.conversations.length > 0) {
-            setSelectedConvo(res.conversations[0]);
-          }
-        }
-      } catch (err) {
-        message.error("Không thể tải danh sách tin nhắn.");
-      } finally {
-        setLoadingConvos(false);
-      }
-    };
-    fetchConversations();
-  }, [currentUser]);
   useEffect(() => {
     if (!selectedConvo) return;
 
     socketRef.current.emit('markAsRead', {
       conversationId: selectedConvo._id
     });
+
+    setConversations(prevConvos => prevConvos.map(convo =>
+      convo._id === selectedConvo._id ? { ...convo, unreadCount: 0 } : convo
+    ));
+
 
     const fetchMessages = async () => {
       setLoadingMessages(true);
@@ -129,17 +74,21 @@ const Chat = () => {
     setTimeout(() => {
       messageAreaRef.current?.scrollTo({ top: messageAreaRef.current.scrollHeight, behavior: 'auto' });
     }, 50);
-  }, [selectedConvo]);
+  }, [selectedConvo, setConversations]);
 
   useEffect(() => {
     if (messageAreaRef.current) {
-      messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      setTimeout(() => {
+        messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 50);
     }
   }, [messages]);
 
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (newMessage.trim() === "" || !socketRef.current || !currentUser || !selectedConvo) return;
+
+    const newTimestamp = new Date().toISOString();
 
     const messageData = {
       content: newMessage.trim(),
@@ -158,14 +107,28 @@ const Chat = () => {
         name: currentUser.name,
         pfp: currentUser.pfp
       },
-      createdAt: new Date().toISOString()
+      createdAt: newTimestamp
     };
+
     setMessages(prev => [...prev, optimisticMessage]);
     setNewMessage("");
 
-    // setTimeout(() => {
-    //   messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    // }, 50);
+    setConversations(prevConvos => {
+      const newConvos = prevConvos.map(convo => {
+        if (convo._id === selectedConvo._id) {
+          return {
+            ...convo,
+            lastMessage: {
+              ...optimisticMessage,
+              content: optimisticMessage.content
+            },
+            unreadCount: 0
+          };
+        }
+        return convo;
+      });
+      return newConvos.sort((a, b) => new Date(b.lastMessage?.createdAt || 0) - new Date(a.lastMessage?.createdAt || 0));
+    });
   };
 
   const isPartnerOnline = selectedConvo && onlineUsers.has(selectedConvo.partner._id);
@@ -179,7 +142,12 @@ const Chat = () => {
         </div>
         <div className="cl-items">
           {loadingConvos ? <Spin style={{ padding: "20px" }} /> : conversations.map(convo => {
-            const isOnline = onlineUsers.has(convo.partner._id);
+            const isOnline = convo.partner && onlineUsers.has(convo.partner._id);
+            if (!convo.partner) return null; // An toàn
+
+            const displayBadge = convo.unreadCount > 0 || (convo.unreadCount === 0 && convo.lastMessage);
+            const badgeValue = convo.unreadCount > 0 ? convo.unreadCount : 0;
+
             return (
               <div
                 key={convo._id}
@@ -192,14 +160,19 @@ const Chat = () => {
                 <div className="convo-details">
                   <div className="convo-top">
                     <span className="convo-name">{convo.partner.name}</span>
-                    <span className="convo-timestamp">{convo.lastMessage ? new Date(convo.lastMessage.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : ''}</span>
+                    <span className="convo-timestamp">{formatTimestamp(convo.lastMessage?.createdAt)}</span>
                   </div>
                   <div className="convo-bottom">
                     <p className={`convo-last-message ${convo.unreadCount > 0 ? 'unread' : ''}`}>
                       {convo.lastMessage?.senderId._id === currentUser?._id ? "Bạn: " : ""}
                       {convo.lastMessage?.content || "..."}
                     </p>
-                    {convo.unreadCount > 0 && <span className="unread-badge">{convo.unreadCount}</span>}
+
+                    {/* {displayBadge && (
+                      <span className={`unread-badge ${badgeValue === 0 ? 'zero' : ''}`}>
+                        {badgeValue}
+                      </span>
+                    )} */}
                   </div>
                 </div>
               </div>
@@ -231,10 +204,11 @@ const Chat = () => {
               {loadingMessages ? (
                 <div style={{ display: 'flex', justifyContent: 'center', padding: '50px' }}><Spin /></div>
               ) : messages.map(msg => (
-                <div key={msg._id} className={`message-bubble ${msg.senderId._id === currentUser._id ? 'sent' : 'received'}`}>
-                  {msg.senderId._id !== currentUser._id && <Avatar src={msg.senderId.pfp || 'https://www.svgrepo.com/show/452030/avatar-default.svg'} size={32} className="message-avatar" />}
+                <div key={msg._id} className={`message-bubble ${msg.senderId._id === currentUser?._id ? 'sent' : 'received'}`}>
+                  {msg.senderId._id !== currentUser?._id && <Avatar src={msg.senderId.pfp || 'https://www.svgrepo.com/show/452030/avatar-default.svg'} size={32} className="message-avatar" />}
                   <div className="message-content">
                     <p>{msg.content}</p>
+                    {/* <span className="message-timestamp">{formatTimestamp(msg.createdAt)}</span> */}
                   </div>
                 </div>
               ))}

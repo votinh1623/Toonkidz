@@ -4,6 +4,7 @@ import { login } from "@/service/authService";
 import Swal from "sweetalert2";
 import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
 import "./Login.scss";
+import GuestChatWidget from "../../GuestChatWidget/GuestChatWidget";
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -33,6 +34,13 @@ const Login = () => {
           showConfirmButton: false,
         });
         navigate("/home/homepage");
+      } else if (res.message === "Tài khoản của bạn đã bị vô hiệu hóa.") {
+        Swal.fire({
+          title: "Tài khoản bị khóa",
+          text: "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.",
+          icon: "warning",
+          confirmButtonText: "Đã hiểu",
+        });
       } else {
         Swal.fire({
           title: "Đăng nhập thất bại",
@@ -103,6 +111,7 @@ const Login = () => {
           <NavLink to="/signup">Đăng ký ngay</NavLink>
         </div>
       </div>
+      <GuestChatWidget />
     </div>
   );
 };

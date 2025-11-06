@@ -6,6 +6,7 @@ import {
   FileTextFilled,
   BarChartOutlined,
   PieChartFilled,
+  MessageOutlined,
 } from "@ant-design/icons";
 import { NavLink } from "react-router-dom";
 
@@ -43,18 +44,18 @@ const AdminSiderContent = () => {
 
       {/* Thống kê */}
       <div className="sider-section">
-        <h3 className="sider-title">Phân tích & Báo cáo</h3>
+        <h3 className="sider-title">Phân tích & Hỗ trợ</h3>
         <ul className="sider-list">
           <li>
             <NavLink to="/admin/reports" className="sider-link">
               <BarChartOutlined className="icon statistic" /> Thống kê
             </NavLink>
           </li>
-          {/* <li>
-            <NavLink to="/admin/reports" className="sider-link">
-              <PieChartFilled className="icon report" /> Báo cáo
+          <li>
+            <NavLink to="/admin/feedback" className="sider-link">
+              <MessageOutlined className="icon feedback" /> Phản hồi & Hỗ trợ
             </NavLink>
-          </li> */}
+          </li>
         </ul>
       </div>
     </div>

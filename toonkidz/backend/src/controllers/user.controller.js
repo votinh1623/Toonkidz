@@ -266,3 +266,21 @@ export const deleteUserById = async (req, res) => {
     res.status(500).json({ success: false, error: 'Failed to delete user' });
   }
 };
+
+export const deactivateUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    user.isActive = false;
+    await user.save();
+
+    res.json({ success: true, message: 'Tài khoản đã bị vô hiệu hóa thành công.' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to deactivate user' });
+  }
+};

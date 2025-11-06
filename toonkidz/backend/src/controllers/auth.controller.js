@@ -37,10 +37,19 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
+
     if (user && (await user.comparePassword(password))) {
+      if (!user.isActive) {
+        return res.status(403).json({ message: "Tài khoản của bạn đã bị vô hiệu hóa." });
+      }
+
       const { accessToken, refreshToken } = generateTokens(user._id);
       await storeRefreshToken(user._id, refreshToken);
       setCookies(res, accessToken, refreshToken);
+
+      user.lastOnline = new Date();
+      await user.save();
+
       res.json({
         _id: user._id,
         name: user.name,

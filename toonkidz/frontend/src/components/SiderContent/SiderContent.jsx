@@ -1,5 +1,3 @@
-// src/components/SiderContent/SiderContent.jsx
-
 import React from "react";
 import {
   Home,
@@ -30,7 +28,8 @@ const NavItem = ({ to, icon, label, badge, onClose }) => {
     >
       {icon}
       <span className="label">{label}</span>
-      {badge && <span className="badge">{badge}</span>}
+
+      {(typeof badge === 'number' || (badge && badge !== "0")) && <span className="badge">{badge}</span>}
     </NavLink>
   );
 };
@@ -44,7 +43,7 @@ const getInitials = (name) => {
   return name.substring(0, 2).toUpperCase();
 };
 
-const SiderContent = ({ onClose, user }) => {
+const SiderContent = ({ onClose, user, totalUnreadMessages }) => {
   const navigate = useNavigate();
 
   const handleNavigate = (path) => {
@@ -95,7 +94,7 @@ const SiderContent = ({ onClose, user }) => {
           to="/home/chat"
           icon={<MessageCircle className="icon" />}
           label="Tin nhắn"
-          badge="3"
+          badge={totalUnreadMessages}
           onClose={onClose}
         />
         <NavItem
