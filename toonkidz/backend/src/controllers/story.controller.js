@@ -1,12 +1,16 @@
-//story.controller.js
+// story.controller.js
 import axios from 'axios';
 import { AI_MODELS, AI_RETRY_OPTIONS } from '../config/ai.config.js';
 import Story from '../models/story.model.js';
 import cloudinary from "../lib/cloudinary.js";
 import fs from "fs";
+import path from "path";
+import Replicate from "replicate";
+import { writeFile } from "fs/promises";
+import { generateImagesForStory } from './image.controller.js';
 
 export const generateStory = async (req, res) => {
-  const { theme, keywords, prompt: userPrompt } = req.body;
+  const { theme, keywords, pages, prompt: userPrompt } = req.body;
   const userId = req.user._id;
 
   if (!theme && !userPrompt) {
@@ -26,35 +30,63 @@ Tạo một câu chuyện thiếu nhi bằng tiếng Việt với các yêu cầ
 
 TỪ KHÓA BẮT BUỘC (nếu có): ${storyKeywords.length ? storyKeywords.join(', ') : 'Không có từ khóa bắt buộc.'}
 
-YÊU CẦU:
+YÊU CẦU BẮT BUỘC:
 1. Tiêu đề: Một dòng ngắn gọn, hấp dẫn.
-2. Tóm tắt: Một hoặc hai câu mô tả nội dung chính của câu chuyện, không chứa "một câu chuyện...".
-3. Câu chuyện: Chia thành 2 trang, mỗi trang khoảng 20 từ.
+2. Tóm tắt: Một hoặc hai câu mô tả nội dung chính của câu chuyện.
+3. Câu chuyện: Chia thành ${pages || 2} trang, mỗi trang khoảng 20 từ.
 4. Mỗi trang phải có nội dung hoàn chỉnh và liên kết với trang trước/sau.
-5. Kết cấu câu chuyện rõ ràng: mở đầu, diễn biến, kết thúc.
+5. Mỗi trang PHẢI có imagePrompt bằng tiếng Anh.
+6. PHẢI có coverImagePrompt bằng tiếng Anh.
 
-ĐỊNH DẠNG ĐẦU RA (JSON):
+ĐỊNH DẠNG JSON BẮT BUỘC - KHÔNG ĐƯỢC THIẾU BẤT KỲ TRƯỜNG NÀO:
 {
   "title": "Tiêu đề câu chuyện",
   "heading": "Tóm tắt ngắn gọn",
+  "coverImagePrompt": "English prompt for cover image",
   "pages": [
     {
       "pageNumber": 1,
-      "content": "Nội dung trang 1..."
+      "content": "Nội dung trang 1 bằng tiếng Việt",
+      "imagePrompt": "English prompt for page 1 image"
     },
     {
       "pageNumber": 2,
-      "content": "Nội dung trang 2..."
+      "content": "Nội dung trang 2 bằng tiếng Việt",
+      "imagePrompt": "English prompt for page 2 image"
+    }
+  ]
+}
+
+QUY TẮC VIẾT IMAGE PROMPT:
+- VIẾT HOÀN TOÀN BẰNG TIẾNG ANH
+- Mô tả: nhân vật + hành động + bối cảnh + cảm xúc
+- Phong cách: cartoon, children's book illustration, bright colors, friendly
+- Cover image: tổng quan câu chuyện, hấp dẫn
+
+VÍ DỤ ĐẦY ĐỦ:
+{
+  "title": "Chú Thỏ Thông Minh",
+  "heading": "Chú thỏ giúp đỡ bạn bè trong rừng",
+  "coverImagePrompt": "Cute white rabbit standing in sunny forest, cartoon style, bright colors, children's book cover, friendly animals in background",
+  "pages": [
+    {
+      "pageNumber": 1,
+      "content": "Thỏ Bông đi khám phá khu rừng xanh...",
+      "imagePrompt": "Small white rabbit exploring sunny forest, cartoon style, bright green trees, happy expression, adventure time"
+    },
+    {
+      "pageNumber": 2, 
+      "content": "Thỏ giúp Sóc tìm hạt dẻ...",
+      "imagePrompt": "Rabbit helping squirrel get acorns from tree hole, cartoon style, friendly animals working together, forest setting"
     }
   ]
 }
 
 Lưu ý:
-- Viết toàn bộ câu chuyện bằng tiếng Việt tự nhiên.
-- Ưu tiên tuyệt đối ý tưởng do người dùng gõ (*${userPrompt || theme}*).
-- Sử dụng từ khóa một cách tự nhiên, không gượng ép.
-- Câu chuyện có tính giáo dục, vui vẻ và phù hợp với trẻ em.
-- Chia câu chuyện thành các trang hợp lý, mỗi trang là một phần của cốt truyện.
+- Nội dung câu chuyện viết bằng tiếng Việt
+- Image prompts viết bằng tiếng Anh
+- KHÔNG ĐƯỢC thiếu imagePrompt trong bất kỳ trang nào
+- KHÔNG ĐƯỢC thiếu coverImagePrompt
 `;
 
   const sortedModels = AI_MODELS.sort((a, b) => a.priority - b.priority);
@@ -73,7 +105,7 @@ Lưu ý:
             {
               input: {
                 prompt: prompt,
-                system_prompt: "Bạn là một nhà văn chuyên viết truyện thiếu nhi. Hãy viết câu chuyện bằng tiếng Việt với cấu trúc trang rõ ràng.",
+                system_prompt: "Bạn là một nhà văn chuyên viết truyện thiếu nhi. Hãy viết câu chuyện bằng tiếng Việt với cấu trúc trang rõ ràng và tạo mô tả hình ảnh bằng tiếng Anh.",
                 max_tokens: 2000,
                 temperature: 0.8
               }
@@ -191,6 +223,10 @@ Lưu ý:
         storyText = String(storyText || '');
         if (!storyText || storyText.trim() === '') throw new Error('Empty response from AI');
 
+        console.log('=== RAW AI RESPONSE ===');
+        console.log(storyText);
+        console.log('=== END RAW RESPONSE ===');
+
         let result;
         try {
           result = JSON.parse(storyText);
@@ -202,41 +238,102 @@ Lưu ý:
           throw new Error('Invalid response format: missing pages array');
         }
 
-        // Create pages without images
-        const pages = result.pages.map((page, index) => ({
+        // Create pages with image prompts
+        const pagesWithPrompts = result.pages.map((page, index) => ({
           pageNumber: page.pageNumber || index + 1,
-          content: page.content
-          // No image field - images will be handled separately by frontend
+          content: page.content,
+          imagePrompt: page.imagePrompt || generateFallbackImagePrompt(page.content, result.title, index + 1)
         }));
 
-        // Save to database without images
+        
+
+        // Create temporary story data
         const storyData = {
-          theme: theme || 'custom',
+          theme: theme,
           title: result.title || `Câu chuyện về ${theme}`,
           head: result.heading || 'Một câu chuyện thú vị dành cho trẻ em',
-          content: pages.map(page => page.content).join('\n\n'),
-          pages: pages,
+          content: pagesWithPrompts.map(page => page.content).join('\n\n'),
+          pages: pagesWithPrompts.map(page => ({
+            pageNumber: page.pageNumber,
+            content: page.content, // Make sure content is saved for each page
+            //imagePrompt: page.imagePrompt,
+            image: '', // Will be updated after image generation
+            audio: '' // Optional audio field
+          })),
+          coverImage: '',
+          coverImagePrompt: result.coverImagePrompt || generateFallbackCoverPrompt(result.title, result.heading),
           userId: userId,
-          status: 'generated', // Story content generated, images pending
+          status: 'preview', // New status to indicate images are being generated
           tags: storyKeywords.join(', '),
-          readingTime: Math.ceil(pages.length * 0.5),
+          readingTime: Math.ceil(pagesWithPrompts.length * 0.5),
           ageGroup: '6-8',
           language: 'vi'
         };
 
-        const savedStory = await Story.create(storyData);
+        // Save story temporarily with 'generating_images' status
+        const tempStory = await Story.create(storyData);
 
-        //Return story without images
-        return res.json({
-          success: true,
-          storyId: savedStory._id,
-          title: savedStory.title,
-          heading: savedStory.head,
-          pages: savedStory.pages,
-          theme: savedStory.theme,
-          keywords: storyKeywords,
-          model_used: model.name
-        });
+        console.log('Starting image generation for story:', tempStory._id);
+
+        // Generate images and wait for completion
+        try {
+          const imageResult = await generateImagesForStoryInternal(
+            tempStory._id.toString(),
+            {
+              coverImagePrompt: result.coverImagePrompt,
+              pages: result.pages.map(page => ({
+                pageNumber: page.pageNumber,
+                prompt: page.imagePrompt
+              }))
+            }
+          );
+          const updatedPages = tempStory.pages.map(page => {
+            const generatedPage = imageResult.pages.find(p => p.pageNumber === page.pageNumber);
+            return {
+              pageNumber: page.pageNumber,
+              content: page.content, // Preserve the original content
+             // imagePrompt: page.imagePrompt, // Preserve the image prompt
+              image: generatedPage ? generatedPage.image : '', // Add generated image URL
+              audio: page.audio || '' // Preserve audio if exists
+            };
+          });
+          // Update story with generated images
+          const updatedStory = await Story.findByIdAndUpdate(
+            tempStory._id,
+            {
+              coverImage: imageResult.coverImage,
+              pages: updatedPages,
+              status: 'completed'
+            },
+            { new: true }
+          );
+
+          console.log('Story completed with images:', updatedStory._id);
+
+          // Return complete story with images
+          return res.json({
+            success: true,
+            storyId: updatedStory._id,
+            title: updatedStory.title,
+            heading: updatedStory.head,
+            pages: updatedStory.pages,
+            coverImage: updatedStory.coverImage,
+            theme: updatedStory.theme,
+            keywords: storyKeywords,
+            model_used: model.name,
+            status: 'completed'
+          });
+
+        } catch (imageError) {
+          console.error('Image generation failed:', imageError);
+
+          // Update story status to failed
+          await Story.findByIdAndUpdate(tempStory._id, {
+            status: 'failed'
+          });
+
+          throw new Error(`Image generation failed: ${imageError.message}`);
+        }
 
       } catch (err) {
         console.warn(`Attempt ${attempt + 1} failed for model ${model.name}:`, err.message);
@@ -277,15 +374,197 @@ Lưu ý:
     message: 'Xin lỗi, tất cả các dịch vụ AI hiện đang gặp sự cố. Vui lòng thử lại sau.'
   });
 };
+export const savePreviewStory = async (req, res) => {
+  try {
+    const { storyId } = req.params;
+    
+    const story = await Story.findById(storyId);
+    if (!story) {
+      return res.status(404).json({ error: 'Story not found' });
+    }
 
-//Helper function to parse non-JSON responses
+    // Update status from 'preview' to 'published' or 'draft'
+    const updatedStory = await Story.findByIdAndUpdate(
+      storyId,
+      { 
+        status: req.body.status || 'published',
+        ...(req.body.title && { title: req.body.title }),
+        ...(req.body.head && { head: req.body.head })
+      },
+      { new: true }
+    );
+
+    res.json({
+      success: true,
+      story: updatedStory,
+      message: 'Story saved successfully'
+    });
+  } catch (error) {
+    console.error('Error saving story:', error);
+    res.status(500).json({ error: 'Failed to save story' });
+  }
+};
+// Internal function to generate images (adapted from image.controller.js)
+const generateImagesForStoryInternal = async (storyId, imagePrompts) => {
+  try {
+    const { coverImagePrompt, pages } = imagePrompts;
+
+    // Generate cover image
+    console.log('Generating cover image...');
+    const coverImageUrl = await generateImageWithFlux(coverImagePrompt);
+
+    // Generate images for each page
+    console.log('Generating page images...');
+    const pagesWithImages = await Promise.all(
+      pages.map(async (page) => {
+        const imageUrl = await generateImageWithFlux(page.prompt);
+        return {
+          pageNumber: page.pageNumber,
+          image: imageUrl
+        };
+      })
+    );
+
+    // Return the image results
+    return {
+      coverImage: coverImageUrl,
+      pages: pagesWithImages
+    };
+
+  } catch (error) {
+    console.error('Error generating images internally:', error);
+    throw error;
+  }
+};
+
+// Image generation function with Replicate Flux Schnell
+const generateImageWithFlux = async (prompt) => {
+  try {
+    // Enhance the prompt for better results
+    const enhancedPrompt = `${prompt}, cartoon style, children's book illustration, bright vibrant colors, friendly characters, detailed, 4k, professional artwork`;
+
+    console.log('Generating image with prompt:', enhancedPrompt);
+
+    // Check if we have Replicate API key
+    if (!process.env.REPLICATE_API_KEY) {
+      throw new Error('Replicate API key not configured');
+    }
+
+    const replicate = new Replicate({
+      auth: process.env.REPLICATE_API_KEY,
+    });
+
+    const input = {
+      prompt: enhancedPrompt,
+      go_fast: true,
+      megapixels: "1",
+      num_outputs: 1,
+      aspect_ratio: "1:1",
+      output_format: "webp",
+      output_quality: 80,
+      num_inference_steps: 4
+    };
+
+    console.log('Calling Replicate API with input:', input);
+
+    const output = await replicate.run("black-forest-labs/flux-schnell", { input });
+
+    console.log('Replicate output received');
+
+    if (!output || !output[0]) {
+      throw new Error('No output received from Replicate');
+    }
+
+    // Create temp directory if it doesn't exist
+    const tempDir = path.join(process.cwd(), 'temp');
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
+    }
+
+    // Generate unique filename
+    const filename = `story_${Date.now()}_${Math.random().toString(36).substring(7)}.webp`;
+    const filePath = path.join(tempDir, filename);
+
+    // Write file to disk
+    console.log('Writing file to disk:', filePath);
+    await writeFile(filePath, output[0]);
+    console.log('Image saved to disk');
+
+    // Upload to Cloudinary using your existing pattern
+    const uploadResult = await uploadToCloudinary([filename], tempDir);
+
+    if (uploadResult.imageUrls && uploadResult.imageUrls.length > 0) {
+      return uploadResult.imageUrls[0];
+    } else {
+      throw new Error('Failed to upload image to Cloudinary');
+    }
+
+  } catch (error) {
+    console.error('Error generating image with Replicate:', error);
+    throw new Error(`Replicate generation failed: ${error.message}`);
+  }
+};
+
+// Also update the uploadToCloudinary function to use your working pattern:
+const uploadToCloudinary = async (filenames, generatedDir) => {
+  const imageUrls = [];
+  const uploadErrors = [];
+
+  for (const filename of filenames) {
+    const filepath = path.join(generatedDir, filename);
+    if (fs.existsSync(filepath)) {
+      try {
+        const result = await cloudinary.uploader.upload(filepath, {
+          folder: "toonkidz/story_images",
+          public_id: `story_${Date.now()}_${filename}`,
+          resource_type: "image",
+        });
+        imageUrls.push(result.secure_url);
+        fs.unlinkSync(filepath);
+        console.log(`Successfully uploaded and deleted: ${filename}`);
+      } catch (uploadError) {
+        console.error(`Error uploading ${filename}:`, uploadError);
+        uploadErrors.push(filename);
+      }
+    } else {
+      console.error(`File not found: ${filepath}`);
+      uploadErrors.push(filename);
+    }
+  }
+
+  if (uploadErrors.length > 0) {
+    if (imageUrls.length > 0) {
+      return {
+        imageUrls,
+        warning: `Some images failed to upload: ${uploadErrors.join(", ")}`,
+      };
+    } else {
+      throw new Error(`Failed to upload images: ${uploadErrors.join(", ")}`);
+    }
+  }
+
+  return { imageUrls };
+};
+// Helper function to generate fallback image prompts
+function generateFallbackImagePrompt(content, title, pageNumber) {
+  const mainCharacter = title.split(' ')[0] || 'character';
+  return `Children's book illustration, cartoon style, bright colors, friendly ${mainCharacter}, ${content.substring(0, 100)}... detailed, vibrant, 4k`;
+}
+
+function generateFallbackCoverPrompt(title, heading) {
+  return `Children's book cover, ${title}, cartoon style, bright vibrant colors, friendly characters, detailed illustration, 4k, professional artwork`;
+}
+
+// Helper function to parse non-JSON responses (updated to handle image prompts)
 async function parseNonJSONResponse(storyText, theme) {
   const lines = storyText.split('\n').map(l => l.trim()).filter(Boolean);
 
   let title = '';
   let heading = '';
+  let coverImagePrompt = '';
   const pages = [];
   let currentPage = null;
+  let inImagePromptSection = false;
 
   for (const line of lines) {
     const lower = line.toLowerCase();
@@ -294,6 +573,8 @@ async function parseNonJSONResponse(storyText, theme) {
       title = line.replace(/title:|tiêu đề:/i, '').trim();
     } else if (lower.startsWith('heading:') || lower.startsWith('tóm tắt:') || lower.startsWith('summary:')) {
       heading = line.replace(/heading:|tóm tắt:|summary:/i, '').trim();
+    } else if (lower.startsWith('coverimageprompt:') || lower.startsWith('cover image prompt:')) {
+      coverImagePrompt = line.replace(/coverimageprompt:|cover image prompt:/i, '').trim();
     } else if (lower.startsWith('page') || lower.startsWith('trang')) {
       if (currentPage) {
         pages.push(currentPage);
@@ -302,10 +583,21 @@ async function parseNonJSONResponse(storyText, theme) {
       const pageNumber = pageMatch ? parseInt(pageMatch[1]) : pages.length + 1;
       currentPage = {
         pageNumber,
-        content: ''
+        content: '',
+        imagePrompt: ''
       };
+      inImagePromptSection = false;
+    } else if (lower.startsWith('imageprompt:') || lower.startsWith('image prompt:')) {
+      if (currentPage) {
+        currentPage.imagePrompt = line.replace(/imageprompt:|image prompt:/i, '').trim();
+        inImagePromptSection = true;
+      }
     } else if (currentPage) {
-      currentPage.content += (currentPage.content ? ' ' : '') + line;
+      if (inImagePromptSection) {
+        currentPage.imagePrompt += ' ' + line;
+      } else {
+        currentPage.content += (currentPage.content ? ' ' : '') + line;
+      }
     }
   }
 
@@ -317,50 +609,49 @@ async function parseNonJSONResponse(storyText, theme) {
     const content = lines.join(' ');
     pages.push({
       pageNumber: 1,
-      content: content
+      content: content,
+      imagePrompt: generateFallbackImagePrompt(content, title, 1)
     });
   }
 
   if (!title) title = `Câu chuyện về ${theme}`;
   if (!heading) heading = 'Một câu chuyện thú vị dành cho trẻ em';
+  if (!coverImagePrompt) coverImagePrompt = generateFallbackCoverPrompt(title, heading);
 
-  return { title, heading, pages };
+  // Ensure all pages have image prompts
+  pages.forEach((page, index) => {
+    if (!page.imagePrompt) {
+      page.imagePrompt = generateFallbackImagePrompt(page.content, title, index + 1);
+    }
+  });
+
+  return { title, heading, coverImagePrompt, pages };
 }
 
-//Function to update story with images (called by frontend after image generation)
-export const updateStoryWithImages = async (req, res) => {
+// Function to get image prompts for a story (for frontend to generate images)
+export const getStoryImagePrompts = async (req, res) => {
   try {
     const { storyId } = req.params;
-    const { pages } = req.body; // Array of pages with image URLs from frontend
 
     const story = await Story.findById(storyId);
     if (!story) {
       return res.status(404).json({ error: 'Story not found' });
     }
 
-    // Update pages with image URLs from frontend
-    story.pages = story.pages.map((page, index) => ({
-      ...page.toObject(),
-      image: pages[index]?.image || '' // Add image URL to each page
-    }));
-
-    // Update status to completed when images are added
-    story.status = 'completed';
-
-    await story.save();
-
     res.json({
       success: true,
-      message: 'Story updated with images successfully',
-      story: {
-        id: story._id,
-        title: story.title,
-        pages: story.pages
+      imagePrompts: {
+        cover: story.coverImagePrompt,
+        pages: story.pages.map(page => ({
+          pageNumber: page.pageNumber,
+          content: page.content,
+          prompt: page.imagePrompt
+        }))
       }
     });
   } catch (error) {
-    console.error('Error updating story with images:', error);
-    res.status(500).json({ error: 'Failed to update story with images' });
+    console.error('Error fetching story image prompts:', error);
+    res.status(500).json({ error: 'Failed to fetch story image prompts' });
   }
 };
 
@@ -393,8 +684,6 @@ export const getStory = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch story' });
   }
 };
-
-
 //Create story
 export const createStory = async (req, res) => {
   try {

@@ -18,7 +18,11 @@ const pageSchema = new mongoose.Schema({
   audio: {
     type: String,
     required: false
-  }
+  },
+  //  imagePrompt: {  // ADD THIS FIELD
+  //   type: String,
+  //   required: false
+  // }
 });
 
 const storySchema = new mongoose.Schema(
@@ -54,7 +58,7 @@ const storySchema = new mongoose.Schema(
     status: {
       type: String,
       required: true,
-      enum: ["draft", "generating", "generated", "published"], // Added more status options
+      enum: ["draft", "generating", "generated", "preview", "published"], // Added more status options
       default: "draft"
     },
     tags: [{
