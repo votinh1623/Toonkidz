@@ -70,8 +70,10 @@ export const likePost = async (req, res) => {
     if (!post) {
       return res.status(404).json({ success: false, error: "Post not found" });
     }
-    if (!post.userId || !post.userId._id) {
-      console.error(`Post ${postId} thiếu chủ sở hữu.`);
+
+    const isOwner = post.userId._id.toString() === userId.toString();
+    if (isOwner) {
+      console.log("Info: Người dùng tự like bài viết của mình (sẽ không có thông báo nếu đã chặn).");
     }
 
     const isLiked = post.likes.includes(userId);
@@ -82,23 +84,26 @@ export const likePost = async (req, res) => {
       await Post.updateOne({ _id: postId }, { $addToSet: { likes: userId } });
 
       try {
-        const response = createNotification({
-          recipientId: post.userId._id,
-          senderId: userId,
-          type: 'like_post',
-          entityId: postId,
-          message: `${req.user.name} đã thích bài đăng của bạn.`
-        });
-        console.log(response);
+        if (!isOwner) {
+          console.log("Creating Like Notification for:", post.userId._id);
+          await createNotification({
+            recipientId: post.userId._id,
+            senderId: userId,
+            type: 'like_post',
+            entityId: postId,
+            message: `${req.user.name} đã thích bài đăng của bạn.`,
+            targetUrl: `/home/profile/${post.userId._id}#${postId}`
+          });
+        }
       } catch (e) {
-        console.error("Lỗi thông báo Like, tiếp tục xử lý chính:", e.message);
+        console.error("Lỗi tạo thông báo Like:", e);
       }
     }
 
     const updatedPost = await Post.findById(postId);
     res.json({ success: true, likes: updatedPost.likes });
   } catch (error) {
-    console.error("Error in likePost controller (Uncaught):", error.message);
+    console.error("Error in likePost controller:", error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 };
@@ -121,16 +126,21 @@ export const addComment = async (req, res) => {
     await post.save();
 
     await updateStoryRating(post.storyId);
+
     try {
-      createNotification({
-        recipientId: post.userId._id,
-        senderId: userId,
-        type: 'comment_post',
-        entityId: post._id,
-        message: `${req.user.name} đã bình luận: "${text.substring(0, 30)}..."`
-      });
+      if (post.userId._id.toString() !== userId.toString()) {
+        console.log("Creating Comment Notification for:", post.userId._id);
+        await createNotification({
+          recipientId: post.userId._id,
+          senderId: userId,
+          type: 'comment_post',
+          entityId: post._id,
+          message: `${req.user.name} đã bình luận: "${text.substring(0, 30)}..."`,
+          targetUrl: `/home/profile/${post.userId._id}#${postId}`
+        });
+      }
     } catch (e) {
-      console.error("Lỗi thông báo Comment, tiếp tục xử lý chính:", e.message);
+      console.error("Lỗi tạo thông báo Comment:", e);
     }
 
     const updatedPost = await Post.findById(postId)
@@ -144,7 +154,7 @@ export const addComment = async (req, res) => {
     res.status(201).json({ success: true, post: updatedPost });
 
   } catch (error) {
-    console.error("Error adding comment (Uncaught):", error);
+    console.error("Error adding comment:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 };
@@ -253,6 +263,43 @@ export const getPostsByUserId = async (req, res) => {
       .sort({ createdAt: -1 });
 
     res.json({ success: true, posts });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+export const updatePost = async (req, res) => {
+  try {
+    const { caption, visibility } = req.body;
+    const post = await Post.findById(req.params.id);
+
+    if (!post) return res.status(404).json({ success: false, error: "Post not found" });
+    if (post.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, error: "Unauthorized" });
+    }
+
+    post.caption = caption || post.caption;
+    post.visibility = visibility || post.visibility;
+    await post.save();
+
+    await post.populate(['userId', 'storyId']);
+
+    res.json({ success: true, post });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+export const deletePost = async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ success: false, error: "Post not found" });
+    if (post.userId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, error: "Unauthorized" });
+    }
+
+    await post.deleteOne();
+    res.json({ success: true, message: "Post deleted successfully" });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }

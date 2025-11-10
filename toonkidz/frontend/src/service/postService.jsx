@@ -70,3 +70,11 @@ export const getPostsByUserId = async (userId) => {
     throw err;
   }
 };
+
+export const updatePostApi = async (postId, data) => {
+  return put(`posts/${postId}`, data);
+};
+
+export const deletePostApi = async (postId) => {
+  return del(`posts/${postId}`);
+};

@@ -1,19 +1,31 @@
 // src/pages/ProfilePage/UserPostFeed.jsx
 import React, { useState, useEffect } from 'react';
-import { Spin, message, Dropdown, Menu, Rate, Modal } from 'antd';
+import { Spin, message, Dropdown, Menu, Rate, Modal, Button } from 'antd';
 import { FaHeart, FaCommentAlt, FaShareAlt, FaStar, FaPaperPlane } from 'react-icons/fa';
 import { BsThreeDotsVertical } from 'react-icons/bs';
-import { likePost, addComment, editComment, deleteComment } from '../../service/postService';
+import { likePost, addComment, editComment, deleteComment, deletePostApi } from '../../service/postService';
 import StoryDetailModal from '../../components/StoryDetailModal/StoryDetailModal';
+import { GlobalOutlined, LockOutlined, TeamOutlined, EllipsisOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
 import 'sweetalert2/src/sweetalert2.scss';
 import './UserPostFeed.scss'
+import PostEditModal from '../PostEditModal/PostEditModal';
+import { useNavigate } from 'react-router-dom';
 
 const renderStars = (rating) => (
   Array.from({ length: 5 }).map((_, i) => (
     <FaStar key={i} className={`star ${i < rating ? "filled" : ""}`} />
   ))
 );
+
+const getInitials = (name) => {
+  if (!name) return "?";
+  const words = name.split(' ');
+  if (words.length > 1) {
+    return `${words[0][0]}${words[words.length - 1][0]}`.toUpperCase();
+  }
+  return name.substring(0, 2).toUpperCase();
+};
 
 const UserPostFeed = ({ posts, loading, currentUser, onUpdatePost }) => {
   const [livePosts, setLivePosts] = useState([]);
@@ -23,6 +35,10 @@ const UserPostFeed = ({ posts, loading, currentUser, onUpdatePost }) => {
   const [selectedStory, setSelectedStory] = useState(null);
   const [editingComment, setEditingComment] = useState(null);
 
+  const [isPostEditModalOpen, setIsPostEditModalOpen] = useState(false);
+  const [postToEdit, setPostToEdit] = useState(null);
+  const navigate = useNavigate();
+
   useEffect(() => {
     setLivePosts(posts || []);
   }, [posts]);
@@ -30,7 +46,15 @@ const UserPostFeed = ({ posts, loading, currentUser, onUpdatePost }) => {
   const updatePostInState = (updatedPost) => {
     const newPosts = livePosts.map(p => p._id === updatedPost._id ? updatedPost : p);
     setLivePosts(newPosts);
-    onUpdatePost(newPosts); // Cập nhật lại state ở component cha
+    onUpdatePost(newPosts);
+  };
+
+  const handleNavigateToProfile = (userId) => {
+    if (currentUser && currentUser._id === userId) {
+      navigate('/home/profile');
+    } else {
+      navigate(`/home/profile/${userId}`);
+    }
   };
 
   const handleToggleLike = async (postId) => {
@@ -51,6 +75,32 @@ const UserPostFeed = ({ posts, loading, currentUser, onUpdatePost }) => {
       message.error("Thao tác thất bại, vui lòng thử lại.");
       setLivePosts(originalPosts);
     }
+  };
+
+  const handleDeletePost = (postId) => {
+    Swal.fire({
+      title: 'Xóa bài viết?',
+      text: "Bạn không thể hoàn tác hành động này!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      confirmButtonText: 'Xóa',
+      cancelButtonText: 'Hủy'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const res = await deletePostApi(postId);
+          if (res.success) {
+            message.success("Đã xóa bài viết.");
+            onUpdatePost(livePosts.filter(p => p._id !== postId));
+          } else {
+            message.error(res.error || "Xóa thất bại.");
+          }
+        } catch (error) {
+          message.error("Lỗi kết nối.");
+        }
+      }
+    });
   };
 
   const handleSendOrUpdateComment = async (postId) => {
@@ -123,6 +173,17 @@ const UserPostFeed = ({ posts, loading, currentUser, onUpdatePost }) => {
     message.success(`Đã báo cáo bình luận (ID: ${commentId}). Cảm ơn bạn!`);
   };
 
+  const handlePostUpdate = (updatedPost) => {
+    updatePostInState(updatedPost);
+    setPostToEdit(null);
+    setIsPostEditModalOpen(false);
+  };
+
+  const handleOpenEditModal = (post) => {
+    setPostToEdit(post);
+    setIsPostEditModalOpen(true);
+  };
+
   const renderCommentMenu = (comment, post) => {
     const isOwnerOrAdmin = currentUser && (currentUser._id === comment.userId._id || currentUser.role === 'admin');
     if (isOwnerOrAdmin) {
@@ -136,6 +197,29 @@ const UserPostFeed = ({ posts, loading, currentUser, onUpdatePost }) => {
     return (
       <Menu>
         <Menu.Item key="report" onClick={() => handleReportComment(comment._id)}>Báo cáo</Menu.Item>
+      </Menu>
+    );
+  };
+
+  const renderPostMenu = (post) => {
+    const isOwner = currentUser && currentUser._id === post.userId._id;
+    if (isOwner) {
+      return (
+        <Menu>
+          <Menu.Item key="edit" onClick={() => handleOpenEditModal(post)}>
+            Chỉnh sửa bài viết
+          </Menu.Item>
+          <Menu.Item key="delete" danger onClick={() => handleDeletePost(post._id)}>
+            Xóa bài viết
+          </Menu.Item>
+        </Menu>
+      );
+    }
+    return (
+      <Menu>
+        <Menu.Item key="report" onClick={() => handleReportPost(post._id)}>
+          Báo cáo bài viết
+        </Menu.Item>
       </Menu>
     );
   };
@@ -168,14 +252,33 @@ const UserPostFeed = ({ posts, loading, currentUser, onUpdatePost }) => {
             const isEditingThisPost = editingComment && editingComment.postId === post._id;
 
             return (
-              <div key={post._id} className="story-card">
+              <div key={post._id} id={post._id} className="story-card">
                 <div className="story-content">
-                  <div className="author-info">
-                    <img className="avatar" src={author.pfp || 'https://www.svgrepo.com/show/452030/avatar-default.svg'} alt={author.name} />
-                    <div className="author-details">
-                      <h4>{author.name}</h4>
-                      <p>{new Date(post.createdAt).toLocaleString('vi-VN')}</p>
+                  <div className="story-header-wrapper">
+                    <div className="author-info">
+                      {author && author.pfp ? (
+                        <img className="avatar" src={author.pfp} alt={author.name} />
+                      ) : (
+                        <div className="avatar-initials">
+                          {getInitials(author?.name)}
+                        </div>
+                      )}
+                      <div className="author-details">
+                        <h4>{author.name}</h4>
+                        <p>
+                          {new Date(post.createdAt).toLocaleString('vi-VN')}
+                          <span className="post-visibility">
+                            {post.visibility === 'public' && <GlobalOutlined />}
+                            {post.visibility === 'friend' && <TeamOutlined />}
+                            {post.visibility === 'private' && <LockOutlined />}
+                          </span>
+                        </p>
+                      </div>
                     </div>
+
+                    <Dropdown overlay={renderPostMenu(post)} trigger={['click']} placement="bottomRight">
+                      <Button type="text" icon={<EllipsisOutlined style={{ fontSize: '20px' }} />} />
+                    </Dropdown>
                   </div>
                   {post.caption && <p className="story-caption">{post.caption}</p>}
                   <div className="story-meta">
@@ -213,10 +316,25 @@ const UserPostFeed = ({ posts, loading, currentUser, onUpdatePost }) => {
                       {post.comments.length ? (
                         post.comments.map((c) => (
                           <div key={c._id} className="comment-row">
-                            <img className="c-avatar" src={c.userId.pfp || 'https://www.svgrepo.com/show/452030/avatar-default.svg'} alt={c.userId.name} />
+                            <div
+                              onClick={() => handleNavigateToProfile(c.userId._id)}
+                              style={{ cursor: 'pointer' }}
+                            >
+                              {c.userId && c.userId.pfp ? (
+                                <img className="avatar" src={c.userId.pfp} alt={c.userId.name} />
+                              ) : (
+                                <div className="avatar-initials">
+                                  {getInitials(c.userId?.name)}
+                                </div>
+                              )}
+                            </div>
                             <div className="c-body">
                               <div className="c-top">
-                                <strong className="c-user">{c.userId.name}</strong>
+                                <strong className="c-user" onClick={() => handleNavigateToProfile(c.userId._id)}
+                                  style={{ cursor: 'pointer' }}
+                                >
+                                  {c.userId.name}
+                                </strong>
                                 <span className="c-date"> • {new Date(c.createdAt).toLocaleDateString()}</span>
                               </div>
                               <div className="c-stars">
@@ -236,7 +354,13 @@ const UserPostFeed = ({ posts, loading, currentUser, onUpdatePost }) => {
                       )}
                     </div>
                     <div className="comment-compose">
-                      <img className="c-avatar small" src={currentUser?.pfp || '/default-avatar.svg'} alt="Bạn" />
+                      {currentUser && currentUser.pfp ? (
+                        <img className="avatar" src={currentUser.pfp} alt={currentUser.name} />
+                      ) : (
+                        <div className="avatar-initials">
+                          {getInitials(currentUser?.name)}
+                        </div>
+                      )}
                       <div className="compose-box">
                         {isEditingThisPost && (
                           <div className="editing-state">
@@ -281,6 +405,13 @@ const UserPostFeed = ({ posts, loading, currentUser, onUpdatePost }) => {
         story={selectedStory}
         open={isViewModalOpen}
         onClose={handleCloseModal}
+      />
+
+      <PostEditModal
+        open={isPostEditModalOpen}
+        onClose={() => setIsPostEditModalOpen(false)}
+        post={postToEdit}
+        onUpdate={handlePostUpdate}
       />
     </div>
   );

@@ -9,6 +9,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 dayjs.extend(relativeTime);
 
 import "./Notify.scss";
+import { useNavigate } from 'react-router-dom';
 const { Title, Text, Paragraph } = Typography;
 
 const NotificationDetailModal = ({ open, onClose, notification }) => {
@@ -113,6 +114,7 @@ function Notify({ socket, totalUnreadMessages }) {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [currentNotification, setCurrentNotification] = useState(null);
+  const navigate = useNavigate();
 
   const fetchNotifications = useCallback(async () => {
     setLoading(true);
@@ -159,9 +161,14 @@ function Notify({ socket, totalUnreadMessages }) {
   };
 
   const handleViewDetail = async (notification) => {
-    setCurrentNotification(notification);
-    setIsDetailModalOpen(true);
-    setIsDropdownOpen(false);
+    if (notification.targetUrl) {
+      setIsDropdownOpen(false);
+      navigate(notification.targetUrl);
+    } else {
+      setCurrentNotification(notification);
+      setIsDetailModalOpen(true);
+      setIsDropdownOpen(false);
+    }
 
     if (!notification.isRead) {
       try {

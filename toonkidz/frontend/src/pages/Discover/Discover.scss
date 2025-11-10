@@ -136,13 +136,37 @@
     align-items: center;
     margin-bottom: 16px;
 
-    .avatar {
-      width: 48px;
-      height: 48px;
+    .avatar-img,
+    .avatar-initials {
+      width: 2.5rem;
+      height: 2.5rem;
       border-radius: 50%;
-      background-color: #eee;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: white;
+      margin-right: 10px;
+    }
+
+    .avatar-img {
       object-fit: cover;
-      margin-right: 12px;
+    }
+
+    .avatar-initials {
+      background: linear-gradient(to bottom right, #a78bfa, #ec4899);
+    }
+
+    .avatar {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 50%;
+      background: linear-gradient(to bottom right, #a78bfa, #ec4899);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
     }
 
     .author-details {
@@ -196,7 +220,7 @@
   }
 
   .read-btn {
-    margin-top: auto; // Đẩy nút xuống dưới cùng
+    margin-top: auto;
     background-color: #f0fdf4;
     color: #16a34a;
     border: 1px solid #bbf7d0;
@@ -250,7 +274,6 @@
     }
   }
 
-  // Phần bình luận (chiếm toàn bộ chiều rộng)
   .comments-inline {
     width: 100%;
     margin-top: 20px;
@@ -397,14 +420,13 @@
 }
 
 
-// --- RESPONSIVE ---
 @media (max-width: 768px) {
   .discover-container {
     padding: 20px 15px;
   }
 
   .story-card {
-    flex-direction: column-reverse; // Đưa ảnh lên trên
+    flex-direction: column-reverse;
 
     .story-content {
       padding-right: 0;

@@ -6,7 +6,7 @@ const getIo = () => {
   return global.io;
 }
 
-export const createNotification = async ({ recipientId, senderId, type, entityId, message }) => {
+export const createNotification = async ({ recipientId, senderId, type, entityId, message, targetUrl = '' }) => {
   if (recipientId.toString() === senderId.toString()) return;
 
   try {
@@ -15,7 +15,8 @@ export const createNotification = async ({ recipientId, senderId, type, entityId
       senderId,
       type,
       entityId,
-      message
+      message,
+      targetUrl
     });
 
     await notification.populate('senderId', 'name pfp');
@@ -62,9 +63,8 @@ export const markAllRead = async (req, res) => {
 
     const socketId = global.userSocketMap[userId.toString()];
     const ioInstance = getIo();
-
     if (socketId && ioInstance) {
-      ioInstance.to(socketId).emit('notificationsRead');
+      ioInstance.to(socketId).emit('notificationsRead', { unreadCount: 0, markAll: true });
     }
 
     res.json({ success: true, message: "Đã đánh dấu tất cả là đã đọc." });
@@ -88,10 +88,14 @@ export const markOneRead = async (req, res) => {
     }
 
     const unreadCount = await Notification.countDocuments({ recipientId: userId, isRead: false });
-    const socketId = global.userSocketMap[userId.toString()];
 
-    if (socketId && global.io) {
-      global.io.to(socketId).emit('notificationsRead', { unreadCount });
+    const socketId = global.userSocketMap[userId.toString()];
+    const ioInstance = getIo();
+    if (socketId && ioInstance) {
+      ioInstance.to(socketId).emit('notificationReadOne', {
+        unreadCount,
+        notificationId
+      });
     }
 
     res.json({ success: true, message: "Đã đánh dấu thông báo là đã đọc." });

@@ -1,7 +1,7 @@
 // backend/src/routes/post.route.js
 import express from 'express';
 import { auth } from '../middleware/auth.middleware.js';
-import { createPost, getAllPosts, likePost, addComment, editComment, deleteComment, getPostsByUserId } from '../controllers/post.controller.js';
+import { createPost, getAllPosts, likePost, addComment, editComment, deleteComment, getPostsByUserId, updatePost, deletePost } from '../controllers/post.controller.js';
 
 const router = express.Router();
 
@@ -14,6 +14,10 @@ router.route('/user/:userId')
 
 router.route('/:id/like')
   .post(auth, likePost);
+
+router.route('/:id')
+  .put(auth, updatePost)
+  .delete(auth, deletePost);
 
 router.route('/:postId/comment')
   .post(auth, addComment);

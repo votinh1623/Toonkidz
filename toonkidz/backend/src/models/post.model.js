@@ -28,6 +28,11 @@ const postSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }],
+  visibility: {
+    type: String,
+    enum: ['public', 'friend', 'private'],
+    default: 'public'
+  },
   comments: [commentSchema],
   shares: {
     type: Number,

@@ -12,6 +12,15 @@ const formatTimestamp = (dateString) => {
   return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 };
 
+const getInitials = (name) => {
+  if (!name) return "?";
+  const words = name.split(' ');
+  if (words.length > 1) {
+    return `${words[0][0]}${words[words.length - 1][0]}`.toUpperCase();
+  }
+  return name.substring(0, 2).toUpperCase();
+};
+
 const Chat = () => {
   const {
     currentUser,
@@ -155,7 +164,13 @@ const Chat = () => {
                 onClick={() => setSelectedConvo(convo)}
               >
                 <div className={`convo-avatar-wrapper ${isOnline ? 'online' : ''}`}>
-                  <Avatar src={convo.partner.pfp || 'https://www.svgrepo.com/show/452030/avatar-default.svg'} size={48} className="convo-avatar" />
+                  {convo.partner && convo.partner.pfp ? (
+                    <img className="avatar" src={convo.partner.pfp} alt={convo.partner.name} />
+                  ) : (
+                    <div className="avatar-initials">
+                      {getInitials(convo.partner?.name)}
+                    </div>
+                  )}
                 </div>
                 <div className="convo-details">
                   <div className="convo-top">
@@ -186,7 +201,13 @@ const Chat = () => {
           <>
             <header className="chat-header">
               <div className="ch-user">
-                <Avatar src={selectedConvo.partner.pfp || 'https://www.svgrepo.com/show/452030/avatar-default.svg'} size={40} />
+                {selectedConvo.partner && selectedConvo.partner.pfp ? (
+                  <img className="avatar" src={selectedConvo.partner.pfp} alt={selectedConvo.partner.name} />
+                ) : (
+                  <div className="avatar-initials">
+                    {getInitials(selectedConvo.partner?.name)}
+                  </div>
+                )}
                 <div className="ch-user-details">
                   <h4>{selectedConvo.partner.name}</h4>
                   <span className={isPartnerOnline ? 'online' : 'offline'}>
@@ -205,7 +226,13 @@ const Chat = () => {
                 <div style={{ display: 'flex', justifyContent: 'center', padding: '50px' }}><Spin /></div>
               ) : messages.map(msg => (
                 <div key={msg._id} className={`message-bubble ${msg.senderId._id === currentUser?._id ? 'sent' : 'received'}`}>
-                  {msg.senderId._id !== currentUser?._id && <Avatar src={msg.senderId.pfp || 'https://www.svgrepo.com/show/452030/avatar-default.svg'} size={32} className="message-avatar" />}
+                  {msg.senderId._id !== currentUser?._id && (msg.senderId && msg.senderId.pfp ? (
+                    <img className="msg-avatar" src={msg.senderId.pfp} alt={msg.senderId.name} />
+                  ) : (
+                    <div className="msg-avatar-initials">
+                      {getInitials(msg.senderId?.name)}
+                    </div>
+                  ))}
                   <div className="message-content">
                     <p>{msg.content}</p>
                     {/* <span className="message-timestamp">{formatTimestamp(msg.createdAt)}</span> */}

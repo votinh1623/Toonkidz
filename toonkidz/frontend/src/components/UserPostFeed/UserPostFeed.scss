@@ -94,7 +94,29 @@
         margin: 0;
         color: #888;
         font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
       }
+    }
+
+    .post-visibility {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.85rem;
+
+      .anticon-global {
+        color: #1890ff;
+      }
+
+      .anticon-team {
+        color: #52c41a;
+      }
+
+      .anticon-lock {
+        color: #ff4d4f;
+      }
+
     }
   }
 
@@ -133,7 +155,7 @@
   }
 
   .read-btn {
-    margin-top: auto; // Đẩy nút xuống dưới cùng
+    margin-top: auto;
     background-color: #f0fdf4;
     color: #16a34a;
     border: 1px solid #bbf7d0;
@@ -187,7 +209,6 @@
     }
   }
 
-  // Phần bình luận (chiếm toàn bộ chiều rộng)
   .comments-inline {
     width: 100%;
     margin-top: 20px;
@@ -331,4 +352,42 @@
       }
     }
   }
+}
+
+.story-header-wrapper {
+  display: flex;
+  justify-content: space-between;
+}
+
+.avatar-img,
+.avatar-initials {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: white;
+  margin-right: 10px;
+}
+
+.avatar-img {
+  object-fit: cover;
+}
+
+.avatar-initials {
+  background: linear-gradient(to bottom right, #a78bfa, #ec4899);
+}
+
+.avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: linear-gradient(to bottom right, #a78bfa, #ec4899);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
 }

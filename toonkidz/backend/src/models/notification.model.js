@@ -23,6 +23,10 @@ const notificationSchema = new mongoose.Schema({
     required: true,
     index: true
   },
+  targetUrl: {
+    type: String,
+    default: ''
+  },
   isRead: {
     type: Boolean,
     default: false,

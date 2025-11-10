@@ -2,6 +2,7 @@
   font-family: 'Poppins', sans-serif;
   color: #333;
   background-color: #fff;
+  height: 100vh;
 
   @media (max-width: 768px) {
     padding: 1.5rem;
@@ -18,10 +19,44 @@
     background-color: #fff;
     padding: 24px 32px;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.07);
+    height: 100vh;
 
     @media (max-width: 768px) {
       padding: 16px;
     }
+  }
+
+  .profile-avatar-img,
+  .profile-avatar-initials {
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: white;
+    font-size: 25px;
+  }
+
+  .profile-avatar-img {
+    object-fit: cover;
+  }
+
+  .profile-avatar-initials {
+    background: linear-gradient(to bottom right, #a78bfa, #ec4899);
+  }
+
+  .profile-avatar {
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: 50%;
+    background: linear-gradient(to bottom right, #a78bfa, #ec4899);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
   }
 
   .profile-header {
@@ -38,15 +73,6 @@
     display: flex;
     align-items: center;
     gap: 20px;
-
-    .avatar-img {
-      width: 90px;
-      height: 90px;
-      border-radius: 50%;
-      object-fit: cover;
-      // border: 1px solid #6c63ff;
-      border: none;
-    }
 
     .username {
       font-size: 1.75rem;
@@ -85,6 +111,17 @@
       &:hover {
         background-color: #f0f0f0;
         border-color: #ccc;
+      }
+
+      &.friend-btn {
+        background: #e6f7e6;
+        color: #52c41a;
+        border: 1px solid #b7eb8f;
+
+        &:hover {
+          background: #d9f7be;
+          border-color: #52c41a;
+        }
       }
 
       &.edit-btn,
@@ -268,5 +305,26 @@
     &:hover {
       background: #555;
     }
+  }
+}
+
+.story-card.highlight-post {
+  animation: highlight 2.5s ease-out;
+}
+
+@keyframes highlight {
+  0% {
+    background-color: rgba(108, 99, 255, 0);
+    box-shadow: 0 0 0 0 rgba(108, 99, 255, 0.3);
+  }
+
+  30% {
+    background-color: rgba(108, 99, 255, 0.15);
+    box-shadow: 0 0 15px 5px rgba(108, 99, 255, 0.3);
+  }
+
+  100% {
+    background-color: rgba(108, 99, 255, 0);
+    box-shadow: 0 0 0 0 rgba(108, 99, 255, 0);
   }
 }

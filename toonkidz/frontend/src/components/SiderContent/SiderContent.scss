@@ -148,6 +148,7 @@
     .profile-info {
       flex: 1;
       min-width: 0;
+      overflow-x: hidden;
 
       .name {
         font-size: 0.875rem;
