@@ -33,7 +33,7 @@ export const addComment = async (postId, { text, rating }) => {
 
 export const editComment = async (postId, commentId, { text, rating }) => {
   try {
-    const res = await put(`posts/${postId}/comments/${commentId}`, { text, rating });
+    const res = await put(`posts/${postId}/comment/${commentId}`, { text, rating });
     return res;
   } catch (err) {
     console.error("Error editing comment:", err);
@@ -43,7 +43,7 @@ export const editComment = async (postId, commentId, { text, rating }) => {
 
 export const deleteComment = async (postId, commentId) => {
   try {
-    const res = await del(`posts/${postId}/comments/${commentId}`);
+    const res = await del(`posts/${postId}/comment/${commentId}`);
     return res;
   } catch (err) {
     console.error("Error deleting comment:", err);
@@ -59,6 +59,10 @@ export const createPost = async (data) => {
     console.error("Error creating post:", err);
     throw err;
   }
+};
+
+export const sharePostToProfile = async (originalPostId, data) => {
+  return post(`posts/${originalPostId}/share`, data);
 };
 
 export const getPostsByUserId = async (userId) => {

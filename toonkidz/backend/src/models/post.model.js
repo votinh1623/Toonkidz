@@ -14,15 +14,31 @@ const postSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  postType: {
+    type: String,
+    enum: ['original', 'share'],
+    required: true,
+    default: 'original'
+  },
   storyId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Story',
-    required: true,
+    // required: true,
+    required: function () { return this.postType === 'original'; }
   },
   caption: {
     type: String,
     trim: true,
     maxlength: 500,
+  },
+  sharedCaption: {
+    type: String,
+    trim: true,
+  },
+  originalPostId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Post',
+    required: function () { return this.postType === 'share'; }
   },
   likes: [{
     type: mongoose.Schema.Types.ObjectId,
