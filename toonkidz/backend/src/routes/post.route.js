@@ -1,29 +1,37 @@
 // backend/src/routes/post.route.js
 import express from 'express';
 import { auth } from '../middleware/auth.middleware.js';
-import { createPost, getAllPosts, likePost, addComment, editComment, deleteComment, getPostsByUserId, updatePost, deletePost } from '../controllers/post.controller.js';
+import {
+  createPost,
+  getAllPosts,
+  likePost,
+  addComment,
+  editComment,
+  deleteComment,
+  getPostsByUserId,
+  updatePost,
+  deletePost,
+  sharePostToProfile
+} from '../controllers/post.controller.js';
 
 const router = express.Router();
 
-router.route('/')
-  .post(auth, createPost)
-  .get(auth, getAllPosts);
+router.get('/', auth, getAllPosts);
 
-router.route('/user/:userId')
-  .get(auth, getPostsByUserId);
+router.get('/user/:userId', auth, getPostsByUserId);
 
-router.route('/:id/like')
-  .post(auth, likePost);
+router.post('/', auth, createPost);
+
+router.post('/:id/share', auth, sharePostToProfile);
 
 router.route('/:id')
   .put(auth, updatePost)
   .delete(auth, deletePost);
 
-router.route('/:postId/comment')
-  .post(auth, addComment);
+router.post('/:id/like', auth, likePost);
 
-router.route('/:postId/comments/:commentId')
-  .put(auth, editComment)
-  .delete(auth, deleteComment);
+router.post('/:postId/comment', auth, addComment);
+router.put('/:postId/comment/:commentId', auth, editComment);
+router.delete('/:postId/comment/:commentId', auth, deleteComment);
 
 export default router;

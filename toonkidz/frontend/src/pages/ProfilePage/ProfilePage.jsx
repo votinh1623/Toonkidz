@@ -32,10 +32,10 @@ const ProfilePage = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const fetchUserPosts = useCallback(async (id) => {
+  const fetchUserPosts = useCallback(async (idToFetch) => {
     setLoadingPosts(true);
     try {
-      const res = await getPostsByUserId(id);
+      const res = await getPostsByUserId(idToFetch);
       if (res.success) {
         setPosts(res.posts);
       } else {
@@ -51,6 +51,7 @@ const ProfilePage = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      setLoadingPosts(true);
       try {
         const meRes = await getProfile();
         setCurrentUser(meRes);
@@ -67,14 +68,17 @@ const ProfilePage = () => {
 
           setIsFollowing(amIFollowingThem);
           setIsFriend(amIFollowingThem && areTheyFollowingMe);
-
           fetchUserPosts(profileRes.user._id);
         } else {
           message.error("Không tìm thấy người dùng này.");
           setLoadingPosts(false);
         }
       } catch (error) {
-        message.error("Lỗi khi tải thông tin trang cá nhân.");
+        if (error.response && error.response.status === 429) {
+          message.error("Bạn đã tải trang quá nhanh. Vui lòng chờ giây lát.");
+        } else {
+          message.error("Lỗi khi tải thông tin trang cá nhân.");
+        }
         setLoadingPosts(false);
       } finally {
         setLoading(false);
@@ -269,6 +273,7 @@ const ProfilePage = () => {
           loading={loadingPosts}
           currentUser={currentUser}
           onUpdatePost={setPosts}
+          isOwner={isOwner}
         />
       </div>
 

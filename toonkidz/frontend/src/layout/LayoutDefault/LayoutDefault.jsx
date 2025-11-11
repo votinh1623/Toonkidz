@@ -1,3 +1,4 @@
+// src/layout/LayoutDefault/LayoutDefault.jsx
 import { Outlet, useLocation } from "react-router-dom";
 import Header from "../../components/Header/Header";
 import { Layout, Grid, Drawer, Spin, message } from "antd";
@@ -12,7 +13,9 @@ const { useBreakpoint } = Grid;
 
 const socket = io("http://localhost:3000", { autoConnect: false });
 
-const fullBleedPaths = ['/home/chat'];
+const fullBleedPaths = [
+  '/home/chat'
+];
 
 const LayoutDefault = () => {
   const screens = useBreakpoint();
@@ -50,7 +53,6 @@ const LayoutDefault = () => {
       return [];
     }
   }, []);
-
 
   useEffect(() => {
     let isMounted = true;
@@ -111,7 +113,12 @@ const LayoutDefault = () => {
         fetchConversations();
 
       } catch (err) {
-        console.error("Failed to fetch profile/connect:", err);
+        if (err.response && err.response.status === 429) {
+          message.error("Bạn đang tải trang quá nhanh. Vui lòng chờ 15 giây.");
+        } else {
+          console.error("Failed to fetch profile/connect:", err);
+          message.error("Lỗi kết nối, vui lòng tải lại trang.");
+        }
       } finally {
         if (isMounted) {
           setLoadingProfile(false);
@@ -129,6 +136,7 @@ const LayoutDefault = () => {
       socketRef.current?.off('unreadCountReset');
     };
   }, [fetchConversations]);
+
   useEffect(() => {
     const total = conversations.reduce((acc, convo) => acc + (convo.unreadCount || 0), 0);
     setTotalUnreadMessages(total);

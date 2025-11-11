@@ -1,7 +1,7 @@
 // src/components/ShareStoryModal/ShareStoryModal.jsx
-
 import React, { useState, useEffect } from 'react';
-import { Modal, Form, Input, Select, Button, Spin, message } from 'antd';
+import { Modal, Form, Input, Select, Button, Spin, message, Space } from 'antd';
+import { GlobalOutlined, TeamOutlined, LockOutlined } from '@ant-design/icons';
 import './ShareStoryModal.scss';
 import { getMyStories } from '../../service/storyService';
 import { createPost } from '../../service/postService';
@@ -14,9 +14,11 @@ const ShareStoryModal = ({ open, onClose, onSuccess }) => {
   const [loadingStories, setLoadingStories] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch danh sách truyện của người dùng khi modal được mở
   useEffect(() => {
     if (open) {
+      form.resetFields();
+      form.setFieldsValue({ visibility: 'public' });
+
       const fetchUserStories = async () => {
         setLoadingStories(true);
         try {
@@ -34,14 +36,14 @@ const ShareStoryModal = ({ open, onClose, onSuccess }) => {
       };
       fetchUserStories();
     }
-  }, [open]);
+  }, [open, form]);
 
   const handleFinish = async (values) => {
     setIsSubmitting(true);
     try {
       const res = await createPost(values);
       if (res.success) {
-        onSuccess(); // Gọi hàm callback thành công từ component cha
+        onSuccess(res.post);
       } else {
         message.error(res.error || "Chia sẻ truyện thất bại!");
       }
@@ -93,6 +95,24 @@ const ShareStoryModal = ({ open, onClose, onSuccess }) => {
             maxLength={500}
             showCount
           />
+        </Form.Item>
+
+        <Form.Item
+          name="visibility"
+          label="Ai có thể xem bài đăng này?"
+          rules={[{ required: true, message: 'Vui lòng chọn quyền xem!' }]}
+        >
+          <Select placeholder="Chọn quyền xem">
+            <Option value="public">
+              <Space><GlobalOutlined /> Công khai (Mọi người)</Space>
+            </Option>
+            <Option value="friend">
+              <Space><TeamOutlined /> Bạn bè (Chỉ bạn bè)</Space>
+            </Option>
+            <Option value="private">
+              <Space><LockOutlined /> Chỉ mình tôi (Private)</Space>
+            </Option>
+          </Select>
         </Form.Item>
 
         <Form.Item>

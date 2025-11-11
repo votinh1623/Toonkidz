@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Spin, message, Dropdown, Menu, Rate, Modal, Button } from 'antd';
 import { FaHeart, FaCommentAlt, FaShareAlt, FaStar, FaPaperPlane } from 'react-icons/fa';
 import { BsThreeDotsVertical } from 'react-icons/bs';
-import { likePost, addComment, editComment, deleteComment, deletePostApi } from '../../service/postService';
+import { likePost, addComment, editComment, deleteComment, deletePostApi, updatePostApi } from '../../service/postService';
 import StoryDetailModal from '../../components/StoryDetailModal/StoryDetailModal';
 import { GlobalOutlined, LockOutlined, TeamOutlined, EllipsisOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
@@ -11,6 +11,9 @@ import 'sweetalert2/src/sweetalert2.scss';
 import './UserPostFeed.scss'
 import PostEditModal from '../PostEditModal/PostEditModal';
 import { useNavigate } from 'react-router-dom';
+import ShareToProfileModal from '../ShareToProfileModal/ShareToProfileModal';
+import ShareToChatModal from '../ShareToChatModal/ShareToChatModal';
+import ShareOptionsModal from '../ShareOptionsModal/ShareOptionsModal';
 
 const renderStars = (rating) => (
   Array.from({ length: 5 }).map((_, i) => (
@@ -27,7 +30,7 @@ const getInitials = (name) => {
   return name.substring(0, 2).toUpperCase();
 };
 
-const UserPostFeed = ({ posts, loading, currentUser, onUpdatePost }) => {
+const UserPostFeed = ({ posts, loading, currentUser, onUpdatePost, isOwner }) => {
   const [livePosts, setLivePosts] = useState([]);
   const [openCommentsId, setOpenCommentsId] = useState(null);
   const [inputs, setInputs] = useState({});
@@ -37,6 +40,11 @@ const UserPostFeed = ({ posts, loading, currentUser, onUpdatePost }) => {
 
   const [isPostEditModalOpen, setIsPostEditModalOpen] = useState(false);
   const [postToEdit, setPostToEdit] = useState(null);
+
+  const [shareOptionsOpen, setShareOptionsOpen] = useState(false);
+  const [shareChatOpen, setShareChatOpen] = useState(false);
+  const [shareProfileOpen, setShareProfileOpen] = useState(false);
+  const [postToShare, setPostToShare] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -184,6 +192,33 @@ const UserPostFeed = ({ posts, loading, currentUser, onUpdatePost }) => {
     setIsPostEditModalOpen(true);
   };
 
+  const handleOpenShareOptions = (post) => {
+    const postToActuallyShare = post.originalPostId ? post.originalPostId : post;
+    let finalPostToShare = postToActuallyShare;
+    if (post.originalPostId && !postToActuallyShare.userId) {
+      finalPostToShare = post.originalPostId;
+    } else {
+      finalPostToShare = post;
+    }
+    if (post.postType === 'share' && post.originalPostId) {
+      setPostToShare(post.originalPostId);
+    } else {
+      setPostToShare(post);
+    }
+
+    setShareOptionsOpen(true);
+  };
+
+  const handleShareToProfile = () => {
+    setShareOptionsOpen(false);
+    setShareProfileOpen(true);
+  };
+
+  const handleShareToChat = () => {
+    setShareOptionsOpen(false);
+    setShareChatOpen(true);
+  };
+
   const renderCommentMenu = (comment, post) => {
     const isOwnerOrAdmin = currentUser && (currentUser._id === comment.userId._id || currentUser.role === 'admin');
     if (isOwnerOrAdmin) {
@@ -234,6 +269,143 @@ const UserPostFeed = ({ posts, loading, currentUser, onUpdatePost }) => {
     setInputs((prev) => ({ ...prev, [postId]: { ...(prev[postId] || { text: "", rating: 0 }), rating } }));
   };
 
+  const OriginalPostContent = ({
+    post,
+    isLiked,
+    open,
+    handleToggleLike,
+    toggleComments,
+    handleOpenShareOptions,
+    showActions = true
+  }) => {
+    const { storyId: story, userId: author } = post;
+    if (!story || !author) return null;
+
+    return (
+      <div className="story-content">
+        <div className="story-header-wrapper">
+          <div className="author-info" onClick={() => handleNavigateToProfile(author._id)} style={{ cursor: 'pointer' }}>
+            {author && author.pfp ? (
+              <img className="avatar" src={author.pfp} alt={author.name} />
+            ) : (
+              <div className="avatar-initials">{getInitials(author?.name)}</div>
+            )}
+            <div className="author-details">
+              <h4>{author.name}</h4>
+              <p>
+                {new Date(post.createdAt).toLocaleString('vi-VN')}
+                <span className="post-visibility">
+                  {post.visibility === 'public' && <GlobalOutlined />}
+                  {post.visibility === 'friend' && <TeamOutlined />}
+                  {post.visibility === 'private' && <LockOutlined />}
+                </span>
+              </p>
+            </div>
+          </div>
+          <Dropdown overlay={renderPostMenu(post)} trigger={['click']} placement="bottomRight">
+            <Button type="text" icon={<EllipsisOutlined style={{ fontSize: '20px' }} />} />
+          </Dropdown>
+        </div>
+        {post.caption && <p className="story-caption">{post.caption}</p>}
+        <div className="story-meta">
+          <p><strong>Tên truyện:</strong> {story.title}</p>
+          <p><strong>Thể loại:</strong> <span className="meta-theme">{story.theme}</span></p>
+          <p><strong>Giới thiệu:</strong> {story.head}</p>
+        </div>
+        <button className="read-btn" onClick={() => handleViewStory(story)}>Đọc truyện ngay</button>
+
+        {showActions && (
+          <div className="story-actions">
+            <button className={`action-btn like ${isLiked ? "liked" : ""}`} onClick={() => handleToggleLike(post._id)}>
+              <FaHeart /> <span>{post.likes.length}</span>
+            </button>
+            <button className={`action-btn comment ${open ? "open" : ""}`} onClick={() => toggleComments(post._id)}>
+              <FaCommentAlt /> <span>{post.comments.length}</span>
+            </button>
+            <button className="action-btn share" onClick={() => handleOpenShareOptions(post)}>
+              <FaShareAlt /> <span>{post.shares || 0}</span>
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const SharedPostContent = ({
+    post,
+    isLiked,
+    open,
+    handleToggleLike,
+    toggleComments,
+    handleOpenShareOptions
+  }) => {
+    const { userId: sharer, originalPostId: originalPost, sharedCaption } = post;
+
+    return (
+      <div className="story-content">
+        <div className="story-header-wrapper">
+          <div className="author-info" onClick={() => handleNavigateToProfile(sharer._id)} style={{ cursor: 'pointer' }}>
+            {sharer && sharer.pfp ? (
+              <img className="avatar" src={sharer.pfp} alt={sharer.name} />
+            ) : (
+              <div className="avatar-initials">{getInitials(sharer?.name)}</div>
+            )}
+            <div className="author-details">
+              <h4>{sharer.name}</h4>
+              <p>
+                {new Date(post.createdAt).toLocaleString('vi-VN')}
+                <span className="post-visibility">
+                  {post.visibility === 'public' && <GlobalOutlined />}
+                  {post.visibility === 'friend' && <TeamOutlined />}
+                  {post.visibility === 'private' && <LockOutlined />}
+                </span>
+              </p>
+            </div>
+          </div>
+          <Dropdown overlay={renderPostMenu(post)} trigger={['click']} placement="bottomRight">
+            <Button type="text" icon={<EllipsisOutlined style={{ fontSize: '20px' }} />} />
+          </Dropdown>
+        </div>
+
+        {sharedCaption && <p className="story-caption">{sharedCaption}</p>}
+
+        {originalPost ? (
+          <div className="embedded-post-container">
+            <OriginalPostContent post={originalPost} showActions={false} />
+          </div>
+        ) : (
+          <div className="embedded-post-unavailable">
+            <LockOutlined />
+            <p>Nội dung này không có sẵn do cài đặt quyền riêng tư của tác giả.</p>
+          </div>
+        )}
+
+
+        <div className="story-actions">
+          <button className={`action-btn like ${isLiked ? "liked" : ""}`} onClick={() => handleToggleLike(post._id)}>
+            <FaHeart /> <span>{post.likes.length}</span>
+          </button>
+          <button
+            className={`action-btn comment ${open ? "open" : ""}`}
+            onClick={() => toggleComments(post._id)}
+            disabled={!originalPost}
+            title={!originalPost ? "Không thể bình luận khi nội dung gốc bị ẩn" : "Bình luận"}
+          >
+            <FaCommentAlt /> <span>{post.comments.length}</span>
+          </button>
+          <button
+            className="action-btn share"
+            onClick={() => handleOpenShareOptions(post)}
+            disabled={!originalPost}
+            title={!originalPost ? "Bạn không thể chia sẻ bài viết này" : "Chia sẻ"}
+          >
+            <FaShareAlt /> <span>{post.shares || 0}</span>
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="user-posts-section">
       <h3 className="section-title">Bài đăng</h3>
@@ -244,71 +416,58 @@ const UserPostFeed = ({ posts, loading, currentUser, onUpdatePost }) => {
       ) : (
         <div className="story-list">
           {livePosts.length > 0 ? livePosts.map((post) => {
-            const { storyId: story, userId: author } = post;
-            if (!story || !author) return null;
+
+            const { storyId, originalPostId, postType } = post;
+            const isSharedPost = postType === 'share';
+
+            const story = isSharedPost ? post.originalPostId?.storyId : post.storyId;
+
+            if (!post.userId) {
+              return null;
+            }
+            if (!isSharedPost && !story) {
+              return null;
+            }
+
             const isLiked = currentUser ? post.likes.includes(currentUser._id) : false;
             const open = openCommentsId === post._id;
             const input = inputs[post._id] || { text: "", rating: 0 };
             const isEditingThisPost = editingComment && editingComment.postId === post._id;
 
+
             return (
               <div key={post._id} id={post._id} className="story-card">
-                <div className="story-content">
-                  <div className="story-header-wrapper">
-                    <div className="author-info">
-                      {author && author.pfp ? (
-                        <img className="avatar" src={author.pfp} alt={author.name} />
-                      ) : (
-                        <div className="avatar-initials">
-                          {getInitials(author?.name)}
-                        </div>
-                      )}
-                      <div className="author-details">
-                        <h4>{author.name}</h4>
-                        <p>
-                          {new Date(post.createdAt).toLocaleString('vi-VN')}
-                          <span className="post-visibility">
-                            {post.visibility === 'public' && <GlobalOutlined />}
-                            {post.visibility === 'friend' && <TeamOutlined />}
-                            {post.visibility === 'private' && <LockOutlined />}
-                          </span>
-                        </p>
+                {isSharedPost ? (
+                  <SharedPostContent
+                    post={post}
+                    isLiked={isLiked}
+                    open={open}
+                    handleToggleLike={handleToggleLike}
+                    toggleComments={toggleComments}
+                    handleOpenShareOptions={handleOpenShareOptions}
+                  />
+                ) : (
+                  <OriginalPostContent
+                    post={post}
+                    isLiked={isLiked}
+                    open={open}
+                    handleToggleLike={handleToggleLike}
+                    toggleComments={toggleComments}
+                    handleOpenShareOptions={handleOpenShareOptions}
+                  />
+                )}
+                {story && (
+                  <div className="story-image-container">
+                    {story.ratingAvg > 0 && (
+                      <div className="story-rating-overlay">
+                        <span>{story.ratingAvg.toFixed(1)}</span>
+                        <FaStar />
                       </div>
-                    </div>
+                    )}
+                    <img src={story.coverImage} alt={story.title} onClick={() => handleViewStory(story)} />
+                  </div>
+                )}
 
-                    <Dropdown overlay={renderPostMenu(post)} trigger={['click']} placement="bottomRight">
-                      <Button type="text" icon={<EllipsisOutlined style={{ fontSize: '20px' }} />} />
-                    </Dropdown>
-                  </div>
-                  {post.caption && <p className="story-caption">{post.caption}</p>}
-                  <div className="story-meta">
-                    <p><strong>Tên truyện:</strong> {story.title}</p>
-                    <p><strong>Thể loại:</strong> <span className="meta-theme">{story.theme}</span></p>
-                    <p><strong>Giới thiệu:</strong> {story.head}</p>
-                  </div>
-                  <button className="read-btn" onClick={() => handleViewStory(story)}>Đọc truyện ngay</button>
-                  <div className="story-actions">
-                    <button className={`action-btn like ${isLiked ? "liked" : ""}`} onClick={() => handleToggleLike(post._id)}>
-                      <FaHeart /> <span>{post.likes.length}</span>
-                    </button>
-                    <button className={`action-btn comment ${open ? "open" : ""}`} onClick={() => toggleComments(post._id)}>
-                      <FaCommentAlt /> <span>{post.comments.length}</span>
-                    </button>
-                    <button className="action-btn share">
-                      <FaShareAlt /> <span>{post.shares}</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="story-image-container">
-                  {story.ratingAvg > 0 && (
-                    <div className="story-rating-overlay">
-                      <span>{story.ratingAvg.toFixed(1)}</span>
-                      <FaStar />
-                    </div>
-                  )}
-                  <img src={story.coverImage} alt={story.title} onClick={() => handleViewStory(story)} />
-                </div>
 
                 {open && (
                   <div className="comments-inline">
@@ -412,6 +571,33 @@ const UserPostFeed = ({ posts, loading, currentUser, onUpdatePost }) => {
         onClose={() => setIsPostEditModalOpen(false)}
         post={postToEdit}
         onUpdate={handlePostUpdate}
+      />
+
+      <ShareOptionsModal
+        open={shareOptionsOpen}
+        onClose={() => setShareOptionsOpen(false)}
+        post={postToShare}
+        onShareToProfile={handleShareToProfile}
+        onShareToChat={handleShareToChat}
+      />
+      <ShareToProfileModal
+        open={shareProfileOpen}
+        onClose={() => setShareProfileOpen(false)}
+        post={postToShare}
+        onShared={(newPost) => {
+          if (isOwner) {
+            onUpdatePost([newPost, ...livePosts]);
+          } else {
+            message.success("Đã chia sẻ lên trang cá nhân của bạn!");
+          }
+          setShareProfileOpen(false);
+        }}
+      />
+      <ShareToChatModal
+        open={shareChatOpen}
+        onClose={() => setShareChatOpen(false)}
+        post={postToShare}
+        currentUser={currentUser}
       />
     </div>
   );

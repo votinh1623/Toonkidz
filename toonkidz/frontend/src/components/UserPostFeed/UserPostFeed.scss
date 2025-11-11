@@ -391,3 +391,61 @@
   color: white;
   font-weight: 600;
 }
+
+.embedded-post-unavailable {
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 24px;
+  margin: 16px 0;
+  background: #f8f9fa;
+  color: #888;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  font-size: 0.95rem;
+
+  .anticon-lock {
+    font-size: 1.5rem;
+  }
+}
+
+// .embedded-post-container {
+//   border: 1px solid #e9ecef;
+//   border-radius: 12px;
+//   padding: 16px;
+//   margin: 16px 0;
+//   background: #fdfdfd;
+
+//   .author-info {
+//     margin-bottom: 12px;
+
+//     .avatar,
+//     .avatar-initials {
+//       width: 40px;
+//       height: 40px;
+//     }
+
+//     .avatar-initials {
+//       font-size: 1rem;
+//     }
+//   }
+
+//   .story-caption {
+//     font-size: 0.9rem;
+//     color: #444;
+//     margin-bottom: 12px;
+//   }
+
+//   .story-meta {
+//     padding: 12px;
+//     font-size: 0.9rem;
+//     margin-bottom: 0;
+//   }
+
+//   .read-btn {
+//     display: none;
+//   }
+// }
