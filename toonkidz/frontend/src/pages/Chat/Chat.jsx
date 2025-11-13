@@ -274,10 +274,17 @@ const Chat = () => {
 
   const isPartnerOnline = selectedConvo && onlineUsers.has(selectedConvo.partner._id);
 
-  const filteredConversations = conversations.filter(convo =>
-    convo.partner.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    convo.partner.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredConversations = conversations.filter(convo => {
+    if (!convo.partner) {
+      console.warn("Lỗi dữ liệu: Cuộc hội thoại thiếu thông tin đối tác.", convo);
+      return false;
+    }
+    const partnerName = convo.partner.name || '';
+
+    return (
+      partnerName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
   return (
     <div className="chat-layout">
@@ -293,7 +300,7 @@ const Chat = () => {
           />
         </div>
         <div className="cl-items">
-          {loadingConvos ? <Spin style={{ padding: "20px" }} /> : conversations.map(convo => {
+          {loadingConvos ? <Spin style={{ padding: "20px" }} /> : filteredConversations.map(convo => {
             const isOnline = convo.partner && onlineUsers.has(convo.partner._id);
             if (!convo.partner) return null; // An toàn
 
@@ -327,10 +334,10 @@ const Chat = () => {
                     </p>
 
                     {/* {displayBadge && (
-                      <span className={`unread-badge ${badgeValue === 0 ? 'zero' : ''}`}>
-                        {badgeValue}
-                      </span>
-                    )} */}
+                      <span className={`unread-badge ${badgeValue === 0 ? 'zero' : ''}`}>
+                        {badgeValue}
+                      </span>
+                    )} */}
                   </div>
                 </div>
               </div>
