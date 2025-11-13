@@ -51,17 +51,13 @@ const ShareToChatModal = ({ open, onClose, post, currentUser }) => {
 
     const receiver = convo.partner;
     setSendingMap(prev => ({ ...prev, [receiver._id]: true }));
-
-    const postIdToSend = post._id;
-    const authorId = post.userId._id;
-
-    const postUrl = `${window.location.origin}/home/profile/${authorId}#${postIdToSend}`;
-
     const messageData = {
-      content: `Hãy xem bài viết này: ${postUrl}`,
+      content: `Đã chia sẻ bài viết của ${post.userId.name}`,
       receiverId: receiver._id,
       senderId: currentUser._id,
       conversationId: convo._id,
+      messageType: 'shared_post',
+      sharedPostId: post._id
     };
 
     socket.emit('sendMessage', messageData);
@@ -69,6 +65,7 @@ const ShareToChatModal = ({ open, onClose, post, currentUser }) => {
     setTimeout(() => {
       setSendingMap(prev => ({ ...prev, [receiver._id]: false }));
       message.success(`Đã gửi cho ${receiver.name}!`);
+      onClose();
     }, 500);
   };
 

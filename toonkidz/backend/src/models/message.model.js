@@ -19,7 +19,23 @@ const messageSchema = new mongoose.Schema(
       type: String,
       trim: true
     },
-
+    messageType: {
+      type: String,
+      enum: ['text', 'shared_post'],
+      default: 'text'
+    },
+    sharedPostId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Post',
+    },
+    isRead: {
+      type: Boolean,
+      default: false
+    },
+    isEdited: {
+      type: Boolean,
+      default: false
+    },
     imgUrl: {
       type: String
     }

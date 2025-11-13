@@ -1,4 +1,3 @@
-// src/pages/Discover/Discover.jsx
 import React, { useState, useEffect } from "react";
 import { Spin, message, Dropdown, Modal, Menu, Rate, Button } from "antd";
 import { FaHeart, FaCommentAlt, FaShareAlt, FaStar, FaPaperPlane } from "react-icons/fa";

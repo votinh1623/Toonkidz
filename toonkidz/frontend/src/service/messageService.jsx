@@ -6,7 +6,7 @@ export const getConversations = async () => {
 };
 
 export const getMessages = async (conversationId) => {
-  return get(`messages/${conversationId}`);
+  return get(`messages/${conversationId}?populatePost=true`);
 };
 
 export const findOrCreateConversation = async (receiverId) => {

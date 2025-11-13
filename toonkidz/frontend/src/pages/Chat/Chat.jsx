@@ -1,10 +1,15 @@
 // src/pages/Chat/Chat.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import { Input, Avatar, Spin, message } from 'antd';
-import { Search, Paperclip, Smile, Send, Phone, MoreVertical } from 'lucide-react';
+import { Input, Avatar, Spin, message, Typography, Space, Menu, Dropdown, Button } from 'antd';
+import { Search, Paperclip, Smile, Send, Phone, MoreVertical, Edit, Trash2 } from 'lucide-react';
 import { getMessages } from '../../service/messageService';
 import { useOutletContext } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import './Chat.scss';
+import { BsThreeDotsVertical } from 'react-icons/bs';
+import Swal from 'sweetalert2';
+
+const { Title, Text } = Typography;
 
 const formatTimestamp = (dateString) => {
   if (!dateString) return '';
@@ -21,6 +26,62 @@ const getInitials = (name) => {
   return name.substring(0, 2).toUpperCase();
 };
 
+const SharedPostSnippet = ({ postData, navigate, currentUserId }) => {
+  if (!postData || !postData.userId) {
+    return <div style={{ color: 'red' }}>Bài viết không tồn tại.</div>;
+  }
+
+  const isShared = postData.originalPostId;
+  const originalPost = isShared ? postData.originalPostId : postData;
+
+  const author = originalPost.userId;
+  const story = originalPost.storyId;
+  const postId = originalPost._id;
+
+
+  const handleNavigation = () => {
+    const url = `/home/profile/${author._id}#${postId}`;
+    navigate(url);
+  };
+
+  return (
+    <div
+      className="shared-post-snippet"
+      onClick={handleNavigation}
+      style={{
+        cursor: 'pointer',
+        border: '1px solid #ddd',
+        borderRadius: '8px',
+        padding: '10px',
+        maxWidth: '300px',
+        background: '#fff',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+      }}
+    >
+      <Text strong style={{ color: '#6c63ff', fontSize: '0.9rem' }}>
+        Bài viết được chia sẻ
+      </Text>
+
+      <Space size={10} align="start" style={{ width: '100%' }}>
+        <Avatar
+          size={40}
+          src={story?.coverImage || 'https://www.svgrepo.com/show/452030/avatar-default.svg'}
+          style={{ flexShrink: 0 }}
+        />
+        <div style={{ minWidth: 0 }}>
+          <Text ellipsis strong>{story?.title || 'Truyện đã xóa'}</Text><br />
+          <Text type="secondary" style={{ fontSize: '0.8rem' }}>
+            {originalPost.caption || postData.sharedCaption || '—'}
+          </Text>
+        </div>
+      </Space>
+    </div>
+  );
+}
+
 const Chat = () => {
   const {
     currentUser,
@@ -36,10 +97,13 @@ const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [editingMessageId, setEditingMessageId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const socketRef = useRef(socket);
   const messageEndRef = useRef(null);
   const messageAreaRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     setMessagesExternally({
@@ -47,6 +111,27 @@ const Chat = () => {
       convoId: selectedConvo?._id
     });
   }, [selectedConvo, setMessagesExternally]);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('messageEdited', (updatedMsg) => {
+        setMessages(prev => prev.map(msg =>
+          msg._id === updatedMsg._id ? updatedMsg : msg
+        ));
+      });
+
+      socket.on('messageDeleted', ({ messageId }) => {
+        setMessages(prev => prev.filter(msg => msg._id !== messageId));
+      });
+    }
+
+    return () => {
+      if (socket) {
+        socket.off('messageEdited');
+        socket.off('messageDeleted');
+      }
+    }
+  }, [socket]);
 
   useEffect(() => {
     if (conversations.length > 0 && (!selectedConvo || !conversations.find(c => c._id === selectedConvo._id))) {
@@ -93,9 +178,45 @@ const Chat = () => {
     }
   }, [messages]);
 
+  const handleNavigateToProfile = (partnerId) => {
+    navigate(`/home/profile/${partnerId}`);
+  };
+
+  const handleStartEdit = (msg) => {
+    setNewMessage(msg.content);
+    setEditingMessageId(msg._id);
+    document.getElementById('chat-input-textarea').focus();
+  };
+
+  const handleDeleteMessage = (messageId) => {
+    Swal.fire({
+      title: 'Xóa tin nhắn?',
+      text: "Bạn không thể hoàn tác hành động này!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      confirmButtonText: 'Xóa',
+      cancelButtonText: 'Hủy'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        socketRef.current.emit('deleteMessage', { messageId });
+      }
+    });
+  };
+
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (newMessage.trim() === "" || !socketRef.current || !currentUser || !selectedConvo) return;
+
+    if (editingMessageId) {
+      socketRef.current.emit('editMessage', {
+        messageId: editingMessageId,
+        newContent: newMessage.trim()
+      });
+      setEditingMessageId(null);
+      setNewMessage('');
+      return;
+    }
 
     const newTimestamp = new Date().toISOString();
 
@@ -140,14 +261,36 @@ const Chat = () => {
     });
   };
 
+  const renderMessageMenu = (msg) => (
+    <Menu>
+      <Menu.Item key="edit" icon={<Edit size={16} />} onClick={() => handleStartEdit(msg)}>
+        Chỉnh sửa
+      </Menu.Item>
+      <Menu.Item key="delete" icon={<Trash2 size={16} />} danger onClick={() => handleDeleteMessage(msg._id)}>
+        Xóa
+      </Menu.Item>
+    </Menu>
+  );
+
   const isPartnerOnline = selectedConvo && onlineUsers.has(selectedConvo.partner._id);
+
+  const filteredConversations = conversations.filter(convo =>
+    convo.partner.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    convo.partner.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="chat-layout">
       <aside className="conversation-list">
         <div className="cl-header">
           <h2>Tin nhắn</h2>
-          <Input className="cl-search" placeholder="Tìm kiếm..." prefix={<Search size={16} color="#888" />} />
+          <Input
+            className="cl-search"
+            placeholder="Tìm kiếm..."
+            prefix={<Search size={16} color="#888" />}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
         <div className="cl-items">
           {loadingConvos ? <Spin style={{ padding: "20px" }} /> : conversations.map(convo => {
@@ -200,7 +343,7 @@ const Chat = () => {
         {selectedConvo ? (
           <>
             <header className="chat-header">
-              <div className="ch-user">
+              <div className="ch-user" onClick={() => handleNavigateToProfile(selectedConvo.partner._id)} style={{ cursor: 'pointer' }}>
                 {selectedConvo.partner && selectedConvo.partner.pfp ? (
                   <img className="avatar" src={selectedConvo.partner.pfp} alt={selectedConvo.partner.name} />
                 ) : (
@@ -234,9 +377,25 @@ const Chat = () => {
                     </div>
                   ))}
                   <div className="message-content">
-                    <p>{msg.content}</p>
-                    {/* <span className="message-timestamp">{formatTimestamp(msg.createdAt)}</span> */}
+                    {msg.messageType === 'shared_post' && msg.sharedPostId ? (
+                      <SharedPostSnippet
+                        postData={msg.sharedPostId}
+                        navigate={navigate}
+                        currentUserId={currentUser._id}
+                      />
+                    ) : (
+                      <p>
+                        {msg.content}
+                        {msg.isEdited && <span style={{ fontSize: '0.7rem', color: '#ccc', marginLeft: '5px' }}>(Đã sửa)</span>}
+                      </p>
+                    )}
                   </div>
+
+                  {msg.senderId._id === currentUser?._id && msg.messageType === 'text' && (
+                    <Dropdown overlay={renderMessageMenu(msg)} trigger={['click']} placement="topRight">
+                      <Button type="text" className="message-action-btn"><BsThreeDotsVertical /></Button>
+                    </Dropdown>
+                  )}
                 </div>
               ))}
               <div ref={messageEndRef} />

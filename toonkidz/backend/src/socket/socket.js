@@ -3,6 +3,7 @@ import Message from '../models/message.model.js';
 import Conversation from '../models/conversation.model.js';
 import User from '../models/user.model.js';
 import mongoose from 'mongoose';
+import Post from '../models/post.model.js';
 
 const userSocketMap = {};
 
@@ -26,7 +27,13 @@ export const initializeSocketIO = (socketServer) => {
 
     socket.on('sendMessage', async (data) => {
       try {
-        const message = await internalSendMessage(data.content, data.receiverId, userId);
+        const message = await internalSendMessage(
+          data.content,
+          data.receiverId,
+          userId,
+          data.messageType,
+          data.sharedPostId
+        );
 
         const receiverSocketId = userSocketMap[data.receiverId];
         if (receiverSocketId) {
@@ -36,6 +43,48 @@ export const initializeSocketIO = (socketServer) => {
       } catch (error) {
         console.error("Error handling message:", error.message);
         socket.emit('messageError', { error: "Failed to send message" });
+      }
+    });
+
+    socket.on('editMessage', async ({ messageId, newContent }) => {
+      try {
+        const updatedMsg = await Message.findOneAndUpdate(
+          { _id: messageId, senderId: userId, messageType: 'text' },
+          { content: newContent, isEdited: true },
+          { new: true }
+        ).populate('senderId', 'name pfp');
+
+        if (!updatedMsg) return;
+
+        const conversation = await Conversation.findById(updatedMsg.conversationId);
+        const recipientId = conversation.participants.find(p => !p.userId.equals(userId)).userId;
+        const recipientSocketId = userSocketMap[recipientId.toString()];
+
+        global.io.to(userSocketMap[userId.toString()]).emit('messageEdited', updatedMsg);
+        if (recipientSocketId) {
+          global.io.to(recipientSocketId).emit('messageEdited', updatedMsg);
+        }
+      } catch (error) {
+        console.error("Error editing message:", error.message);
+      }
+    });
+
+    socket.on('deleteMessage', async ({ messageId }) => {
+      try {
+        const deletedMsg = await Message.findOneAndDelete({ _id: messageId, senderId: userId });
+
+        if (!deletedMsg) return;
+
+        const conversation = await Conversation.findById(deletedMsg.conversationId);
+        const recipientId = conversation.participants.find(p => !p.userId.equals(userId)).userId;
+        const recipientSocketId = userSocketMap[recipientId.toString()];
+
+        global.io.to(userSocketMap[userId.toString()]).emit('messageDeleted', { messageId, conversationId: deletedMsg.conversationId });
+        if (recipientSocketId) {
+          global.io.to(recipientSocketId).emit('messageDeleted', { messageId, conversationId: deletedMsg.conversationId });
+        }
+      } catch (error) {
+        console.error("Error deleting message:", error.message);
       }
     });
 
@@ -85,7 +134,7 @@ export const initializeSocketIO = (socketServer) => {
   });
 };
 
-const internalSendMessage = async (content, receiverId, senderId) => {
+const internalSendMessage = async (content, receiverId, senderId, messageType = 'text', sharedPostId = null) => {
   let conversation = await Conversation.findOne({
     type: 'direct',
     'participants.userId': { $all: [senderId, receiverId] }
@@ -105,7 +154,9 @@ const internalSendMessage = async (content, receiverId, senderId) => {
   const newMessage = new Message({
     conversationId: conversation._id,
     senderId: senderId,
-    content: content
+    content: content,
+    messageType: messageType,
+    sharedPostId: sharedPostId
   });
 
   conversation.lastMessage = {
@@ -122,6 +173,21 @@ const internalSendMessage = async (content, receiverId, senderId) => {
 
   await Promise.all([newMessage.save(), conversation.save()]);
   await newMessage.populate('senderId', 'name pfp');
+
+  if (newMessage.sharedPostId) {
+    const sharedPostData = await Post.findById(newMessage.sharedPostId)
+      .populate('userId', 'name pfp')
+      .populate('storyId')
+      .populate({
+        path: 'originalPostId',
+        populate: [
+          { path: 'userId', select: 'name pfp' },
+          { path: 'storyId' }
+        ]
+      });
+
+    newMessage.sharedPostId = sharedPostData;
+  }
 
   return newMessage;
 };
