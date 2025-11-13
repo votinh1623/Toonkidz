@@ -10,7 +10,7 @@ import Swal from 'sweetalert2';
 import 'sweetalert2/src/sweetalert2.scss';
 import './UserPostFeed.scss'
 import PostEditModal from '../PostEditModal/PostEditModal';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import ShareToProfileModal from '../ShareToProfileModal/ShareToProfileModal';
 import ShareToChatModal from '../ShareToChatModal/ShareToChatModal';
 import ShareOptionsModal from '../ShareOptionsModal/ShareOptionsModal';
@@ -46,9 +46,43 @@ const UserPostFeed = ({ posts, loading, currentUser, onUpdatePost, isOwner }) =>
   const [shareProfileOpen, setShareProfileOpen] = useState(false);
   const [postToShare, setPostToShare] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     setLivePosts(posts || []);
+    if (location.hash && posts.length > 0) {
+      const hashParts = location.hash.substring(1).split('&comment=');
+      const postId = hashParts[0];
+      const commentId = hashParts[1] || null;
+
+      setTimeout(() => {
+        const postElement = document.getElementById(postId);
+        if (postElement) {
+          postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          postElement.classList.add('highlight-post');
+
+          if (commentId) {
+            setOpenCommentsId(postId);
+
+            setTimeout(() => {
+              const commentElement = document.getElementById(commentId);
+              if (commentElement) {
+                commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                commentElement.classList.add('highlight-comment');
+              }
+            }, 500);
+          }
+
+          setTimeout(() => {
+            postElement.classList.remove('highlight-post');
+            if (commentId) {
+              const commentElement = document.getElementById(commentId);
+              commentElement?.classList.remove('highlight-comment');
+            }
+          }, 3000);
+        }
+      }, 500);
+    }
   }, [posts]);
 
   const updatePostInState = (updatedPost) => {
@@ -474,7 +508,7 @@ const UserPostFeed = ({ posts, loading, currentUser, onUpdatePost, isOwner }) =>
                     <div id={`comments-${post._id}`} className="existing-comments">
                       {post.comments.length ? (
                         post.comments.map((c) => (
-                          <div key={c._id} className="comment-row">
+                          <div key={c._id} id={c._id} className="comment-row">
                             <div
                               onClick={() => handleNavigateToProfile(c.userId._id)}
                               style={{ cursor: 'pointer' }}

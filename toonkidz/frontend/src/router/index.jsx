@@ -17,7 +17,6 @@ import UserManagement from "../pages/Admin/UserManagement/UserManagement";
 import StoryManagement from "../pages/Admin/StoryManagement/StoryManagement";
 import AddStory from "../components/AddStory/AddStory";
 import EditStory from "../components/EditStory/EditStory";
-import ReportingAndCensorship from "../pages/Admin/ReportingAndCensorship/ReportingAndCensorship";
 import ProfilePage from "../pages/ProfilePage/ProfilePage";
 import Discover from "../pages/Discover/Discover";
 import AvailableStoriesPage from "../pages/AvailableStoriesPage/AvailableStoriesPage";
@@ -26,6 +25,7 @@ import PrivateRoute from "./PrivateRoute";
 import AdminRoute from "./AdminRoute";
 import Chat from "../pages/Chat/Chat";
 import FeedbackManagement from "../pages/Admin/FeedbackManagement/FeedbackManagement";
+import ReportingManagement from "../pages/Admin/ReportingManagement/ReportingManagement";
 
 export const route = [
   { path: "/login", element: <Login /> },
@@ -80,7 +80,7 @@ export const route = [
               { path: "stories-management", element: <StoryManagement /> },
               { path: "stories-management/add", element: <AddStory /> },
               { path: "stories-management/edit/:storyId", element: <EditStory /> },
-              { path: "reports", element: <ReportingAndCensorship /> },
+              { path: "reports", element: <ReportingManagement /> },
               { path: "feedback", element: <FeedbackManagement /> },
             ],
           },

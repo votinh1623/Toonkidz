@@ -1,6 +1,7 @@
 // backend/src/controllers/report.controller.js
 import Report from '../models/report.model.js';
 import Post from '../models/post.model.js';
+import User from '../models/user.model.js';
 import mongoose from 'mongoose';
 
 export const createReport = async (req, res) => {
@@ -14,7 +15,7 @@ export const createReport = async (req, res) => {
 
     const newReport = new Report({
       reporterId,
-      targetId,
+      targetId: new mongoose.Types.ObjectId(targetId),
       targetType,
       reason
     });
@@ -31,35 +32,51 @@ export const getAllReports = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    const status = req.query.status;
+
+    const { status, targetType } = req.query;
 
     const query = {};
     if (status) {
       query.status = status;
+    }
+    if (targetType) {
+      query.targetType = targetType;
     }
 
     const reports = await Report.find(query)
       .populate('reporterId', 'name email pfp')
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .lean();
 
     const populatedReports = await Promise.all(reports.map(async (report) => {
       let targetDetail = null;
+
       if (report.targetType === 'Post') {
-        targetDetail = await Post.findById(report.targetId).select('caption storyId').populate('storyId', 'title');
+        targetDetail = await Post.findById(report.targetId)
+          .populate('storyId', 'title')
+          .populate('userId', 'name pfp');
+
       } else if (report.targetType === 'Comment') {
-        const post = await Post.findOne({ "comments._id": report.targetId });
+        const post = await Post.findOne({ "comments._id": report.targetId })
+          .populate('storyId', 'title')
+          .populate('userId', 'name pfp');
+
         if (post) {
-          const comment = post.comments.id(report.targetId);
+          const comment = post.comments.find(c => c._id.equals(report.targetId));
           targetDetail = {
-            commentText: comment.text,
+            commentText: comment?.text,
             postId: post._id,
-            storyTitle: (await post.populate('storyId', 'title')).storyId.title
+            postAuthor: post.userId,
+            storyTitle: post.storyId?.title // Lấy title (đã populate)
           };
         }
+      } else if (report.targetType === 'User') {
+        targetDetail = await User.findById(report.targetId).select('name email pfp');
       }
-      return { ...report.toObject(), targetDetail };
+
+      return { ...report, targetDetail };
     }));
 
     const total = await Report.countDocuments(query);
