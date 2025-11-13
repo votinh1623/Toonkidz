@@ -14,6 +14,7 @@ import PostEditModal from "../../components/PostEditModal/PostEditModal";
 import ShareOptionsModal from "../../components/ShareOptionsModal/ShareOptionsModal";
 import ShareToProfileModal from "../../components/ShareToProfileModal/ShareToProfileModal";
 import ShareToChatModal from "../../components/ShareToChatModal/ShareToChatModal";
+import ReportModal from "../../components/ReportModal/ReportModal";
 
 const getInitials = (name) => {
   if (!name) return "?";
@@ -42,6 +43,9 @@ const Discover = () => {
   const [shareChatOpen, setShareChatOpen] = useState(false);
   const [shareProfileOpen, setShareProfileOpen] = useState(false);
   const [postToShare, setPostToShare] = useState(null);
+
+  const [reportModalData, setReportModalData] = useState(null);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -192,8 +196,14 @@ const Discover = () => {
     setInputs(prev => ({ ...prev, [postId]: { text: "", rating: 0 } }));
   };
 
-  const handleReportComment = (commentId) => {
-    message.success(`Đã báo cáo bình luận (ID: ${commentId}). Cảm ơn bạn!`);
+  const handleReport = (targetId, targetType, targetName) => {
+    setReportModalData({ targetId, targetType, targetName });
+    setIsReportModalOpen(true);
+  };
+
+  const handleReported = () => {
+    setIsReportModalOpen(false);
+    message.success("Cảm ơn bạn, báo cáo của bạn đã được gửi đến quản trị viên.");
   };
 
   const renderCommentMenu = (comment, post) => {
@@ -212,7 +222,7 @@ const Discover = () => {
     }
     return (
       <Menu>
-        <Menu.Item key="report" onClick={() => handleReportComment(comment._id)}>
+        <Menu.Item key="report" onClick={() => handleReport(comment._id, 'Comment', comment.userId.name)}>
           Báo cáo bình luận này
         </Menu.Item>
       </Menu>
@@ -245,7 +255,6 @@ const Discover = () => {
           const res = await deletePostApi(postId);
           if (res.success) {
             message.success("Đã xóa bài viết.");
-            // Cập nhật state của Discover
             setPosts(posts.filter(p => p._id !== postId));
           } else {
             message.error(res.error || "Xóa thất bại.");
@@ -292,7 +301,7 @@ const Discover = () => {
     }
     return (
       <Menu>
-        <Menu.Item key="report" onClick={() => handleReportPost(post._id)}>
+        <Menu.Item key="report" onClick={() => handleReport(post._id, 'Post', post.userId.name)}>
           Báo cáo bài viết
         </Menu.Item>
       </Menu>
@@ -633,6 +642,15 @@ const Discover = () => {
         onClose={() => setShareChatOpen(false)}
         post={postToShare}
         currentUser={currentUser}
+      />
+
+      <ReportModal
+        open={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        targetId={reportModalData?.targetId}
+        targetType={reportModalData?.targetType}
+        targetName={reportModalData?.targetName}
+        onReported={handleReported}
       />
     </>
   );

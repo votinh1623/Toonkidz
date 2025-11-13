@@ -1,6 +1,6 @@
 // backend/src/routes/post.route.js
 import express from 'express';
-import { auth } from '../middleware/auth.middleware.js';
+import { adminAuth, auth } from '../middleware/auth.middleware.js';
 import {
   createPost,
   getAllPosts,
@@ -11,7 +11,8 @@ import {
   getPostsByUserId,
   updatePost,
   deletePost,
-  sharePostToProfile
+  sharePostToProfile,
+  adminDeleteComment
 } from '../controllers/post.controller.js';
 
 const router = express.Router();
@@ -33,5 +34,7 @@ router.post('/:id/like', auth, likePost);
 router.post('/:postId/comment', auth, addComment);
 router.put('/:postId/comment/:commentId', auth, editComment);
 router.delete('/:postId/comment/:commentId', auth, deleteComment);
+
+router.delete('/admin/:postId/comments/:commentId', auth, adminAuth, adminDeleteComment);
 
 export default router;

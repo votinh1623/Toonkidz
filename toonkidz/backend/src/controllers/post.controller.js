@@ -544,3 +544,30 @@ export const deletePost = async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
+export const adminDeleteComment = async (req, res) => {
+  try {
+    const { postId, commentId } = req.params;
+    const post = await Post.findById(postId).populate('originalPostId');
+    if (!post) return res.status(404).json({ success: false, error: "Post not found" });
+
+    const comment = post.comments.id(commentId);
+    if (!comment) return res.status(404).json({ success: false, error: "Comment not found" });
+
+    post.comments.pull({ _id: commentId });
+    await post.save();
+
+    const storyIdToRate = post.originalPostId
+      ? post.originalPostId.storyId
+      : post.storyId;
+
+    if (storyIdToRate) {
+      await updateStoryRating(storyIdToRate);
+    }
+
+    res.json({ success: true, message: "Admin đã xóa bình luận." });
+  } catch (error) {
+    console.error("Error in adminDeleteComment:", error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};

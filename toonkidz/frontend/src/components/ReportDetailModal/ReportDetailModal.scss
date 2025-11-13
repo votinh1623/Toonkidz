@@ -1,0 +1,59 @@
+.report-detail-modal-body {
+  .report-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .ant-space {
+      align-items: center;
+    }
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid #f0f0f0;
+    margin: 16px 0;
+  }
+
+  .report-detail-content {
+    background: #fafafa;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 8px;
+  }
+
+  .report-user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px;
+  }
+
+  .avatar-img,
+  .avatar-initials {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: white;
+    flex-shrink: 0;
+    font-size: 0.9rem;
+  }
+
+  .avatar-img {
+    object-fit: cover;
+  }
+
+  .avatar-initials {
+    background: linear-gradient(to bottom right, #a78bfa, #ec4899);
+  }
+}

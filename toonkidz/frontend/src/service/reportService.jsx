@@ -1,29 +1,30 @@
-// frontend/src/services/reportService.js
-import api from './api'; // (Đây là axios instance của bạn)
+// src/service/reportService.jsx
+import { post, get, put, del } from '@/utils/request';
 
-export const submitReport = async (reportData) => {
-  try {
-    const { data } = await api.post('/reports', reportData);
-    return data;
-  } catch (error) {
-    throw error.response.data;
-  }
+const API_ENDPOINT = 'reports';
+
+export const createReport = async ({ targetId, targetType, reason, details }) => {
+  return post(API_ENDPOINT, { targetId, targetType, reason, details });
 };
 
-export const getAdminReports = async (page = 1, status = 'pending') => {
-  try {
-    const { data } = await api.get(`/reports/admin?page=${page}&status=${status}`);
-    return data;
-  } catch (error) {
-    throw error.response.data;
+export const getAllReports = async (status, targetType, page = 1, pageSize = 5) => {
+  const params = new URLSearchParams();
+  if (status) {
+    params.append('status', status);
   }
-}
+  if (targetType) {
+    params.append('targetType', targetType);
+  }
 
-export const updateReportStatusAdmin = async (reportId, status) => {
-  try {
-    const { data } = await api.put(`/reports/admin/${reportId}`, { status });
-    return data;
-  } catch (error) {
-    throw error.response.data;
-  }
-}
+  params.append('page', page);
+  params.append('limit', pageSize);
+  return get(`${API_ENDPOINT}/admin?${params.toString()}`);
+};
+
+export const updateReportStatus = async (reportId, status) => {
+  return put(`${API_ENDPOINT}/admin/${reportId}`, { status });
+};
+
+export const adminDeleteComment = async (postId, commentId) => {
+  return del(`posts/admin/${postId}/comments/${commentId}`);
+};

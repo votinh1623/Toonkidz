@@ -42,13 +42,12 @@ const AdminSiderContent = () => {
         </ul>
       </div>
 
-      {/* Thống kê */}
       <div className="sider-section">
-        <h3 className="sider-title">Phân tích & Hỗ trợ</h3>
+        <h3 className="sider-title">Báo cáo & Hỗ trợ</h3>
         <ul className="sider-list">
           <li>
             <NavLink to="/admin/reports" className="sider-link">
-              <BarChartOutlined className="icon statistic" /> Thống kê
+              <BarChartOutlined className="icon statistic" /> Quản lý báo cáo
             </NavLink>
           </li>
           <li>

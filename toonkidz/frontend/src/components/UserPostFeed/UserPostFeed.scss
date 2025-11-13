@@ -229,9 +229,15 @@
       gap: 12px;
       padding: 12px 6px;
       border-bottom: 1px solid #f1f1f1;
+      transition: background-color 0.5s ease;
+      border-radius: 8px;
 
       &:last-child {
         border-bottom: none;
+      }
+
+      &.highlight-comment {
+        animation: highlight 2.5s ease-out;
       }
     }
 
