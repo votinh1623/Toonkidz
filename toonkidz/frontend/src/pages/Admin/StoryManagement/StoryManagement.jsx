@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Table, Tag, Input, Space, Tooltip, Modal, message, Button, Select } from "antd";
 import { EyeOutlined, EditOutlined, DeleteOutlined, PlusOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { getStories, deleteStoryById } from "../../../service/storyService";
 import { useDebounce } from "../../../hooks/useDebounce";
 import StoryDetailModal from "../../../components/StoryDetailModal/StoryDetailModal";
@@ -36,6 +36,7 @@ const StoryManagement = () => {
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 5, total: 0 });
+  const { currentUser } = useOutletContext();
 
   const [filters, setFilters] = useState({
     search: "",
@@ -256,6 +257,7 @@ const StoryManagement = () => {
         story={selectedStory}
         open={isModalOpen}
         onClose={handleCloseModal}
+        currentUser={currentUser}
       />
     </div>
   );

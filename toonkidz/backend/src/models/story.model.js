@@ -40,12 +40,11 @@ const storySchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    // Keep original content for full story view or remove if using pages only
     content: {
       type: String,
-      required: false, // Make optional since we have pages
+      required: false,
     },
-    pages: [pageSchema], // Array of pages
+    pages: [pageSchema],
     coverImage: {
       type: String,
       required: false,
@@ -58,18 +57,18 @@ const storySchema = new mongoose.Schema(
     status: {
       type: String,
       required: true,
-      enum: ["draft", "generating", "generated", "preview", "published"], // Added more status options
+      enum: ["draft", "generating", "generated", "preview", "published"],
       default: "draft"
     },
     tags: [{
       type: String,
-      required: false, // Changed to array of strings for better querying
+      required: false,
     }],
-    readingTime: { // Estimated reading time in minutes
+    readingTime: {
       type: Number,
       required: false
     },
-    ageGroup: { // Target age group
+    ageGroup: {
       type: String,
       enum: ["3-5", "6-8", "9-12"],
       required: false
@@ -95,14 +94,25 @@ const storySchema = new mongoose.Schema(
     ratingCount: {
       type: Number,
       default: 0
-    }
+    },
+    totalLikes: {
+      type: Number,
+      default: 0
+    },
+    readCount: {
+      type: Number,
+      default: 0,
+    },
+    ratedBy: [{
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      rating: { type: Number, required: true }
+    }],
   },
   {
     timestamps: true,
   }
 );
 
-// Index for better query performance
 storySchema.index({ userId: 1, createdAt: -1 });
 storySchema.index({ theme: 1, status: 1 });
 storySchema.index({ tags: 1 });

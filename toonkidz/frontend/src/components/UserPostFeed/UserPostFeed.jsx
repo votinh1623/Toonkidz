@@ -10,7 +10,7 @@ import Swal from 'sweetalert2';
 import 'sweetalert2/src/sweetalert2.scss';
 import './UserPostFeed.scss'
 import PostEditModal from '../PostEditModal/PostEditModal';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 import ShareToProfileModal from '../ShareToProfileModal/ShareToProfileModal';
 import ShareToChatModal from '../ShareToChatModal/ShareToChatModal';
 import ShareOptionsModal from '../ShareOptionsModal/ShareOptionsModal';
@@ -45,6 +45,7 @@ const UserPostFeed = ({ posts, loading, currentUser, onUpdatePost, isOwner }) =>
   const [shareChatOpen, setShareChatOpen] = useState(false);
   const [shareProfileOpen, setShareProfileOpen] = useState(false);
   const [postToShare, setPostToShare] = useState(null);
+  const { curUser } = useOutletContext();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -598,6 +599,7 @@ const UserPostFeed = ({ posts, loading, currentUser, onUpdatePost, isOwner }) =>
         story={selectedStory}
         open={isViewModalOpen}
         onClose={handleCloseModal}
+        currentUser={curUser}
       />
 
       <PostEditModal

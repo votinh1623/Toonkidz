@@ -9,7 +9,7 @@ import Swal from 'sweetalert2';
 import 'sweetalert2/src/sweetalert2.scss';
 import "./Discover.scss";
 import { getProfile } from "../../service/userService";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import PostEditModal from "../../components/PostEditModal/PostEditModal";
 import ShareOptionsModal from "../../components/ShareOptionsModal/ShareOptionsModal";
 import ShareToProfileModal from "../../components/ShareToProfileModal/ShareToProfileModal";
@@ -46,6 +46,7 @@ const Discover = () => {
 
   const [reportModalData, setReportModalData] = useState(null);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const { curUser } = useOutletContext();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -612,6 +613,7 @@ const Discover = () => {
         story={selectedStory}
         open={isViewModalOpen}
         onClose={handleCloseModal}
+        currentUser={curUser}
       />
 
       <PostEditModal

@@ -8,6 +8,8 @@ import path from "path";
 import Replicate from "replicate";
 import { writeFile } from "fs/promises";
 import { generateImagesForStory } from './image.controller.js';
+import User from '../models/user.model.js';
+import Post from '../models/post.model.js';
 
 export const generateStory = async (req, res) => {
   const { theme, keywords, pages, prompt: userPrompt } = req.body;
@@ -245,7 +247,7 @@ Lưu ý:
           imagePrompt: page.imagePrompt || generateFallbackImagePrompt(page.content, result.title, index + 1)
         }));
 
-        
+
 
         // Create temporary story data
         const storyData = {
@@ -292,7 +294,7 @@ Lưu ý:
             return {
               pageNumber: page.pageNumber,
               content: page.content, // Preserve the original content
-             // imagePrompt: page.imagePrompt, // Preserve the image prompt
+              // imagePrompt: page.imagePrompt, // Preserve the image prompt
               image: generatedPage ? generatedPage.image : '', // Add generated image URL
               audio: page.audio || '' // Preserve audio if exists
             };
@@ -377,7 +379,7 @@ Lưu ý:
 export const savePreviewStory = async (req, res) => {
   try {
     const { storyId } = req.params;
-    
+
     const story = await Story.findById(storyId);
     if (!story) {
       return res.status(404).json({ error: 'Story not found' });
@@ -386,7 +388,7 @@ export const savePreviewStory = async (req, res) => {
     // Update status from 'preview' to 'published' or 'draft'
     const updatedStory = await Story.findByIdAndUpdate(
       storyId,
-      { 
+      {
         status: req.body.status || 'published',
         ...(req.body.title && { title: req.body.title }),
         ...(req.body.head && { head: req.body.head })
@@ -505,7 +507,6 @@ const generateImageWithFlux = async (prompt) => {
   }
 };
 
-// Also update the uploadToCloudinary function to use your working pattern:
 const uploadToCloudinary = async (filenames, generatedDir) => {
   const imageUrls = [];
   const uploadErrors = [];
@@ -545,7 +546,7 @@ const uploadToCloudinary = async (filenames, generatedDir) => {
 
   return { imageUrls };
 };
-// Helper function to generate fallback image prompts
+
 function generateFallbackImagePrompt(content, title, pageNumber) {
   const mainCharacter = title.split(' ')[0] || 'character';
   return `Children's book illustration, cartoon style, bright colors, friendly ${mainCharacter}, ${content.substring(0, 100)}... detailed, vibrant, 4k`;
@@ -555,7 +556,6 @@ function generateFallbackCoverPrompt(title, heading) {
   return `Children's book cover, ${title}, cartoon style, bright vibrant colors, friendly characters, detailed illustration, 4k, professional artwork`;
 }
 
-// Helper function to parse non-JSON responses (updated to handle image prompts)
 async function parseNonJSONResponse(storyText, theme) {
   const lines = storyText.split('\n').map(l => l.trim()).filter(Boolean);
 
@@ -618,7 +618,6 @@ async function parseNonJSONResponse(storyText, theme) {
   if (!heading) heading = 'Một câu chuyện thú vị dành cho trẻ em';
   if (!coverImagePrompt) coverImagePrompt = generateFallbackCoverPrompt(title, heading);
 
-  // Ensure all pages have image prompts
   pages.forEach((page, index) => {
     if (!page.imagePrompt) {
       page.imagePrompt = generateFallbackImagePrompt(page.content, title, index + 1);
@@ -628,7 +627,6 @@ async function parseNonJSONResponse(storyText, theme) {
   return { title, heading, coverImagePrompt, pages };
 }
 
-// Function to get image prompts for a story (for frontend to generate images)
 export const getStoryImagePrompts = async (req, res) => {
   try {
     const { storyId } = req.params;
@@ -655,7 +653,6 @@ export const getStoryImagePrompts = async (req, res) => {
   }
 };
 
-//Function to get story by ID
 export const getStory = async (req, res) => {
   try {
     const { storyId } = req.params;
@@ -684,7 +681,7 @@ export const getStory = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch story' });
   }
 };
-//Create story
+
 export const createStory = async (req, res) => {
   try {
     const { title, head, theme, pages } = req.body;
@@ -725,7 +722,6 @@ export const createStory = async (req, res) => {
       let imageUrl = null;
       let audioUrl = null;
 
-      // Upload ảnh
       if (imgPath) {
         try {
           const imgUpload = await cloudinary.uploader.upload(imgPath, {
@@ -779,7 +775,6 @@ export const createStory = async (req, res) => {
   }
 };
 
-//Get all stories
 export const getAllStories = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -824,21 +819,39 @@ export const getAllStories = async (req, res) => {
   }
 };
 
-// Get Story By ID
 export const getStoryById = async (req, res) => {
   try {
-    const story = await Story.findById(req.params.id).populate('userId', 'name email');
+    const { id } = req.params;
+    const currentUserId = req.user ? req.user._id.toString() : null;
+    const story = await Story.findById(id).populate('userId', 'name email');
+
     if (!story) {
       return res.status(404).json({ success: false, error: 'Story not found' });
     }
-    res.json({ success: true, story });
+
+    let myRating = 0;
+
+    if (currentUserId && story.ratedBy && story.ratedBy.length > 0) {
+      const userRate = story.ratedBy.find(r => r.userId.toString() === currentUserId);
+      if (userRate) {
+        myRating = userRate.rating;
+      }
+    }
+
+    const storyData = story.toObject();
+    storyData.myRating = myRating;
+
+    res.json({
+      success: true,
+      story: storyData
+    });
+
   } catch (error) {
     console.error('Error fetching story by ID:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch story' });
   }
 };
 
-//Update Story
 export const updateStory = async (req, res) => {
   try {
     const { title, head, theme, status, pages: pagesJSON } = req.body;
@@ -864,7 +877,7 @@ export const updateStory = async (req, res) => {
     if (coverPath) {
       const coverUpload = await cloudinary.uploader.upload(coverPath, { folder: "toonkidz/story_covers" });
       story.coverImage = coverUpload.secure_url;
-      fs.unlinkSync(coverPath); // Xóa file tạm
+      fs.unlinkSync(coverPath);
     }
     const submittedPages = JSON.parse(pagesJSON);
     const updatedPages = [];
@@ -905,7 +918,6 @@ export const updateStory = async (req, res) => {
   }
 };
 
-//Delete Story
 export const deleteStory = async (req, res) => {
   try {
     const story = await Story.findById(req.params.id);
@@ -914,7 +926,6 @@ export const deleteStory = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Story not found' });
     }
 
-    // (Bonus) Xóa ảnh bìa và ảnh các trang trên Cloudinary
     if (story.coverImage) {
       const publicId = story.coverImage.split('/').pop().split('.')[0];
       await cloudinary.uploader.destroy(`toonkidz/story_covers/${publicId}`);
@@ -941,11 +952,10 @@ export const deleteStory = async (req, res) => {
 
 export const getMyStories = async (req, res) => {
   try {
-    // req.user._id được cung cấp bởi middleware `auth`
     const userId = req.user._id;
 
     const stories = await Story.find({ userId: userId })
-      .sort({ createdAt: -1 }); // Sắp xếp truyện mới nhất lên đầu
+      .sort({ createdAt: -1 });
 
     if (!stories) {
       return res.status(404).json({ success: false, error: 'No stories found for this user' });
@@ -966,23 +976,22 @@ export const getPublicStories = async (req, res) => {
     const theme = req.query.theme;
     const ageGroup = req.query.ageGroup;
 
-    const query = {
-      status: "published",
-    };
+    const query = { status: "published" };
 
-    if (theme) {
-      query.theme = theme;
-    }
-    if (ageGroup) {
-      query.ageGroup = ageGroup;
-    }
-    if (search) {
-      query.title = { $regex: search, $options: "i" };
+    if (theme && theme !== 'null') query.theme = theme;
+    if (ageGroup && ageGroup !== 'null') query.ageGroup = ageGroup;
+    if (search) query.title = { $regex: search, $options: "i" };
+    let sortQuery = { createdAt: -1 };
+
+    if (req.query.sortBy === 'ratingAvg') {
+      sortQuery = { ratingAvg: -1, totalLikes: -1, createdAt: -1 };
+    } else if (req.query.sortBy === 'readCount') {
+      sortQuery = { readCount: -1, totalLikes: -1, createdAt: -1 };
     }
 
     const stories = await Story.find(query)
-      .populate('userId', 'name')
-      .sort({ createdAt: -1 })
+      .populate('userId', 'name pfp')
+      .sort(sortQuery)
       .skip((page - 1) * limit)
       .limit(limit);
 
@@ -1001,5 +1010,130 @@ export const getPublicStories = async (req, res) => {
   } catch (error) {
     console.error('Error fetching public stories:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch stories' });
+  }
+};
+
+export const incrementReadCount = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const story = await Story.findByIdAndUpdate(
+      id,
+      { $inc: { readCount: 1 } },
+      { new: true }
+    );
+    if (!story) return res.status(404).json({ success: false, error: "Story not found" });
+
+    res.json({ success: true, readCount: story.readCount });
+  } catch (error) {
+    res.status(500).json({ success: false, error: "Server error" });
+  }
+};
+
+export const syncStoryStats = async (req, res) => {
+  try {
+    console.log("Starting sync stats...");
+    const updateResult = await Story.updateMany(
+      {
+        $or: [
+          { readCount: { $exists: false } },
+          { totalLikes: { $exists: false } }
+        ]
+      },
+      {
+        $set: {
+          readCount: 0,
+          totalLikes: 0
+        }
+      }
+    );
+    console.log(`Initialized stats for ${updateResult.modifiedCount} old stories.`);
+    const aggregation = await Post.aggregate([
+      {
+        $match: { storyId: { $exists: true } }
+      },
+      {
+        $group: {
+          _id: "$storyId",
+          calculatedLikes: { $sum: { $size: "$likes" } }
+        }
+      }
+    ]);
+
+    let syncedCount = 0;
+    for (const item of aggregation) {
+      if (item._id) {
+        await Story.findByIdAndUpdate(item._id, {
+          totalLikes: item.calculatedLikes || 0
+        });
+        syncedCount++;
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Đã khởi tạo dữ liệu cho ${updateResult.modifiedCount} truyện cũ và đồng bộ like cho ${syncedCount} truyện.`
+    });
+
+  } catch (error) {
+    console.error("Sync failed:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const getSystemStats = async (req, res) => {
+  try {
+    const [storyCount, userCount, totalReadsData, totalLikesData] = await Promise.all([
+      Story.countDocuments({ status: 'published' }),
+      User.countDocuments({ isActive: true }),
+      Story.aggregate([{ $group: { _id: null, total: { $sum: "$readCount" } } }]),
+      Story.aggregate([{ $group: { _id: null, total: { $sum: "$totalLikes" } } }])
+    ]);
+
+    res.json({
+      success: true,
+      stats: {
+        totalStories: storyCount,
+        totalAuthors: userCount,
+        totalReads: totalReadsData[0]?.total || 0,
+        totalLikes: totalLikesData[0]?.total || 0
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching system stats:", error);
+    res.status(500).json({ success: false, error: "Server error" });
+  }
+};
+
+export const rateStory = async (req, res) => {
+  try {
+    const { storyId } = req.params;
+    const { rating } = req.body;
+    const userId = req.user._id;
+
+    const story = await Story.findById(storyId);
+    if (!story) return res.status(404).json({ success: false, error: "Story not found" });
+
+    const existingRateIndex = story.ratedBy.findIndex(r => r.userId.toString() === userId.toString());
+
+    if (existingRateIndex > -1) {
+      story.ratedBy[existingRateIndex].rating = rating;
+    } else {
+      story.ratedBy.push({ userId, rating });
+    }
+
+    const totalScore = story.ratedBy.reduce((sum, item) => sum + item.rating, 0);
+    story.ratingAvg = totalScore / story.ratedBy.length;
+    story.ratingCount = story.ratedBy.length;
+
+    await story.save();
+
+    res.json({
+      success: true,
+      ratingAvg: story.ratingAvg,
+      ratingCount: story.ratingCount,
+      userRating: rating
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 };

@@ -1,83 +1,39 @@
-//src/utils/request
-const API_DOMAIN = "http://localhost:3000/api";
-
-const buildUrl = (path) =>
-  `${API_DOMAIN.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
-
-const getAuthHeaders = () => ({});
+import axiosClient from './axiosClient';
 
 export const get = async (path) => {
-  const res = await fetch(buildUrl(path), {
-    method: "GET",
-    credentials: "include",
-  });
-  return res.json();
+  return await axiosClient.get(path);
 };
 
 export const post = async (path, data) => {
-  const res = await fetch(buildUrl(path), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-    credentials: "include",
-  });
-  return res.json();
+  return await axiosClient.post(path, data);
 };
 
 export const put = async (path, data) => {
-  const res = await fetch(buildUrl(path), {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-    credentials: "include",
-  });
-  return res.json();
-};
-
-export const del = async (path) => {
-  const res = await fetch(buildUrl(path), {
-    method: "DELETE",
-    credentials: "include",
-  });
-  return res.json();
+  return await axiosClient.put(path, data);
 };
 
 export const patch = async (path, data) => {
-  const res = await fetch(buildUrl(path), {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      ...getAuthHeaders(),
-    },
-    body: JSON.stringify(data),
-    credentials: "include",
-  });
-  return res.json();
+  return await axiosClient.patch(path, data);
+};
+
+export const del = async (path) => {
+  return await axiosClient.delete(path);
 };
 
 export const postFormData = async (path, formData) => {
-  const res = await fetch(buildUrl(path), {
-    method: "POST",
-    body: formData,
-    credentials: "include",
+  return await axiosClient.post(path, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
   });
-  return res.json();
 };
 
 export const putFormData = async (path, formData) => {
-  const res = await fetch(buildUrl(path), {
-    method: "PUT",
-    body: formData,
-    credentials: "include",
+  return await axiosClient.put(path, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
   });
-  return res.json();
 };
 
 export const patchFormData = async (path, formData) => {
-  const res = await fetch(buildUrl(path), {
-    method: "PATCH",
-    body: formData,
-    credentials: "include",
+  return await axiosClient.patch(path, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
   });
-  return res.json();
 };
