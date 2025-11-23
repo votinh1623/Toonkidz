@@ -1,7 +1,7 @@
 // src/pages/AvailableStoriesPage/AvailableStoriesPage.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { Spin, message, Input, Pagination } from 'antd';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { getPublicStories } from '../../service/storyService';
 import StoryDetailModal from '../../components/StoryDetailModal/StoryDetailModal';
@@ -37,6 +37,7 @@ const AvailableStoriesPage = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedStory, setSelectedStory] = useState(null);
+  const { currentUser } = useOutletContext();
   const navigate = useNavigate();
 
   const fetchData = useCallback(async () => {
@@ -167,6 +168,7 @@ const AvailableStoriesPage = () => {
         story={selectedStory}
         open={isModalOpen}
         onClose={handleCloseModal}
+        currentUser={currentUser}
       />
     </div>
   );

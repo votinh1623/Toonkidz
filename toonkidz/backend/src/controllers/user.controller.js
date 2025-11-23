@@ -10,10 +10,11 @@ export const toggleFavoriteStory = async (req, res) => {
     const { storyId } = req.params;
 
     const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ success: false, error: "User not found" });
-    }
+    const story = await Story.findById(storyId);
 
+    if (!user || !story) {
+      return res.status(404).json({ success: false, error: "User or Story not found" });
+    }
     const storyIndex = user.favorites.indexOf(storyId);
     let message = "";
 
@@ -24,8 +25,27 @@ export const toggleFavoriteStory = async (req, res) => {
       user.favorites.push(storyId);
       message = "Đã thêm truyện vào danh sách yêu thích";
     }
-
     await user.save();
+    const userInStoryIndex = story.favorites.indexOf(userId);
+
+    if (userInStoryIndex > -1) {
+      if (storyIndex > -1) {
+        story.favorites.splice(userInStoryIndex, 1);
+      }
+    } else {
+      if (storyIndex === -1) {
+        story.favorites.push(userId);
+      }
+    }
+    if (storyIndex > -1) {
+      const idx = story.favorites.indexOf(userId);
+      if (idx > -1) story.favorites.splice(idx, 1);
+    } else {
+      if (!story.favorites.includes(userId)) story.favorites.push(userId);
+    }
+
+    await story.save();
+
     res.json({ success: true, message, favorites: user.favorites });
 
   } catch (error) {

@@ -1,8 +1,5 @@
-// src/components/StoryDetailModal/StoryDetailModal.scss
-
 .story-modal {
 
-  // --- TÙY CHỈNH KHUNG MODAL ---
   .ant-modal-content {
     background: transparent;
     box-shadow: none;
@@ -24,7 +21,6 @@
     }
   }
 
-  // --- STYLE CHUNG CHO CAROUSEL/SLICK ---
   .slick-slide {
     height: 620px;
     overflow: hidden;
@@ -34,11 +30,10 @@
     padding: 0 10px;
   }
 
-  // --- STYLE CHUNG CHO TẤT CẢ CÁC "TRANG SÁCH" ---
   .story-cover-slide,
   .story-end-slide,
   .story-page-slide {
-    display: flex !important; // Ghi đè style `inline-block` của thư viện
+    display: flex !important;
     width: 100%;
     height: 100%;
     border-radius: 12px;
@@ -46,7 +41,6 @@
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
   }
 
-  // --- TRANG BÌA & TRANG KẾT THÚC ---
   .story-cover-slide,
   .story-end-slide {
     position: relative;
@@ -159,6 +153,92 @@
           }
         }
       }
+
+      .interaction-section {
+        background: rgba(255, 255, 255, 0.9);
+        padding: 20px;
+        border-radius: 16px;
+        margin: 20px auto;
+        width: 80%;
+        max-width: 400px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        animation: fadeInUp 0.6s ease;
+
+        .rating-box {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 12px;
+
+          span {
+            font-weight: 600;
+            color: #555;
+            font-size: 1.1rem;
+          }
+
+          .custom-rate {
+            font-size: 36px;
+            color: #e0e0e0;
+
+            .ant-rate-star-full {
+              color: #fadb14;
+            }
+
+            .ant-rate-star-half .ant-rate-star-first {
+              color: #fadb14;
+            }
+
+            &:hover {
+              transform: scale(1.05);
+              transition: transform 0.2s;
+            }
+
+            svg {
+              fill: currentColor;
+            }
+          }
+
+          .thank-you {
+            color: #52c41a;
+            font-weight: 600;
+            font-size: 1rem;
+            animation: fadeIn 0.5s;
+          }
+        }
+
+        .favorite-box {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          padding-top: 10px;
+          border-top: 1px dashed #ddd;
+
+          .fav-btn {
+            border-color: #ff4d4f;
+            color: #ff4d4f;
+            transition: all 0.3s;
+
+            &:hover {
+              background: #fff1f0;
+              transform: scale(1.1);
+            }
+
+            &.active {
+              background: #fff1f0;
+              box-shadow: 0 0 10px rgba(255, 77, 79, 0.3);
+            }
+          }
+
+          span {
+            font-size: 0.9rem;
+            color: #666;
+          }
+        }
+      }
     }
   }
 
@@ -166,7 +246,6 @@
     background-color: #fff;
     height: 500px;
 
-    // Wrapper mới để kiểm soát layout
     .story-page-wrapper {
       display: flex;
       width: 100%;
@@ -254,7 +333,6 @@
     }
   }
 
-  // --- NÚT ĐIỀU HƯỚNG & DẤU CHẤM ---
   .slick-arrow {
     z-index: 10;
     width: 48px;
@@ -288,7 +366,18 @@
   }
 }
 
-// --- ANIMATION ---
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

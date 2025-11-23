@@ -1,5 +1,5 @@
-// src/service/storyService.js
-import { get, del, postFormData, putFormData } from "@/utils/request";
+import { get, post, del, postFormData, putFormData, put } from "@/utils/request";
+import { putPublic } from "../utils/publicRequest";
 
 export const getStories = async (
   page = 1,
@@ -81,13 +81,14 @@ export const getMyStories = async () => {
 
 export const getPublicStories = async (filters = {}) => {
   try {
-    const params = new URLSearchParams({
-      page: filters.page || 1,
-      limit: filters.limit || 12,
-    });
+    const params = new URLSearchParams();
+    if (filters.page) params.append('page', filters.page);
+    if (filters.limit) params.append('limit', filters.limit);
     if (filters.search) params.append('search', filters.search);
     if (filters.theme) params.append('theme', filters.theme);
     if (filters.ageGroup) params.append('ageGroup', filters.ageGroup);
+
+    if (filters.sortBy) params.append('sortBy', filters.sortBy);
 
     const res = await get(`stories/public?${params.toString()}`);
     return res;
@@ -95,4 +96,16 @@ export const getPublicStories = async (filters = {}) => {
     console.error("Error fetching public stories:", err);
     throw err;
   }
+};
+
+export const incrementStoryReadCount = async (storyId) => {
+  return putPublic(`stories/${storyId}/read`);
+};
+
+export const getSystemStats = async () => {
+  return get('stories/stats/system');
+};
+
+export const rateStory = async (storyId, rating) => {
+  return await post(`stories/${storyId}/rate`, { rating });
 };

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Spin, message } from 'antd';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart as faHeartSolid, faShareSquare, faStar } from '@fortawesome/free-solid-svg-icons';
 import { getMyStories, deleteStoryById } from '../../service/storyService';
@@ -19,7 +19,7 @@ const LibraryPage = () => {
   const [loading, setLoading] = useState(true);
   const [favoriteIds, setFavoriteIds] = useState([]);
   const navigate = useNavigate();
-
+  const { currentUser } = useOutletContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedStory, setSelectedStory] = useState(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -224,6 +224,7 @@ const LibraryPage = () => {
         story={selectedStory}
         open={isModalOpen}
         onClose={handleCloseModal}
+        currentUser={currentUser}
       />
 
       <ShareStoryModal

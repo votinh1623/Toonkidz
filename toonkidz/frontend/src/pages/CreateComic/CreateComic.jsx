@@ -117,7 +117,7 @@ const CreateComic = () => {
       console.log('Sending payload:', payload);
 
       const token = localStorage.getItem('token');
-      
+
       const response = await axios.post('/api/stories/generate', payload, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -212,7 +212,7 @@ const CreateComic = () => {
               <h2>🎭 Chọn thể loại truyện</h2>
               <div className="genre-grid">
                 {genres.map(genre => (
-                  <div 
+                  <div
                     key={genre.id}
                     className={`genre-card ${selectedGenre === genre.id ? 'active' : ''}`}
                     onClick={() => handleGenreSelect(genre)}
@@ -227,7 +227,7 @@ const CreateComic = () => {
             {/* Story Settings */}
             <div className="create-comic__section">
               <h2>⚙️ Cài đặt truyện</h2>
-              
+
               {selectedGenre && (
                 <div className="setting-group">
                   <div className="keywords-header">
@@ -329,7 +329,7 @@ const CreateComic = () => {
                 <label>Độ tuổi phù hợp:</label>
                 <div className="age-group-cards">
                   {ageGroups.map(age => (
-                    <div 
+                    <div
                       key={age.value}
                       className={`age-card ${formData.ageGroup === age.value ? 'active' : ''}`}
                       onClick={() => handleInputChange('ageGroup', age.value)}
@@ -343,7 +343,7 @@ const CreateComic = () => {
 
               <div className="setting-group">
                 <label>Độ dài truyện: <strong>{formData.pages} trang</strong></label>
-                <Slider 
+                <Slider
                   min={1}
                   max={7}
                   value={formData.pages}
@@ -360,7 +360,7 @@ const CreateComic = () => {
 
               <div className="setting-group">
                 <label>
-                  <Checkbox 
+                  <Checkbox
                     checked={formData.addAudio}
                     onChange={(e) => handleInputChange('addAudio', e.target.checked)}
                   >
@@ -371,8 +371,8 @@ const CreateComic = () => {
 
               <div className="setting-group">
                 <label>💡 Ý tưởng của bạn (tùy chọn):</label>
-                <TextArea 
-                  rows={4} 
+                <TextArea
+                  rows={4}
                   placeholder="Ví dụ: Một chú thỏ ham chơi và một chú rùa chăm chỉ tham gia cuộc đua trong rừng..."
                   value={formData.prompt}
                   onChange={(e) => handleInputChange('prompt', e.target.value)}
@@ -381,7 +381,7 @@ const CreateComic = () => {
                 />
               </div>
 
-              <Button 
+              <Button
                 type="primary"
                 size="large"
                 onClick={generateStory}
@@ -399,7 +399,7 @@ const CreateComic = () => {
           <div className="create-comic__preview">
             <div className="preview-card">
               <h3>👁️ Xem trước</h3>
-              
+
               {generatedStory ? (
                 <div className="preview-content">
                   <div className="preview-cover">
@@ -421,8 +421,8 @@ const CreateComic = () => {
                     </div>
                   </div>
                   <div className="preview-actions">
-                    <Button 
-                      type="primary" 
+                    <Button
+                      type="primary"
                       icon={<EyeOutlined />}
                       onClick={() => setPreviewModalOpen(true)}
                     >
@@ -521,8 +521,8 @@ const CreateComic = () => {
             <div className="preview-actions">
               <Row gutter={16} justify="center">
                 <Col>
-                  <Button 
-                    type="primary" 
+                  <Button
+                    type="primary"
                     size="large"
                     icon={<SaveOutlined />}
                     loading={saving}
@@ -532,7 +532,7 @@ const CreateComic = () => {
                   </Button>
                 </Col>
                 <Col>
-                  <Button 
+                  <Button
                     size="large"
                     icon={<SaveOutlined />}
                     loading={saving}
@@ -542,7 +542,7 @@ const CreateComic = () => {
                   </Button>
                 </Col>
                 <Col>
-                  <Button 
+                  <Button
                     size="large"
                     icon={<ReloadOutlined />}
                     onClick={retryGeneration}
@@ -551,11 +551,27 @@ const CreateComic = () => {
                     Tạo lại
                   </Button>
                 </Col>
+                <Col>
+                  <Button
+                    size="large"
+                    onClick={() => setPreviewModalOpen(false)}
+                  >
+                    Đóng
+                  </Button>
+                </Col>
               </Row>
             </div>
           </div>
         )}
       </Modal>
+
+      {/* Story Detail Modal */}
+      <StoryModal
+        open={open}
+        onClose={() => setOpen(false)}
+        story={generatedStory}
+        loading={loading}
+      />
     </>
   )
 }

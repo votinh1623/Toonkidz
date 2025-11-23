@@ -1,68 +1,109 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import CountUp from 'react-countup';
+import { Spin, message, Skeleton, Empty } from 'antd';
+import { useNavigate, useOutletContext } from 'react-router-dom';
+import { getPublicStories, getSystemStats } from '../../service/storyService';
+import StoryDetailModal from '../../components/StoryDetailModal/StoryDetailModal';
+import StoryCard from '../../components/StoryCard/StoryCard';
 import "./Homepage.scss";
 
 const Homepage = () => {
-
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("featured");
+  const [stories, setStories] = useState([]);
+  const [loadingStories, setLoadingStories] = useState(true);
+  const { currentUser } = useOutletContext();
 
-  const stats = [
-    { label: "Truyện", value: 50000, suffix: "+", colorClass: "comic" },
-    { label: "Tác giả", value: 2000, suffix: "+", colorClass: "author" },
-    { label: "Bé yêu thích", value: 500000, suffix: "+", colorClass: "favourite" },
-    { label: "Lượt đọc", value: 10000000, suffix: "+", colorClass: "reader" },
+  const [statsData, setStatsData] = useState({
+    totalStories: 0,
+    totalAuthors: 0,
+    totalLikes: 0,
+    totalReads: 0
+  });
+
+  const [selectedStory, setSelectedStory] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await getSystemStats();
+        if (res.success) {
+          setStatsData(res.stats);
+        }
+      } catch (error) {
+        console.error("Failed to fetch stats");
+      }
+    };
+    fetchStats();
+  }, []);
+
+  useEffect(() => {
+    const fetchStories = async () => {
+      setLoadingStories(true);
+      try {
+        let params = { page: 1, limit: 8 };
+
+        switch (activeTab) {
+          case 'featured':
+            params.sortBy = 'ratingAvg';
+            break;
+          case 'trending':
+            params.sortBy = 'readCount';
+            break;
+          case 'latest':
+            params.sortBy = 'createdAt';
+            break;
+        }
+
+        const res = await getPublicStories(params);
+        if (res.success) {
+          setStories(res.stories);
+        }
+      } catch (error) {
+        message.error("Không thể tải danh sách truyện.");
+      } finally {
+        setLoadingStories(false);
+      }
+    };
+
+    fetchStories();
+  }, [activeTab]);
+
+  const statsDisplay = [
+    { label: "Truyện", value: statsData.totalStories, suffix: "+", colorClass: "comic" },
+    { label: "Tác giả", value: statsData.totalAuthors, suffix: "+", colorClass: "author" },
+    { label: "Lượt thích", value: statsData.totalLikes, suffix: "+", colorClass: "favourite" },
+    { label: "Lượt đọc", value: statsData.totalReads, suffix: "+", colorClass: "reader" },
   ];
 
-  const stories = [
-    {
-      id: 1,
-      title: "Cuộc phiêu lưu của chú thỏ trong rừng kỳ diệu",
-      author: "Cô Ngọc",
-      description:
-        "Chú thỏ con phải trải qua nhiều thử thách để tìm về nhà và học được những bài học quý giá về tình bạn và lòng dũng cảm.",
-      category: "Cổ tích",
-      status: "Hoàn thành",
-      reads: "1.2M",
-      likes: "85K",
-      comments: "5.2K",
-      rating: 4.9,
-      image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTCa5lGoOSNNor_DqVLVJM5TbLv0XSJvprQiw&s",
-    },
-    {
-      id: 2,
-      title: "Cô bé bán diêm và ngôi sao",
-      author: "Ba Hoa",
-      description:
-        "Câu chuyện cảm động về cô bé bán diêm được một ngôi sao thần kỳ và cuộc hành trình thay đổi cuộc đời mình.",
-      category: "Cổ tích",
-      status: "Hoàn thành",
-      reads: "1.2M",
-      likes: "85K",
-      comments: "5.2K",
-      rating: 4.9,
-      image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFW_ZSXFX0kQnquxJGO-5F3ZHC-BB-MK7gFg&s",
-    },
-  ];
+  const handleViewStory = (story) => { setSelectedStory(story); setIsModalOpen(true); };
+  const handleNavigateToCreate = () => { navigate('/home/create-comic'); };
+  const handleNavigateToDiscover = () => { navigate('/discover'); };
 
   return (
     <div className="home">
-      {/* Slider */}
       <div className="home__slider">
-        <div className="home__slider__title">Thế giới truyện kì diệu dành cho bé</div>
-        <div className="home__slider__subtitle">
-          Hàng ngàn câu chuyện vui nhộn, giáo dục và đầy màu sắc đang chờ các bé khám phá
-        </div>
-        <div className="home__slider__button">
-          <button className="home__slider__button--start">Bắt đầu đọc</button>
-          <button className="home__slider__button--more">Tìm hiểu thêm</button>
+        <div className="home__slider__content">
+          <div className="home__slider__title">Thế giới truyện kì diệu dành cho bé</div>
+          <div className="home__slider__subtitle">
+            Hàng ngàn câu chuyện vui nhộn, giáo dục và đầy màu sắc đang chờ các bé khám phá.
+            Sáng tạo câu chuyện riêng của bạn ngay hôm nay!
+          </div>
+          <div className="home__slider__button">
+            <button className="home__slider__button--start" onClick={handleNavigateToCreate}>
+              Tạo truyện ngay
+            </button>
+            <button className="home__slider__button--more" onClick={handleNavigateToDiscover}>
+              Khám phá thư viện
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="home_statistical">
-        {stats.map((item, index) => (
-          <div key={index} className={`home__statistical__${item.colorClass}`}>
+        {statsDisplay.map((item, index) => (
+          <div key={index} className={`stat-card home__statistical__${item.colorClass}`}>
             <div className="home__statistical__comic__quantity">
               <CountUp
                 start={0}
@@ -77,52 +118,62 @@ const Homepage = () => {
         ))}
       </div>
 
-      <div className="home__tabs">
+      <div className="home__section-header">
         <div className="tabs">
-          <button
-            className={activeTab === "featured" ? "active" : ""}
-            onClick={() => setActiveTab("featured")}
-          >
+          <button className={activeTab === "featured" ? "active" : ""} onClick={() => setActiveTab("featured")}>
             ⭐ Nổi bật
           </button>
-          <button
-            className={activeTab === "trending" ? "active" : ""}
-            onClick={() => setActiveTab("trending")}
-          >
+          <button className={activeTab === "trending" ? "active" : ""} onClick={() => setActiveTab("trending")}>
             🚀 Thịnh hành
           </button>
-          <button
-            className={activeTab === "latest" ? "active" : ""}
-            onClick={() => setActiveTab("latest")}
-          >
+          <button className={activeTab === "latest" ? "active" : ""} onClick={() => setActiveTab("latest")}>
             🕒 Mới nhất
           </button>
         </div>
-        <button className="share-btn">Chia sẻ truyện</button>
+        <button className="view-all-btn" onClick={handleNavigateToDiscover}>
+          Xem tất cả &rarr;
+        </button>
       </div>
 
       <div className="home__stories">
-        {stories.map((story) => (
-          <div key={story.id} className="story-card">
-            <img src={story.image} alt={story.title} />
-            <div className="story-content">
-              <h3>{story.title}</h3>
-              <p className="author">by {story.author}</p>
-              <p className="desc">{story.description}</p>
-              <div className="tags">
-                <span className="tag">{story.category}</span>
-                <span className="tag status">{story.status}</span>
+        {loadingStories ? (
+          <div className="loading-grid">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="skeleton-card">
+                <Skeleton.Image active className="sk-img" />
+                <Skeleton active paragraph={{ rows: 2 }} />
               </div>
-              <div className="meta">
-                <span>👀 {story.reads}</span>
-                <span>❤️ {story.likes}</span>
-                <span>💬 {story.comments}</span>
-              </div>
-              <div className="rating">⭐ {story.rating}</div>
-            </div>
+            ))}
           </div>
-        ))}
+        ) : stories.length > 0 ? (
+          <div className="story-grid-layout">
+            {stories.map((story) => (
+              <StoryCard
+                key={story._id}
+                story={story}
+                onClick={handleViewStory}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state">
+            <Empty description="Chưa có truyện nào trong mục này" />
+          </div>
+        )}
       </div>
+
+      <div className="home__cta">
+        <h2>Bạn đã sẵn sàng sáng tạo?</h2>
+        <p>Tham gia cùng hàng ngàn tác giả nhí và phụ huynh khác.</p>
+        <button onClick={handleNavigateToCreate}>Bắt đầu ngay</button>
+      </div>
+
+      <StoryDetailModal
+        story={selectedStory}
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        currentUser={currentUser}
+      />
     </div>
   );
 };

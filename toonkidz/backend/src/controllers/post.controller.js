@@ -279,7 +279,6 @@ export const likePost = async (req, res) => {
       await Post.updateOne({ _id: postId }, { $pull: { likes: userId } });
     } else {
       await Post.updateOne({ _id: postId }, { $addToSet: { likes: userId } });
-
       try {
         if (!isOwner) {
           await createNotification({
@@ -294,6 +293,18 @@ export const likePost = async (req, res) => {
       } catch (e) {
         console.error("Lỗi tạo thông báo Like:", e);
       }
+    }
+
+    let storyId = post.storyId;
+
+    if (post.postType === 'share' && post.originalPostId) {
+      const original = await Post.findById(post.originalPostId).select('storyId');
+      if (original) storyId = original.storyId;
+    }
+
+    if (storyId) {
+      const increment = isLiked ? -1 : 1;
+      await Story.findByIdAndUpdate(storyId, { $inc: { totalLikes: increment } });
     }
 
     const updatedPost = await Post.findById(postId);
