@@ -179,21 +179,9 @@
             font-size: 1.1rem;
           }
 
-          .custom-rate {
-            font-size: 36px;
-            color: #e0e0e0;
-
-            .ant-rate-star-full {
-              color: #fadb14;
-            }
-
-            .ant-rate-star-half .ant-rate-star-first {
-              color: #fadb14;
-            }
-
+          .custom-star {
             &:hover {
-              transform: scale(1.05);
-              transition: transform 0.2s;
+              transform: scale(1.2);
             }
 
             svg {

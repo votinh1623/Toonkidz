@@ -4,6 +4,7 @@ import { RedoOutlined, CloseOutlined, HeartOutlined, HeartFilled } from "@ant-de
 import "./StoryDetailModal.scss";
 import { incrementStoryReadCount, rateStory, getStoryById } from "../../service/storyService";
 import { toggleFavorite } from "../../service/userService";
+import StarRating from "./StarRating";
 
 const StoryDetailModal = ({ story: initialStory, open, onClose, currentUser }) => {
 
@@ -188,7 +189,10 @@ const StoryDetailModal = ({ story: initialStory, open, onClose, currentUser }) =
                   <div className="interaction-section">
                     <div className="rating-box">
                       <span>Bạn thấy truyện thế nào?</span>
-                      <Rate allowHalf value={userRating} onChange={handleRate} className="custom-rate" />
+                      <StarRating
+                        value={userRating}
+                        onChange={handleRate}
+                      />
                       {hasRated && <span className="thank-you">Cảm ơn bé! ❤️</span>}
                     </div>
                     <div className="favorite-box">

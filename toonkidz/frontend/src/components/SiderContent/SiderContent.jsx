@@ -9,6 +9,7 @@ import {
   Settings,
   Sparkles,
   Bell,
+  Shield,
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import "./SiderContent.scss";
@@ -104,6 +105,15 @@ const SiderContent = ({ onClose, user, totalUnreadMessages }) => {
           badge="5"
           onClose={onClose}
         />
+
+        {user?.role === 'admin' && (
+          <NavItem
+            to="/admin/dashboard"
+            icon={<Shield className="icon" style={{ color: '#ff4d4f' }} />}
+            label="Trang Quản Trị"
+            onClose={onClose}
+          />
+        )}
 
         <div className="divider"></div>
 

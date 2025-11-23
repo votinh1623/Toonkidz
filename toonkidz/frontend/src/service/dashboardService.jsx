@@ -1,10 +1,8 @@
-// src/service/dashboardService.js
 import { get } from "@/utils/request";
 
-export const getDashboardStats = async (params = {}) => {
+export const getDashboardStats = async (range = 7) => {
   try {
-    const query = new URLSearchParams(params).toString();
-    const res = await get(`admin/stats?${query}`);
+    const res = await get(`admin/stats?range=${range}`);
     return res;
   } catch (err) {
     console.error("Error fetching dashboard stats:", err);

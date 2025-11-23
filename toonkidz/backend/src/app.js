@@ -32,6 +32,7 @@ import postRoutes from './routes/post.route.js';
 import messageRoutes from './routes/message.route.js';
 import conversationRoutes from './routes/conversation.route.js';
 import reportRoutes from './routes/report.route.js';
+import adminRoutes from './routes/admin.route.js';
 import { initializeSocketIO } from "./socket/socket.js";
 
 // Get __dirname equivalent in ES modules
@@ -89,6 +90,7 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/conversations', conversationRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/admin', adminRoutes);
 
 // TTS Status Check Endpoint
 app.get('/api/tts-status', async (req, res) => {

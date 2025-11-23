@@ -1,84 +1,90 @@
-// src/pages/Admin/Dashboard/Dashboard.jsx
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Statistic, DatePicker, Select, Table, Typography, Avatar, Tag, Spin, Space } from 'antd';
+import { Card, Row, Col, Statistic, Select, Table, Typography, Avatar, Tag, Spin, Space, message } from 'antd';
 import { Users, Book, MessageSquare, Heart } from 'lucide-react';
 import { Line, Pie } from '@ant-design/charts';
-// import { getDashboardStats } from '../../../service/dashboardService'; // (Sẽ dùng khi có API)
+import { getDashboardStats } from '../../../service/dashboardService';
 import './Dashboard.scss';
 import dayjs from 'dayjs';
 
-const { RangePicker } = DatePicker;
 const { Title } = Typography;
 
-const mockStats = {
-  totalUsers: 1250,
-  totalStories: 280,
-  totalPosts: 5400,
-  totalLikes: "25.7k",
-};
-
-const mockLineData = [
-  { date: '2025-10-01', value: 10, type: 'Người dùng' },
-  { date: '2025-10-02', value: 12, type: 'Người dùng' },
-  { date: '2025-10-03', value: 11, type: 'Người dùng' },
-  { date: '2025-10-04', value: 15, type: 'Người dùng' },
-  { date: '2025-10-05', value: 18, type: 'Người dùng' },
-  { date: '2025-10-06', value: 22, type: 'Người dùng' },
-  { date: '2025-10-07', value: 20, type: 'Người dùng' },
-  { date: '2025-10-01', value: 5, type: 'Bài đăng' },
-  { date: '2025-10-02', value: 7, type: 'Bài đăng' },
-  { date: '2025-10-03', value: 6, type: 'Bài đăng' },
-  { date: '2025-10-04', value: 10, type: 'Bài đăng' },
-  { date: '2025-10-05', value: 12, type: 'Bài đăng' },
-  { date: '2025-10-06', value: 15, type: 'Bài đăng' },
-  { date: '2025-10-07', value: 11, type: 'Bài đăng' },
-];
-
-const mockPieData = [
-  { type: 'Đã xuất bản', value: 180 },
-  { type: 'Bản nháp', value: 70 },
-  { type: 'AI đã tạo', value: 30 },
-];
-
-const mockRecentUsers = [
-  { _id: '1', name: 'Lê Trung Nguyên', email: 'nguyen@gmail.com', createdAt: '2025-11-05T10:00:00Z', pfp: null },
-  { _id: '2', name: 'Cô Ngọc', email: 'ngoc@gmail.com', createdAt: '2025-11-05T09:30:00Z', pfp: 'https://cdn-icons-png.flaticon.com/512/147/147144.png' },
-  { _id: '3', name: 'Bo Hoa', email: 'bohoa@gmail.com', createdAt: '2025-11-04T15:00:00Z', pfp: null },
-];
-
 const Dashboard = () => {
-  const [stats, setStats] = useState(mockStats);
-  const [lineData, setLineData] = useState(mockLineData);
-  const [pieData, setPieData] = useState(mockPieData);
-  const [recentUsers, setRecentUsers] = useState(mockRecentUsers);
-  const [loading, setLoading] = useState(false);
-  const [dateRange, setDateRange] = useState([dayjs().subtract(7, 'day'), dayjs()]);
+  const [stats, setStats] = useState({ totalUsers: 0, totalStories: 0, totalPosts: 0, totalLikes: 0 });
+  const [lineData, setLineData] = useState([]);
+  const [pieData, setPieData] = useState([]);
+  const [recentUsers, setRecentUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [range, setRange] = useState(7);
 
-  const onDateChange = (dates) => {
-    if (dates) {
-      setDateRange(dates);
-    } else {
-      setDateRange([dayjs().subtract(7, 'day'), dayjs()]);
-    }
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const res = await getDashboardStats(range);
+        if (res.success) {
+          setStats(res.stats);
+
+          const sortedLineData = res.lineData.sort((a, b) => {
+            return new Date(a.date) - new Date(b.date);
+          });
+          setLineData(sortedLineData);
+
+          setPieData(res.pieData);
+          setRecentUsers(res.recentUsers);
+        } else {
+          message.error("Lỗi tải dữ liệu dashboard");
+        }
+      } catch (error) {
+        message.error("Lỗi kết nối server");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [range]);
+
+  const handleRangeChange = (value) => {
+    setRange(value);
   };
 
   const lineConfig = {
     data: lineData,
     xField: 'date',
     yField: 'value',
+
     seriesField: 'type',
-    color: ({ type }) => {
-      if (type === 'Người dùng') {
-        return '#6c63ff';
-      }
-      return '#5AD8A6';
+    colorField: 'type',
+
+    color: ['#2f54eb', '#fa8c16'],
+
+    yAxis: {
+      title: { text: 'Số lượng' },
+      min: 0,
+      tickInterval: 1,
+    },
+    xAxis: {
+      title: { text: 'Ngày' },
+      label: {
+        formatter: (v) => dayjs(v).format('DD/MM'),
+      },
     },
 
-    yAxis: { title: { text: 'Số lượng' } },
-    xAxis: { title: { text: 'Ngày' } },
     smooth: true,
+
+    point: {
+      size: 5,
+      shape: 'circle',
+      style: {
+        fill: 'white',
+        lineWidth: 2,
+        strokeOpacity: 1,
+      },
+    },
+
     legend: { position: 'top' },
     tooltip: { showCrosshairs: true, shared: true },
+
+    animation: false,
   };
 
   const pieConfig = {
@@ -86,13 +92,38 @@ const Dashboard = () => {
     angleField: 'value',
     colorField: 'type',
     radius: 0.8,
+    innerRadius: 0.6,
     label: {
-      type: 'spider',
-      content: (item) => {
-        return `${item.type}\n${(item.percent * 100).toFixed(0)}%`;
+      type: 'inner',
+      offset: '-30%',
+      content: ({ percent }) => `${(percent * 100).toFixed(0)}%`,
+      style: {
+        fontSize: 14,
+        textAlign: 'center',
       },
     },
-    interactions: [{ type: 'element-active' }],
+
+    interactions: [
+      { type: 'element-selected' },
+      { type: 'element-active' }
+    ],
+
+    statistic: {
+      title: false,
+      content: {
+        style: {
+          whiteSpace: 'pre-wrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        },
+        content: 'Trạng thái',
+      },
+    },
+
+    legend: { position: 'bottom' },
+
+    height: 300,
+    autoFit: true,
   };
 
   const userColumns = [
@@ -125,11 +156,11 @@ const Dashboard = () => {
       <div className="dashboard-header">
         <Title level={2}>Tổng quan</Title>
         <Space>
-          <Select defaultValue="last7days" style={{ width: 120 }}>
-            <Select.Option value="last7days">7 ngày qua</Select.Option>
-            <Select.Option value="last30days">30 ngày qua</Select.Option>
+          <Select defaultValue={7} style={{ width: 150 }} onChange={handleRangeChange}>
+            <Select.Option value={7}>7 ngày qua</Select.Option>
+            <Select.Option value={30}>30 ngày qua</Select.Option>
+            <Select.Option value={90}>3 tháng qua</Select.Option>
           </Select>
-          <RangePicker value={dateRange} onChange={onDateChange} />
         </Space>
       </div>
 
@@ -175,14 +206,25 @@ const Dashboard = () => {
 
         <Row gutter={[16, 16]} style={{ marginTop: '24px' }}>
           <Col xs={24} lg={16}>
-            <Card title="Phân tích tăng trưởng (Người dùng vs Bài đăng)">
-              <Line {...lineConfig} />
+            <Card title="Phân tích tăng trưởng">
+              {lineData.length > 0 ? (
+                <div style={{ height: 300 }}>
+                  <Line {...lineConfig} />
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: 20, color: '#999' }}>Chưa có dữ liệu tăng trưởng</div>
+              )}
             </Card>
           </Col>
           <Col xs={24} lg={8}>
             <Card title="Tỉ lệ trạng thái truyện">
-              {/* Thẻ Pie sẽ render chính xác sau khi sửa config */}
-              <Pie {...pieConfig} />
+              {pieData.length > 0 ? (
+                <div style={{ height: 300 }}>
+                  <Pie {...pieConfig} />
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: 20, color: '#999' }}>Chưa có dữ liệu truyện</div>
+              )}
             </Card>
           </Col>
         </Row>
