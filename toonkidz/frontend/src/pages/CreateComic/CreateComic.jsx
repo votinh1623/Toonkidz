@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Checkbox, Slider, Input, message, Spin, Modal, Tag, Button, Row, Col } from 'antd';
 import { SaveOutlined, ReloadOutlined, EyeOutlined } from '@ant-design/icons';
 import "./CreateComic.scss";
@@ -13,6 +13,10 @@ const CreateComic = () => {
   const [loading, setLoading] = useState(false);
   const [generatedStory, setGeneratedStory] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [suggestedKeywords, setSuggestedKeywords] = useState({ 
+    vietnamese: { easy: [], medium: [], hard: [] },
+    english: { easy: [], medium: [], hard: [] }
+  });
   const [formData, setFormData] = useState({
     theme: '',
     keywords: [],
@@ -25,12 +29,12 @@ const CreateComic = () => {
   const [selectedGenre, setSelectedGenre] = useState('');
 
   const genres = [
-    { id: 'fairytale', label: 'Cổ tích', icon: '🏰', keywords: ['công chúa', 'hoàng tử', 'lâu đài', 'phép thuật', 'tiên'] },
-    { id: 'adventure', label: 'Phiêu lưu', icon: '🗺️', keywords: ['khám phá', 'bản đồ', 'kho báu', 'thử thách', 'hành trình'] },
-    { id: 'animal', label: 'Động vật', icon: '🐾', keywords: ['thỏ', 'rùa', 'mèo', 'chó', 'chim', 'cá'] },
-    { id: 'science', label: 'Khoa học', icon: '🔬', keywords: ['vũ trụ', 'robot', 'phát minh', 'thí nghiệm', 'khám phá'] },
-    { id: 'nature', label: 'Thiên nhiên', icon: '🌳', keywords: ['rừng', 'cây', 'hoa', 'con sông', 'núi', 'biển'] },
-    { id: 'music', label: 'Âm nhạc', icon: '🎵', keywords: ['nhạc cụ', 'bài hát', 'vũ điệu', 'âm thanh', 'giai điệu'] },
+    { id: 'animal', label: 'Động vật', icon: '🐾' },
+    { id: 'fairytale', label: 'Cổ tích', icon: '🏰' },
+    { id: 'adventure', label: 'Phiêu lưu', icon: '🗺️' },
+    { id: 'science', label: 'Khoa học', icon: '🔬' },
+    { id: 'nature', label: 'Thiên nhiên', icon: '🌳' },
+    { id: 'music', label: 'Âm nhạc', icon: '🎵' },
   ];
 
   const ageGroups = [
@@ -38,6 +42,33 @@ const CreateComic = () => {
     { value: '6-8', label: '6-8 tuổi', description: 'Truyện vừa, nội dung giáo dục' },
     { value: '9-12', label: '9-12 tuổi', description: 'Truyện dài, nội dung phong phú' }
   ];
+
+  // Lấy gợi ý từ khóa từ backend khi thể loại thay đổi
+  useEffect(() => {
+    const fetchSuggestedKeywords = async () => {
+      if (!selectedGenre) {
+        setSuggestedKeywords({ 
+          vietnamese: { easy: [], medium: [], hard: [] },
+          english: { easy: [], medium: [], hard: [] }
+        });
+        return;
+      }
+
+      try {
+        const response = await axios.get(`/api/themes/${selectedGenre}/keywords`);
+        console.log('Keywords response:', response.data);
+        
+        if (response.data.words) {
+          setSuggestedKeywords(response.data.words);
+        }
+      } catch (error) {
+        console.error('Error fetching suggested keywords:', error);
+        message.error('Không thể tải gợi ý từ khóa');
+      }
+    };
+
+    fetchSuggestedKeywords();
+  }, [selectedGenre]);
 
   const handleGenreSelect = (genre) => {
     setSelectedGenre(genre.id);
@@ -73,13 +104,17 @@ const CreateComic = () => {
 
     setLoading(true);
     try {
+      // Chuẩn bị payload
       const payload = {
         theme: formData.theme,
         keywords: selectedKeywords,
         pages: formData.pages,
         prompt: formData.prompt,
-        ageGroup: formData.ageGroup
+        ageGroup: formData.ageGroup,
+        addAudio: formData.addAudio
       };
+
+      console.log('Sending payload:', payload);
 
       const token = localStorage.getItem('token');
       
@@ -88,11 +123,13 @@ const CreateComic = () => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        timeout: 300000
+        timeout: 120000 // 2 phút
       });
 
+      console.log('Story generation response:', response.data);
+
       if (response.data.success) {
-        setGeneratedStory(response.data);
+        setGeneratedStory(response.data.data || response.data);
         message.success('Tạo truyện thành công! Bạn có thể xem trước và lưu lại.');
         setPreviewModalOpen(true);
       } else {
@@ -141,38 +178,31 @@ const CreateComic = () => {
     generateStory();
   };
 
-  const getCurrentKeywords = () => {
-    const genre = genres.find(g => g.id === selectedGenre);
-    return genre ? genre.keywords : [];
-  };
-
-  const getSelectedGenre = () => {
-    return genres.find(g => g.id === selectedGenre);
+  // Refresh keywords
+  const refreshKeywords = async () => {
+    if (!selectedGenre) return;
+    
+    try {
+      const response = await axios.get(`/api/themes/${selectedGenre}/keywords`);
+      
+      if (response.data.words) {
+        setSuggestedKeywords(response.data.words);
+        setSelectedKeywords([]);
+        message.success('Đã làm mới gợi ý từ khóa!');
+      }
+    } catch (error) {
+      console.error('Error refreshing keywords:', error);
+      message.error('Không thể làm mới từ khóa');
+    }
   };
 
   return (
     <>
       <div className="create-comic">
-        {/* Hero Section */}
-        <div className="create-comic__hero">
-          <div className="create-comic__hero-content">
-            <h1>Tạo Truyện Tranh với AI</h1>
-            <p>Biến ý tưởng thành truyện tranh sống động chỉ trong vài phút. AI sẽ giúp bạn sáng tạo câu chuyện độc đáo cho bé!</p>
-            <div className="hero-features">
-              <div className="feature">
-                <span>🚀</span>
-                <span>Nhanh chóng</span>
-              </div>
-              <div className="feature">
-                <span>🎨</span>
-                <span>Hình ảnh đẹp</span>
-              </div>
-              <div className="feature">
-                <span>📚</span>
-                <span>Giáo dục</span>
-              </div>
-            </div>
-          </div>
+        {/* Header giống hình ảnh */}
+        <div className="create-comic__header">
+          <h1>TOON KIDZ</h1>
+          <h2>Tạo truyện AI</h2>
         </div>
 
         <div className="create-comic__main">
@@ -200,19 +230,98 @@ const CreateComic = () => {
               
               {selectedGenre && (
                 <div className="setting-group">
-                  <label>Từ khóa cho {getSelectedGenre()?.label}:</label>
-                  <div className="keywords-container">
-                    {getCurrentKeywords().map(keyword => (
-                      <Tag
-                        key={keyword}
-                        color={selectedKeywords.includes(keyword) ? 'blue' : 'default'}
-                        onClick={() => handleKeywordSelect(keyword)}
-                        className="keyword-tag"
-                      >
-                        {keyword}
-                      </Tag>
-                    ))}
+                  <div className="keywords-header">
+                    <label>Từ khóa gợi ý cho {genres.find(g => g.id === selectedGenre)?.label}:</label>
+                    <Button 
+                      size="small" 
+                      onClick={refreshKeywords}
+                      icon={<ReloadOutlined />}
+                    >
+                      Làm mới
+                    </Button>
                   </div>
+                  
+                  {/* Từ khóa theo cấp độ */}
+                  {suggestedKeywords.vietnamese.easy.length > 0 && (
+                    <div className="keyword-section">
+                      <div className="keyword-section-title">
+                        🎯 Dễ (3-5 tuổi)
+                      </div>
+                      <div className="keywords-container">
+                        {suggestedKeywords.vietnamese.easy.map((keyword) => (
+                          <Tag
+                            key={keyword}
+                            color={selectedKeywords.includes(keyword) ? 'green' : 'default'}
+                            onClick={() => handleKeywordSelect(keyword)}
+                            className="keyword-tag"
+                          >
+                            {keyword}
+                          </Tag>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {suggestedKeywords.vietnamese.medium.length > 0 && (
+                    <div className="keyword-section">
+                      <div className="keyword-section-title">
+                        ⭐ Trung bình (6-8 tuổi)
+                      </div>
+                      <div className="keywords-container">
+                        {suggestedKeywords.vietnamese.medium.map((keyword) => (
+                          <Tag
+                            key={keyword}
+                            color={selectedKeywords.includes(keyword) ? 'blue' : 'default'}
+                            onClick={() => handleKeywordSelect(keyword)}
+                            className="keyword-tag"
+                          >
+                            {keyword}
+                          </Tag>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {suggestedKeywords.vietnamese.hard.length > 0 && (
+                    <div className="keyword-section">
+                      <div className="keyword-section-title">
+                        🔥 Khó (9-12 tuổi)
+                      </div>
+                      <div className="keywords-container">
+                        {suggestedKeywords.vietnamese.hard.map((keyword) => (
+                          <Tag
+                            key={keyword}
+                            color={selectedKeywords.includes(keyword) ? 'orange' : 'default'}
+                            onClick={() => handleKeywordSelect(keyword)}
+                            className="keyword-tag"
+                          >
+                            {keyword}
+                          </Tag>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Hiển thị từ khóa đã chọn */}
+                  {selectedKeywords.length > 0 && (
+                    <div className="selected-keywords-info">
+                      <div className="selected-count">
+                        <strong>Đã chọn {selectedKeywords.length} từ khóa:</strong>
+                      </div>
+                      <div className="selected-list">
+                        {selectedKeywords.map(keyword => (
+                          <Tag 
+                            key={keyword} 
+                            color="purple" 
+                            closable 
+                            onClose={() => handleKeywordSelect(keyword)}
+                          >
+                            {keyword}
+                          </Tag>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -286,7 +395,7 @@ const CreateComic = () => {
             </div>
           </div>
 
-          {/* Preview Panel */}
+          {/* Preview Panel - FIXED */}
           <div className="create-comic__preview">
             <div className="preview-card">
               <h3>👁️ Xem trước</h3>
@@ -294,11 +403,17 @@ const CreateComic = () => {
               {generatedStory ? (
                 <div className="preview-content">
                   <div className="preview-cover">
-                    <img src={generatedStory.coverImage} alt={generatedStory.title} />
+                    <img 
+                      src={generatedStory.coverImage || '/default-cover.jpg'} 
+                      alt={generatedStory.title} 
+                      onError={(e) => {
+                        e.target.src = '/default-cover.jpg';
+                      }}
+                    />
                   </div>
                   <div className="preview-info">
-                    <h4>{generatedStory.title}</h4>
-                    <p className="preview-heading">{generatedStory.heading}</p>
+                    <h4>{generatedStory.title || 'Tiêu đề truyện'}</h4>
+                    <p className="preview-heading">{generatedStory.heading || 'Mô tả ngắn về truyện'}</p>
                     <div className="preview-meta">
                       <Tag color="blue">{formData.ageGroup} tuổi</Tag>
                       <Tag color="green">{generatedStory.pages?.length || formData.pages} trang</Tag>
@@ -346,7 +461,7 @@ const CreateComic = () => {
         </div>
       </div>
 
-      {/* Preview Modal */}
+      {/* Preview Modal - FIXED */}
       <Modal
         title="📖 Xem trước truyện"
         open={previewModalOpen}
@@ -358,14 +473,20 @@ const CreateComic = () => {
         {generatedStory && (
           <div className="preview-modal-content">
             <div className="preview-header">
-              <img src={generatedStory.coverImage} alt={generatedStory.title} />
+              <img 
+                src={generatedStory.coverImage || '/default-cover.jpg'} 
+                alt={generatedStory.title}
+                onError={(e) => {
+                  e.target.src = '/default-cover.jpg';
+                }}
+              />
               <div className="preview-header-info">
-                <h2>{generatedStory.title}</h2>
-                <p>{generatedStory.heading}</p>
+                <h2>{generatedStory.title || 'Tiêu đề truyện'}</h2>
+                <p>{generatedStory.heading || 'Mô tả truyện'}</p>
                 <div className="preview-tags">
                   <Tag color="blue">Thể loại: {formData.theme}</Tag>
                   <Tag color="green">Độ tuổi: {formData.ageGroup}</Tag>
-                  <Tag color="orange">{generatedStory.pages?.length} trang</Tag>
+                  <Tag color="orange">{generatedStory.pages?.length || 0} trang</Tag>
                 </div>
               </div>
             </div>
@@ -375,15 +496,25 @@ const CreateComic = () => {
               <div className="pages-grid">
                 {generatedStory.pages?.map((page, index) => (
                   <div key={index} className="page-preview">
-                    <div className="page-number">Trang {page.pageNumber}</div>
+                    <div className="page-number">Trang {page.pageNumber || index + 1}</div>
                     <div className="page-image">
-                      <img src={page.image} alt={`Page ${page.pageNumber}`} />
+                      <img 
+                        src={page.image || '/default-page.jpg'} 
+                        alt={`Page ${page.pageNumber || index + 1}`}
+                        onError={(e) => {
+                          e.target.src = '/default-page.jpg';
+                        }}
+                      />
                     </div>
                     <div className="page-content">
-                      <p>{page.content}</p>
+                      <p>{page.content || 'Nội dung trang...'}</p>
                     </div>
                   </div>
-                ))}
+                )) || (
+                  <div className="no-pages">
+                    <p>Chưa có nội dung trang nào được tạo.</p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -420,30 +551,11 @@ const CreateComic = () => {
                     Tạo lại
                   </Button>
                 </Col>
-                <Col>
-                  <Button 
-                    size="large"
-                    onClick={() => setPreviewModalOpen(false)}
-                  >
-                    Đóng
-                  </Button>
-                </Col>
               </Row>
-              <div className="action-note">
-                <small>💡 Bạn có thể xuất bản ngay hoặc lưu bản nháp để chỉnh sửa sau</small>
-              </div>
             </div>
           </div>
         )}
       </Modal>
-
-      {/* Story Detail Modal */}
-      <StoryModal 
-        open={open} 
-        onClose={() => setOpen(false)} 
-        story={generatedStory}
-        loading={loading}
-      />
     </>
   )
 }

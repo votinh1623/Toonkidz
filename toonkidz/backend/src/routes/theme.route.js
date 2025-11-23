@@ -4,6 +4,6 @@ import { getThemeWords } from "../controllers/theme.controller.js";
 
 const router = express.Router();
 
-router.get("/:theme/words", getThemeWords);
+router.get("/:theme/keywords", getThemeWords);
 
 export default router;

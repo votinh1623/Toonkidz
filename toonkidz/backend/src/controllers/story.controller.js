@@ -60,6 +60,7 @@ YÊU CẦU BẮT BUỘC:
 QUY TẮC VIẾT IMAGE PROMPT:
 - VIẾT HOÀN TOÀN BẰNG TIẾNG ANH
 - Mô tả: nhân vật + hành động + bối cảnh + cảm xúc
+- Luôn chú ý là không được để xuất hiện chữ cái lên ảnh
 - Phong cách: cartoon, children's book illustration, bright colors, friendly
 - Cover image: tổng quan câu chuyện, hấp dẫn
 
