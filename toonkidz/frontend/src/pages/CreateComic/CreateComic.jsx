@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Checkbox, Slider, Input, message, Spin, Modal, Tag, Button, Row, Col } from 'antd';
-import { SaveOutlined, ReloadOutlined, EyeOutlined } from '@ant-design/icons';
+import { Checkbox, Slider, Input, message, Spin, Modal, Tag, Button, Row, Col, Card } from 'antd';
 import "./CreateComic.scss";
 import StoryModal from '../../components/StoryModal/StoryModal';
 import axios from 'axios';
@@ -17,16 +16,20 @@ const CreateComic = () => {
     vietnamese: { easy: [], medium: [], hard: [] },
     english: { easy: [], medium: [], hard: [] }
   });
+  const [availableVoices, setAvailableVoices] = useState({});
+  const [voicesLoading, setVoicesLoading] = useState(false);
   const [formData, setFormData] = useState({
     theme: '',
     keywords: [],
     pages: 3,
     prompt: '',
     addAudio: false,
-    ageGroup: '6-8'
+    ageGroup: '6-8',
+    selectedVoice: 'vi-VN-HoaiMyNeural'
   });
   const [selectedKeywords, setSelectedKeywords] = useState([]);
   const [selectedGenre, setSelectedGenre] = useState('');
+  const [audioPlaying, setAudioPlaying] = useState(false);
 
   const genres = [
     { id: 'animal', label: 'Động vật', icon: '🐾' },
@@ -43,6 +46,34 @@ const CreateComic = () => {
     { value: '9-12', label: '9-12 tuổi', description: 'Truyện dài, nội dung phong phú' }
   ];
 
+  // Fetch danh sách voices từ backend
+  const fetchAvailableVoices = async () => {
+    setVoicesLoading(true);
+    try {
+      const response = await axios.get('/api/voices/vi');
+      
+      if (response.data.success && response.data.voices) {
+        setAvailableVoices(response.data.voices);
+        
+        // Set voice mặc định nếu có
+        if (response.data.count > 0 && !formData.selectedVoice) {
+          const firstVoice = Object.keys(response.data.voices)[0];
+          handleInputChange('selectedVoice', firstVoice);
+        }
+      }
+    } catch (error) {
+      message.error('Không thể tải danh sách giọng đọc');
+      setAvailableVoices({});
+    } finally {
+      setVoicesLoading(false);
+    }
+  };
+
+  // Load voices khi component mount
+  useEffect(() => {
+    fetchAvailableVoices();
+  }, []);
+
   // Lấy gợi ý từ khóa từ backend khi thể loại thay đổi
   useEffect(() => {
     const fetchSuggestedKeywords = async () => {
@@ -56,13 +87,11 @@ const CreateComic = () => {
 
       try {
         const response = await axios.get(`/api/themes/${selectedGenre}/keywords`);
-        console.log('Keywords response:', response.data);
         
         if (response.data.words) {
           setSuggestedKeywords(response.data.words);
         }
       } catch (error) {
-        console.error('Error fetching suggested keywords:', error);
         message.error('Không thể tải gợi ý từ khóa');
       }
     };
@@ -96,6 +125,45 @@ const CreateComic = () => {
     }));
   };
 
+  // Thử nghiệm giọng đọc
+  const testVoice = async (voiceId = formData.selectedVoice) => {
+    if (!voiceId) {
+      message.warning('Vui lòng chọn giọng đọc trước');
+      return;
+    }
+
+    setAudioPlaying(true);
+    try {
+      const testText = "Xin chào! Đây là giọng đọc thử nghiệm cho truyện của bạn.";
+      const response = await axios.post('http://localhost:5001/tts', {
+        text: testText,
+        voice: voiceId
+      }, {
+        responseType: 'blob',
+        timeout: 30000,
+      });
+
+      const audioUrl = URL.createObjectURL(response.data);
+      const audio = new Audio(audioUrl);
+      
+      audio.onended = () => {
+        setAudioPlaying(false);
+        URL.revokeObjectURL(audioUrl);
+      };
+      
+      audio.onerror = () => {
+        setAudioPlaying(false);
+        URL.revokeObjectURL(audioUrl);
+      };
+      
+      await audio.play();
+      
+    } catch (error) {
+      setAudioPlaying(false);
+      message.error('Không thể thử nghiệm giọng đọc');
+    }
+  };
+
   const generateStory = async () => {
     if (!formData.theme && !formData.prompt) {
       message.error('Vui lòng chọn thể loại hoặc nhập ý tưởng truyện');
@@ -104,17 +172,15 @@ const CreateComic = () => {
 
     setLoading(true);
     try {
-      // Chuẩn bị payload
       const payload = {
         theme: formData.theme,
         keywords: selectedKeywords,
         pages: formData.pages,
         prompt: formData.prompt,
         ageGroup: formData.ageGroup,
-        addAudio: formData.addAudio
+        includeAudio: formData.addAudio,
+        voice: formData.addAudio ? formData.selectedVoice : undefined
       };
-
-      console.log('Sending payload:', payload);
 
       const token = localStorage.getItem('token');
 
@@ -123,21 +189,18 @@ const CreateComic = () => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        timeout: 120000 // 2 phút
+        timeout: 120000
       });
-
-      console.log('Story generation response:', response.data);
 
       if (response.data.success) {
         setGeneratedStory(response.data.data || response.data);
-        message.success('Tạo truyện thành công! Bạn có thể xem trước và lưu lại.');
+        message.success('Tạo truyện thành công!');
         setPreviewModalOpen(true);
       } else {
         throw new Error(response.data.error || 'Failed to generate story');
       }
     } catch (error) {
-      console.error('Error generating story:', error);
-      message.error(error.response?.data?.message || 'Có lỗi xảy ra khi tạo truyện. Vui lòng thử lại.');
+      message.error(error.response?.data?.message || 'Có lỗi xảy ra khi tạo truyện');
     } finally {
       setLoading(false);
     }
@@ -166,8 +229,7 @@ const CreateComic = () => {
         setGeneratedStory(null);
       }
     } catch (error) {
-      console.error('Error saving story:', error);
-      message.error('Có lỗi khi lưu truyện. Vui lòng thử lại.');
+      message.error('Có lỗi khi lưu truyện');
     } finally {
       setSaving(false);
     }
@@ -191,15 +253,80 @@ const CreateComic = () => {
         message.success('Đã làm mới gợi ý từ khóa!');
       }
     } catch (error) {
-      console.error('Error refreshing keywords:', error);
       message.error('Không thể làm mới từ khóa');
     }
+  };
+
+  // Refresh voices
+  const refreshVoices = async () => {
+    await fetchAvailableVoices();
+  };
+
+  // Render voice cards
+  const renderVoiceCards = () => {
+    if (voicesLoading) {
+      return (
+        <div className="voices-loading">
+          <Spin size="small" />
+          <span>Đang tải giọng đọc...</span>
+        </div>
+      );
+    }
+
+    if (Object.keys(availableVoices).length === 0) {
+      return (
+        <div className="no-voices">
+          <p>Không có giọng đọc nào khả dụng</p>
+        </div>
+      );
+    }
+
+    return Object.entries(availableVoices).map(([voiceId, voiceInfo]) => (
+      <Card
+        key={voiceId}
+        className={`voice-card ${formData.selectedVoice === voiceId ? 'selected' : ''}`}
+        onClick={() => handleInputChange('selectedVoice', voiceId)}
+        size="small"
+      >
+        <div className="voice-card-content">
+          <div className="voice-header">
+            <div className="voice-avatar">
+              {voiceInfo.gender === 'female' ? '👩' : '👨'}
+            </div>
+            <div className="voice-info">
+              <div className="voice-name">
+                <strong>{voiceInfo.name}</strong>
+              </div>
+              <div className="voice-type">
+                {voiceInfo.gender === 'female' ? 'Nữ' : 'Nam'}
+              </div>
+            </div>
+          </div>
+          
+          <div className="voice-description">
+            {voiceInfo.description}
+          </div>
+          
+          <div className="voice-actions">
+            <Button 
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                testVoice(voiceId);
+              }}
+              loading={audioPlaying && formData.selectedVoice === voiceId}
+            >
+              Nghe thử
+            </Button>
+          </div>
+        </div>
+      </Card>
+    ));
   };
 
   return (
     <>
       <div className="create-comic">
-        {/* Header giống hình ảnh */}
         <div className="create-comic__header">
           <h1>TOON KIDZ</h1>
           <h2>Tạo truyện AI</h2>
@@ -209,7 +336,7 @@ const CreateComic = () => {
           <div className="create-comic__main__left">
             {/* Genre Selection */}
             <div className="create-comic__section">
-              <h2>🎭 Chọn thể loại truyện</h2>
+              <h2>Chọn thể loại truyện</h2>
               <div className="genre-grid">
                 {genres.map(genre => (
                   <div
@@ -226,7 +353,7 @@ const CreateComic = () => {
 
             {/* Story Settings */}
             <div className="create-comic__section">
-              <h2>⚙️ Cài đặt truyện</h2>
+              <h2>Cài đặt truyện</h2>
 
               {selectedGenre && (
                 <div className="setting-group">
@@ -235,7 +362,6 @@ const CreateComic = () => {
                     <Button 
                       size="small" 
                       onClick={refreshKeywords}
-                      icon={<ReloadOutlined />}
                     >
                       Làm mới
                     </Button>
@@ -245,7 +371,7 @@ const CreateComic = () => {
                   {suggestedKeywords.vietnamese.easy.length > 0 && (
                     <div className="keyword-section">
                       <div className="keyword-section-title">
-                        🎯 Dễ (3-5 tuổi)
+                        Dễ (3-5 tuổi)
                       </div>
                       <div className="keywords-container">
                         {suggestedKeywords.vietnamese.easy.map((keyword) => (
@@ -265,7 +391,7 @@ const CreateComic = () => {
                   {suggestedKeywords.vietnamese.medium.length > 0 && (
                     <div className="keyword-section">
                       <div className="keyword-section-title">
-                        ⭐ Trung bình (6-8 tuổi)
+                        Trung bình (6-8 tuổi)
                       </div>
                       <div className="keywords-container">
                         {suggestedKeywords.vietnamese.medium.map((keyword) => (
@@ -285,7 +411,7 @@ const CreateComic = () => {
                   {suggestedKeywords.vietnamese.hard.length > 0 && (
                     <div className="keyword-section">
                       <div className="keyword-section-title">
-                        🔥 Khó (9-12 tuổi)
+                        Khó (9-12 tuổi)
                       </div>
                       <div className="keywords-container">
                         {suggestedKeywords.vietnamese.hard.map((keyword) => (
@@ -348,8 +474,6 @@ const CreateComic = () => {
                   max={7}
                   value={formData.pages}
                   onChange={(value) => handleInputChange('pages', value)}
-                  trackStyle={{ background: '#1890ff' }}
-                  handleStyle={{ borderColor: '#1890ff' }}
                 />
                 <div className="slider-labels">
                   <span>Ngắn</span>
@@ -358,19 +482,48 @@ const CreateComic = () => {
                 </div>
               </div>
 
+              {/* Audio Settings */}
               <div className="setting-group">
-                <label>
+                <div className="audio-checkbox">
                   <Checkbox
                     checked={formData.addAudio}
                     onChange={(e) => handleInputChange('addAudio', e.target.checked)}
                   >
-                    🎵 Thêm audio đọc truyện
+                    <span className="audio-label">Thêm audio đọc truyện</span>
                   </Checkbox>
-                </label>
+                </div>
+                
+                {formData.addAudio && (
+                  <div className="voice-selection-section">
+                    <div className="section-header">
+                      <div className="section-title">Chọn giọng đọc:</div>
+                      <Button 
+                        size="small" 
+                        onClick={refreshVoices}
+                        loading={voicesLoading}
+                      >
+                        Làm mới
+                      </Button>
+                    </div>
+                    
+                    <div className="voice-cards-grid">
+                      {renderVoiceCards()}
+                    </div>
+                    
+                    {/* Selected voice info */}
+                    {formData.selectedVoice && availableVoices[formData.selectedVoice] && (
+                      <div className="selected-voice-info">
+                        <div className="selected-voice-badge">
+                          <strong>Đã chọn: {availableVoices[formData.selectedVoice].name}</strong>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="setting-group">
-                <label>💡 Ý tưởng của bạn (tùy chọn):</label>
+                <label>Ý tưởng của bạn (tùy chọn):</label>
                 <TextArea
                   rows={4}
                   placeholder="Ví dụ: Một chú thỏ ham chơi và một chú rùa chăm chỉ tham gia cuộc đua trong rừng..."
@@ -388,17 +541,16 @@ const CreateComic = () => {
                 loading={loading}
                 disabled={(!formData.theme && !formData.prompt) || loading}
                 className="generate-btn"
-                icon={<ReloadOutlined />}
               >
-                {loading ? 'Đang tạo truyện...' : '🎨 Tạo truyện ngay'}
+                {loading ? 'Đang tạo truyện...' : 'Tạo truyện ngay'}
               </Button>
             </div>
           </div>
 
-          {/* Preview Panel - FIXED */}
+          {/* Preview Panel */}
           <div className="create-comic__preview">
             <div className="preview-card">
-              <h3>👁️ Xem trước</h3>
+              <h3>Xem trước</h3>
 
               {generatedStory ? (
                 <div className="preview-content">
@@ -418,12 +570,12 @@ const CreateComic = () => {
                       <Tag color="blue">{formData.ageGroup} tuổi</Tag>
                       <Tag color="green">{generatedStory.pages?.length || formData.pages} trang</Tag>
                       <Tag color="orange">{Math.ceil((generatedStory.pages?.length || formData.pages) * 0.5)} phút</Tag>
+                      {formData.addAudio && <Tag color="purple">Có audio</Tag>}
                     </div>
                   </div>
                   <div className="preview-actions">
                     <Button
                       type="primary"
-                      icon={<EyeOutlined />}
                       onClick={() => setPreviewModalOpen(true)}
                     >
                       Xem chi tiết
@@ -441,7 +593,7 @@ const CreateComic = () => {
 
             {/* Quick Stats */}
             <div className="stats-card">
-              <h4>📊 Thống kê</h4>
+              <h4>Thống kê</h4>
               <div className="stats-grid">
                 <div className="stat">
                   <div className="stat-value">{selectedKeywords.length}</div>
@@ -456,19 +608,23 @@ const CreateComic = () => {
                   <div className="stat-label">Độ tuổi</div>
                 </div>
               </div>
+              {formData.addAudio && formData.selectedVoice && availableVoices[formData.selectedVoice] && (
+                <div className="audio-info">
+                  <Tag color="green">Giọng: {availableVoices[formData.selectedVoice].name}</Tag>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Preview Modal - FIXED */}
+      {/* Preview Modal */}
       <Modal
-        title="📖 Xem trước truyện"
+        title="Xem trước truyện"
         open={previewModalOpen}
         onCancel={() => setPreviewModalOpen(false)}
         footer={null}
         width={1000}
-        className="preview-modal"
       >
         {generatedStory && (
           <div className="preview-modal-content">
@@ -524,7 +680,6 @@ const CreateComic = () => {
                   <Button
                     type="primary"
                     size="large"
-                    icon={<SaveOutlined />}
                     loading={saving}
                     onClick={() => saveStory('published')}
                   >
@@ -534,7 +689,6 @@ const CreateComic = () => {
                 <Col>
                   <Button
                     size="large"
-                    icon={<SaveOutlined />}
                     loading={saving}
                     onClick={() => saveStory('draft')}
                   >
@@ -544,19 +698,10 @@ const CreateComic = () => {
                 <Col>
                   <Button
                     size="large"
-                    icon={<ReloadOutlined />}
                     onClick={retryGeneration}
                     loading={loading}
                   >
                     Tạo lại
-                  </Button>
-                </Col>
-                <Col>
-                  <Button
-                    size="large"
-                    onClick={() => setPreviewModalOpen(false)}
-                  >
-                    Đóng
                   </Button>
                 </Col>
               </Row>
@@ -565,7 +710,6 @@ const CreateComic = () => {
         )}
       </Modal>
 
-      {/* Story Detail Modal */}
       <StoryModal
         open={open}
         onClose={() => setOpen(false)}
@@ -576,4 +720,4 @@ const CreateComic = () => {
   )
 }
 
-export default CreateComic
+export default CreateComic;

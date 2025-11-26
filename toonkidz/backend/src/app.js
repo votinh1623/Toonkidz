@@ -34,6 +34,10 @@ import conversationRoutes from './routes/conversation.route.js';
 import reportRoutes from './routes/report.route.js';
 import adminRoutes from './routes/admin.route.js';
 import { initializeSocketIO } from "./socket/socket.js";
+import voiceRoutes from './routes/voice.route.js';
+
+// ... các import khác
+
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -91,6 +95,8 @@ app.use('/api/conversations', conversationRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/voices', voiceRoutes);
+
 
 // TTS Status Check Endpoint
 app.get('/api/tts-status', async (req, res) => {

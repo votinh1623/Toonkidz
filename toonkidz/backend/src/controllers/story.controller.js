@@ -11,9 +11,112 @@ import { generateImagesForStory } from './image.controller.js';
 import User from '../models/user.model.js';
 import Post from '../models/post.model.js';
 
+// Hàm kiểm tra TTS server có hoạt động không
+const checkTTSServer = async () => {
+  try {
+    const response = await axios.get('http://localhost:5001/health', {
+      timeout: 5000
+    });
+    return response.data.status === 'healthy';
+  } catch (error) {
+    console.warn('TTS server is not available:', error.message);
+    return false;
+  }
+};
+
+// Hàm tạo audio cho từng trang truyện
+const generateAudioForPages = async (pages, storyId, voice = 'vi-VN-HoaiMyNeural') => {
+  try {
+    console.log('Starting audio generation for story:', storyId, 'with voice:', voice);
+    
+    // Kiểm tra TTS server có hoạt động không
+    const isTTSServerAvailable = await checkTTSServer();
+    if (!isTTSServerAvailable) {
+      console.warn('TTS server is not available, skipping audio generation');
+      return pages.map(page => ({
+        ...page,
+        audio: '' // Trả về pages không có audio
+      }));
+    }
+
+    const pagesWithAudio = await Promise.all(
+      pages.map(async (page) => {
+        try {
+          // Gọi edge_tts_server để tạo audio
+          const ttsResponse = await axios.post('http://localhost:5001/tts', {
+            text: page.content,
+            voice: voice
+          }, {
+            responseType: 'arraybuffer',
+            timeout: 30000 // 30 seconds timeout
+          });
+
+          // Tạo file audio tạm thời
+          const tempDir = path.join(process.cwd(), 'temp');
+          if (!fs.existsSync(tempDir)) {
+            fs.mkdirSync(tempDir, { recursive: true });
+          }
+
+          const audioFilename = `audio_${storyId}_page${page.pageNumber}_${Date.now()}.mp3`;
+          const audioFilePath = path.join(tempDir, audioFilename);
+
+          // Lưu file audio tạm thời
+          await writeFile(audioFilePath, ttsResponse.data);
+
+          // Upload lên Cloudinary
+          const uploadResult = await cloudinary.uploader.upload(audioFilePath, {
+            resource_type: "video",
+            folder: "toonkidz/story_audios",
+            format: "mp3",
+          });
+
+          // Xóa file tạm
+          fs.unlinkSync(audioFilePath);
+
+          console.log(`Audio generated for page ${page.pageNumber} with voice ${voice}:`, uploadResult.secure_url);
+
+          return {
+            pageNumber: page.pageNumber,
+            content: page.content,
+            image: page.image || '',
+            audio: uploadResult.secure_url
+          };
+        } catch (error) {
+          console.error(`Error generating audio for page ${page.pageNumber} with voice ${voice}:`, error);
+          // Trả về trang không có audio nếu lỗi
+          return {
+            pageNumber: page.pageNumber,
+            content: page.content,
+            image: page.image || '',
+            audio: '' // Để trống nếu không tạo được audio
+          };
+        }
+      })
+    );
+
+    return pagesWithAudio;
+  } catch (error) {
+    console.error('Error in generateAudioForPages:', error);
+    // Trả về pages không có audio nếu có lỗi
+    return pages.map(page => ({
+      ...page,
+      audio: ''
+    }));
+  }
+};
+
 export const generateStory = async (req, res) => {
-  const { theme, keywords, pages, prompt: userPrompt } = req.body;
+  const { theme, keywords, pages, prompt: userPrompt, includeAudio = false, voice = 'vi-VN-HoaiMyNeural', ageGroup = '6-8' } = req.body;
   const userId = req.user._id;
+
+  console.log('Generate story request:', { 
+    theme, 
+    keywords: keywords?.length, 
+    pages, 
+    includeAudio, 
+    voice,
+    ageGroup 
+  });
 
   if (!theme && !userPrompt) {
     return res.status(400).json({ error: 'Theme or prompt is required' });
@@ -101,7 +204,7 @@ Lưu ý:
       try {
         let storyText = '';
 
-        // Generate story content
+        // Generate story content (giữ nguyên phần này)
         if (model.provider === 'replicate') {
           const response = await axios.post(
             model.endpoint,
@@ -230,7 +333,7 @@ Lưu ý:
         console.log(storyText);
         console.log('=== END RAW RESPONSE ===');
 
-        let result;
+           let result;
         try {
           result = JSON.parse(storyText);
         } catch {
@@ -241,16 +344,14 @@ Lưu ý:
           throw new Error('Invalid response format: missing pages array');
         }
 
-        // Create pages with image prompts
+        // Create pages với audio rỗng ban đầu
         const pagesWithPrompts = result.pages.map((page, index) => ({
           pageNumber: page.pageNumber || index + 1,
           content: page.content,
           imagePrompt: page.imagePrompt || generateFallbackImagePrompt(page.content, result.title, index + 1)
         }));
 
-
-
-        // Create temporary story data
+        // Create temporary story data - KHỞI TẠO AUDIO LÀ RỖNG
         const storyData = {
           theme: theme,
           title: result.title || `Câu chuyện về ${theme}`,
@@ -258,29 +359,29 @@ Lưu ý:
           content: pagesWithPrompts.map(page => page.content).join('\n\n'),
           pages: pagesWithPrompts.map(page => ({
             pageNumber: page.pageNumber,
-            content: page.content, // Make sure content is saved for each page
-            //imagePrompt: page.imagePrompt,
+            content: page.content,
             image: '', // Will be updated after image generation
-            audio: '' // Optional audio field
+            audio: '' // Sẽ được cập nhật sau nếu có audio
           })),
           coverImage: '',
           coverImagePrompt: result.coverImagePrompt || generateFallbackCoverPrompt(result.title, result.heading),
           userId: userId,
-          status: 'preview', // New status to indicate images are being generated
+          status: 'generating', // Trạng thái đang tạo
           tags: storyKeywords.join(', '),
           readingTime: Math.ceil(pagesWithPrompts.length * 0.5),
-          ageGroup: '6-8',
+          ageGroup: ageGroup,
           language: 'vi'
         };
 
-        // Save story temporarily with 'generating_images' status
+        // Save story tạm thời
         const tempStory = await Story.create(storyData);
+        console.log('Temporary story created:', tempStory._id);
 
+        // BƯỚC 1: Generate images trước
         console.log('Starting image generation for story:', tempStory._id);
-
-        // Generate images and wait for completion
+        let imageResult;
         try {
-          const imageResult = await generateImagesForStoryInternal(
+          imageResult = await generateImagesForStoryInternal(
             tempStory._id.toString(),
             {
               coverImagePrompt: result.coverImagePrompt,
@@ -290,53 +391,81 @@ Lưu ý:
               }))
             }
           );
-          const updatedPages = tempStory.pages.map(page => {
-            const generatedPage = imageResult.pages.find(p => p.pageNumber === page.pageNumber);
-            return {
-              pageNumber: page.pageNumber,
-              content: page.content, // Preserve the original content
-              // imagePrompt: page.imagePrompt, // Preserve the image prompt
-              image: generatedPage ? generatedPage.image : '', // Add generated image URL
-              audio: page.audio || '' // Preserve audio if exists
-            };
-          });
-          // Update story with generated images
-          const updatedStory = await Story.findByIdAndUpdate(
-            tempStory._id,
-            {
-              coverImage: imageResult.coverImage,
-              pages: updatedPages,
-              status: 'completed'
-            },
-            { new: true }
-          );
-
-          console.log('Story completed with images:', updatedStory._id);
-
-          // Return complete story with images
-          return res.json({
-            success: true,
-            storyId: updatedStory._id,
-            title: updatedStory.title,
-            heading: updatedStory.head,
-            pages: updatedStory.pages,
-            coverImage: updatedStory.coverImage,
-            theme: updatedStory.theme,
-            keywords: storyKeywords,
-            model_used: model.name,
-            status: 'completed'
-          });
-
+          console.log('Image generation completed');
         } catch (imageError) {
           console.error('Image generation failed:', imageError);
-
           // Update story status to failed
           await Story.findByIdAndUpdate(tempStory._id, {
             status: 'failed'
           });
-
           throw new Error(`Image generation failed: ${imageError.message}`);
         }
+
+        // Cập nhật pages với images
+        let finalPages = tempStory.pages.map(page => {
+          const generatedPage = imageResult.pages.find(p => p.pageNumber === page.pageNumber);
+          return {
+            pageNumber: page.pageNumber,
+            content: page.content,
+            image: generatedPage ? generatedPage.image : '',
+            audio: '' // Vẫn giữ audio rỗng
+          };
+        });
+
+        // BƯỚC 2: Generate audio NẾU được chọn
+        if (includeAudio) {
+          console.log('Starting audio generation for story:', tempStory._id, 'with voice:', voice);
+          try {
+            finalPages = await generateAudioForPages(finalPages, tempStory._id.toString(), voice);
+            console.log(`Audio generation completed: ${finalPages.filter(p => p.audio).length}/${finalPages.length} pages have audio`);
+          } catch (audioError) {
+            console.error('Audio generation failed, but continuing with story:', audioError);
+            // Vẫn tiếp tục với story, nhưng không có audio
+            finalPages = finalPages.map(page => ({
+              ...page,
+              audio: ''
+            }));
+          }
+        }
+
+        // BƯỚC 3: Update story cuối cùng với cả images và audio
+        const updatedStory = await Story.findByIdAndUpdate(
+          tempStory._id,
+          {
+            coverImage: imageResult.coverImage,
+            pages: finalPages,
+            status: 'completed'
+          },
+          { new: true }
+        );
+
+        console.log('Story completed successfully:', updatedStory._id);
+        console.log('Story details:', {
+          title: updatedStory.title,
+          pages: updatedStory.pages.length,
+          hasImages: updatedStory.pages.every(p => p.image),
+          hasAudio: includeAudio ? updatedStory.pages.some(p => p.audio) : false
+        });
+
+        // Return complete story
+        return res.json({
+          success: true,
+          storyId: updatedStory._id,
+          title: updatedStory.title,
+          heading: updatedStory.head,
+          pages: updatedStory.pages,
+          coverImage: updatedStory.coverImage,
+          theme: updatedStory.theme,
+          keywords: storyKeywords,
+          model_used: model.name,
+          status: 'completed',
+          hasAudio: includeAudio,
+          voiceUsed: includeAudio ? voice : null,
+          audioStats: includeAudio ? {
+            totalPages: finalPages.length,
+            pagesWithAudio: finalPages.filter(p => p.audio).length
+          } : null
+        });
 
       } catch (err) {
         console.warn(`Attempt ${attempt + 1} failed for model ${model.name}:`, err.message);
@@ -377,6 +506,7 @@ Lưu ý:
     message: 'Xin lỗi, tất cả các dịch vụ AI hiện đang gặp sự cố. Vui lòng thử lại sau.'
   });
 };
+
 export const savePreviewStory = async (req, res) => {
   try {
     const { storyId } = req.params;
@@ -407,6 +537,7 @@ export const savePreviewStory = async (req, res) => {
     res.status(500).json({ error: 'Failed to save story' });
   }
 };
+
 // Internal function to generate images (adapted from image.controller.js)
 const generateImagesForStoryInternal = async (storyId, imagePrompts) => {
   try {
@@ -1136,5 +1267,61 @@ export const rateStory = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// Thêm route để lấy danh sách voices
+export const getAvailableVoices = async (req, res) => {
+  try {
+    const { language } = req.params;
+    
+    // Danh sách voices tiếng Việt
+    const vietnameseVoices = {
+      'vi-VN-HoaiMyNeural': {
+        name: 'Hoài My',
+        gender: 'female',
+        description: 'Giọng nữ miền Bắc, trẻ trung, trong sáng',
+        locale: 'vi-VN'
+      },
+      'vi-VN-NamMinhNeural': {
+        name: 'Nam Minh',
+        gender: 'male', 
+        description: 'Giọng nam miền Bắc, ấm áp, thân thiện',
+        locale: 'vi-VN'
+      },
+      'vi-VN-ThanhXuanNeural': {
+        name: 'Thanh Xuân',
+        gender: 'female',
+        description: 'Giọng nữ miền Bắc, nhẹ nhàng, truyền cảm',
+        locale: 'vi-VN'
+      },
+      'vi-VN-AnNeural': {
+        name: 'An',
+        gender: 'male',
+        description: 'Giọng nam miền Nam, trầm ấm, dễ nghe',
+        locale: 'vi-VN'
+      },
+      'vi-VN-HoaiMy': {
+        name: 'Hoài My (Standard)',
+        gender: 'female',
+        description: 'Giọng nữ tiêu chuẩn, rõ ràng, dễ hiểu',
+        locale: 'vi-VN'
+      }
+    };
+
+    const voices = language === 'vi' ? vietnameseVoices : vietnameseVoices;
+
+    res.json({
+      success: true,
+      voices: voices,
+      count: Object.keys(voices).length
+    });
+
+  } catch (error) {
+    console.error('Error fetching voices:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch available voices'
+    });
   }
 };
