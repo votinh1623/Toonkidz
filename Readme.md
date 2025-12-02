@@ -1,19 +1,5 @@
 # NOTES:
 
-##  batching requests
-
-## npm start //Done
-
-## python edge_tts_server.py //Done
-
-## recommendation algorithm for similar behavior**
-
-## CMMI for software process???
-
-## iso and cmmi
-
-## shell -> cd "C:Redis" -> redis-server.exe
-
 
 ***Config .env first!!!***
 
