@@ -33,22 +33,22 @@ class RedisConnection {
   }
 
   async set(key, value, mode, duration) {
-  await this.connect();
-  try {
-    // Support both old-style (mode, duration) and object-style
-    if (mode && duration) {
-      // Translate "EX", "PX", etc. to proper option key
-      const opts = {};
-      opts[mode] = duration;
-      return await this.client.set(key, value, opts);
-    } else {
-      return await this.client.set(key, value);
+    await this.connect();
+    try {
+      // Support both old-style (mode, duration) and object-style
+      if (mode && duration) {
+        // Translate "EX", "PX", etc. to proper option key
+        const opts = {};
+        opts[mode] = duration;
+        return await this.client.set(key, value, opts);
+      } else {
+        return await this.client.set(key, value);
+      }
+    } catch (error) {
+      console.error("Redis set error:", error);
+      return null;
     }
-  } catch (error) {
-    console.error("Redis set error:", error);
-    return null;
   }
-}
 
 
   async get(key) {
@@ -68,6 +68,19 @@ class RedisConnection {
     } catch (error) {
       console.error('Redis del error:', error);
       return null;
+    }
+  }
+
+  async deleteByPattern(pattern) {
+    await this.connect();
+    try {
+      const keys = await this.client.keys(pattern);
+      if (keys.length > 0) {
+        await this.client.del(keys);
+        console.log(`Deleted ${keys.length} keys matching ${pattern}`);
+      }
+    } catch (error) {
+      console.error('Redis delete pattern error:', error);
     }
   }
 }

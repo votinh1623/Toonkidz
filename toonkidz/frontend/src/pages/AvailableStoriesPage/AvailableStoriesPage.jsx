@@ -1,12 +1,10 @@
-// src/pages/AvailableStoriesPage/AvailableStoriesPage.jsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { Spin, message, Input, Pagination } from 'antd';
-import { useNavigate, useOutletContext } from 'react-router-dom';
-import { Search } from 'lucide-react';
-import { getPublicStories } from '../../service/storyService';
+import { Spin, message, Pagination } from 'antd';
+import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
+import { StarFilled } from "@ant-design/icons";
+import { searchStoriesApi } from '../../service/storyService';
 import StoryDetailModal from '../../components/StoryDetailModal/StoryDetailModal';
 import './AvailableStoriesPage.scss';
-import { StarFilled } from "@ant-design/icons";
 
 const themeFilters = [
   { value: null, label: "Tất cả" },
@@ -29,10 +27,13 @@ const AvailableStoriesPage = () => {
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 12, total: 0 });
+
+  const [searchParams] = useSearchParams();
+
   const [filters, setFilters] = useState({
     theme: null,
     ageGroup: null,
-    search: ""
+    search: searchParams.get("search") || ""
   });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -40,20 +41,32 @@ const AvailableStoriesPage = () => {
   const { currentUser } = useOutletContext();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const searchFromUrl = searchParams.get("search") || "";
+    if (searchFromUrl !== filters.search) {
+      setFilters(prev => ({ ...prev, search: searchFromUrl }));
+      setPagination(prev => ({ ...prev, current: 1 }));
+    }
+  }, [searchParams]);
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const params = {
         page: pagination.current,
-        pageSize: pagination.pageSize,
-        ...filters,
+        limit: pagination.pageSize,
+        q: filters.search,
+        theme: filters.theme,
+        ageGroup: filters.ageGroup,
       };
-      const res = await getPublicStories(params);
+
+      const res = await searchStoriesApi(params);
+
       if (res.success) {
         setStories(res.stories);
         setPagination(prev => ({
           ...prev,
-          total: res.pagination.totalStories,
+          total: res.pagination.total,
         }));
       } else {
         message.error(res.error || "Không thể tải danh sách truyện.");
@@ -82,6 +95,7 @@ const AvailableStoriesPage = () => {
     setSelectedStory(story);
     setIsModalOpen(true);
   };
+
   const handleCloseModal = () => setIsModalOpen(false);
 
   return (
@@ -89,6 +103,11 @@ const AvailableStoriesPage = () => {
       <div className="page-header">
         <h1>Truyện Sẵn Có</h1>
         <p>Khám phá kho tàng truyện tranh và truyện kể hấp dẫn do ToonKidz biên soạn.</p>
+        {filters.search && (
+          <p className="search-result-text">
+            Kết quả tìm kiếm cho: <strong>"{filters.search}"</strong>
+          </p>
+        )}
       </div>
 
       <div className="filter-bar">
@@ -149,7 +168,7 @@ const AvailableStoriesPage = () => {
           ) : (
             <div className="page-empty">
               <h3>Không tìm thấy truyện nào</h3>
-              <p>Vui lòng thử thay đổi bộ lọc hoặc tìm kiếm lại.</p>
+              <p>Vui lòng thử thay đổi bộ lọc hoặc tìm kiếm từ khóa khác.</p>
             </div>
           )}
 
@@ -160,6 +179,7 @@ const AvailableStoriesPage = () => {
             total={pagination.total}
             onChange={handlePageChange}
             showSizeChanger={false}
+            hideOnSinglePage={true}
           />
         </>
       )}
