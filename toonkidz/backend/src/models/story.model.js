@@ -57,7 +57,7 @@ const storySchema = new mongoose.Schema(
     status: {
       type: String,
       required: true,
-      enum: ["draft", "generating", "generated", "preview", "published"],
+      enum: ["draft", "generating", "generated", "preview", "published", "completed", "failed"],
       default: "draft"
     },
     tags: [{
@@ -116,6 +116,7 @@ const storySchema = new mongoose.Schema(
 storySchema.index({ userId: 1, createdAt: -1 });
 storySchema.index({ theme: 1, status: 1 });
 storySchema.index({ tags: 1 });
+storySchema.index({ title: 'text', tags: 'text' });
 
 const Story = mongoose.model("Story", storySchema);
 

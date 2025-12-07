@@ -20,6 +20,28 @@ const Header = ({ onToggleSider, user, loading, socket, totalUnreadMessages }) =
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
 
+  // --- THÊM STATE CHO TÌM KIẾM ---
+  const [keyword, setKeyword] = useState("");
+
+  // --- HÀM XỬ LÝ TÌM KIẾM ---
+  const handleSearch = () => {
+    if (keyword.trim()) {
+      // Chuyển hướng sang trang Truyện Sẵn Có với query param search
+      // Dùng encodeURIComponent để xử lý ký tự đặc biệt
+      navigate(`/home/library-favorites?search=${encodeURIComponent(keyword.trim())}`);
+    } else {
+      // Nếu rỗng thì về trang gốc
+      navigate(`/home/library-favorites`);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+  // ------------------------------
+
   const handleLogout = async () => {
     if (window.confirm("Bạn có chắc muốn đăng xuất?")) {
       try {
@@ -38,32 +60,31 @@ const Header = ({ onToggleSider, user, loading, socket, totalUnreadMessages }) =
     <header className="header-container">
       <div className="header">
         <button className="header__toggle" onClick={onToggleSider}>
-          <svg
-            className="icon"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 6h16M4 12h16M4 18h16"
-            />
+          <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
 
-        <div
-          className="header__logo"
-          onClick={() => navigate("/home/homepage")}
-        >
+        <div className="header__logo" onClick={() => navigate("/home/homepage")}>
           TOON KIDZ
         </div>
 
+        {/* --- CẬP NHẬT PHẦN INPUT SEARCH --- */}
         <div className="header__search">
-          <input type="text" placeholder="Tìm kiếm truyện..." />
-          <Search className="search-icon" />
+          <input
+            type="text"
+            placeholder="Tìm kiếm truyện..."
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            onKeyDown={handleKeyDown}
+          />
+          <Search
+            className="search-icon"
+            onClick={handleSearch}
+            style={{ cursor: 'pointer' }} // Thêm cursor pointer cho icon
+          />
         </div>
+        {/* ---------------------------------- */}
 
         <nav className="header__nav">
           <NavLink to="/home/homepage">Trang chủ</NavLink>
@@ -73,16 +94,10 @@ const Header = ({ onToggleSider, user, loading, socket, totalUnreadMessages }) =
         </nav>
 
         <div className="header__actions">
-          <Notify
-            socket={socket}
-            totalUnreadMessages={totalUnreadMessages}
-          />
+          <Notify socket={socket} totalUnreadMessages={totalUnreadMessages} />
 
           <div className="header__account">
-            <button
-              className="account-btn"
-              onClick={() => setShowDropdown(!showDropdown)}
-            >
+            <button className="account-btn" onClick={() => setShowDropdown(!showDropdown)}>
               {loading ? (
                 <Spin size="small" />
               ) : user && user.pfp ? (
@@ -95,12 +110,7 @@ const Header = ({ onToggleSider, user, loading, socket, totalUnreadMessages }) =
             {showDropdown && (
               <div className="account-dropdown">
                 <div className="account-dropdown__title">Tài khoản</div>
-                <button
-                  onClick={() => {
-                    navigate("/home/profile");
-                    setShowDropdown(false);
-                  }}
-                >
+                <button onClick={() => { navigate("/home/profile"); setShowDropdown(false); }}>
                   Hồ sơ
                 </button>
                 <button onClick={handleLogout}>Đăng xuất</button>

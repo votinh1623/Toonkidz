@@ -10,8 +10,8 @@ import { writeFile } from "fs/promises";
 import { generateImagesForStory } from './image.controller.js';
 import User from '../models/user.model.js';
 import Post from '../models/post.model.js';
+import redis from '../lib/redis.js';
 
-// Hàm kiểm tra TTS server có hoạt động không
 const checkTTSServer = async () => {
   try {
     const response = await axios.get('http://localhost:5001/health', {
@@ -28,7 +28,7 @@ const checkTTSServer = async () => {
 const generateAudioForPages = async (pages, storyId, voice = 'vi-VN-HoaiMyNeural') => {
   try {
     console.log('Starting audio generation for story:', storyId, 'with voice:', voice);
-    
+
     // Kiểm tra TTS server có hoạt động không
     const isTTSServerAvailable = await checkTTSServer();
     if (!isTTSServerAvailable) {
@@ -109,13 +109,13 @@ export const generateStory = async (req, res) => {
   const { theme, keywords, pages, prompt: userPrompt, includeAudio = false, voice = 'vi-VN-HoaiMyNeural', ageGroup = '6-8' } = req.body;
   const userId = req.user._id;
 
-  console.log('Generate story request:', { 
-    theme, 
-    keywords: keywords?.length, 
-    pages, 
-    includeAudio, 
+  console.log('Generate story request:', {
+    theme,
+    keywords: keywords?.length,
+    pages,
+    includeAudio,
     voice,
-    ageGroup 
+    ageGroup
   });
 
   if (!theme && !userPrompt) {
@@ -333,7 +333,7 @@ Lưu ý:
         console.log(storyText);
         console.log('=== END RAW RESPONSE ===');
 
-           let result;
+        let result;
         try {
           result = JSON.parse(storyText);
         } catch {
@@ -899,6 +899,7 @@ export const createStory = async (req, res) => {
       coverImage: coverImageUrl,
       status: "draft",
     });
+    await redis.deleteByPattern('stories:public:*');
 
     return res.status(201).json({ success: true, story });
   } catch (error) {
@@ -1042,6 +1043,7 @@ export const updateStory = async (req, res) => {
     story.pages = updatedPages;
 
     const savedStory = await story.save();
+    await redis.deleteByPattern('stories:public:*');
     return res.status(200).json({ success: true, story: savedStory });
 
   } catch (error) {
@@ -1074,6 +1076,7 @@ export const deleteStory = async (req, res) => {
     }
 
     await story.deleteOne();
+    await redis.deleteByPattern('stories:public:*');
 
     res.json({ success: true, message: 'Story deleted successfully' });
   } catch (error) {
@@ -1100,24 +1103,81 @@ export const getMyStories = async (req, res) => {
   }
 };
 
+// export const getPublicStories = async (req, res) => {
+//   try {
+//     const page = parseInt(req.query.page) || 1;
+//     const limit = parseInt(req.query.limit) || 12;
+//     const search = req.query.search || "";
+//     const theme = req.query.theme;
+//     const ageGroup = req.query.ageGroup;
+
+//     const query = { status: "published" };
+
+//     if (theme && theme !== 'null') query.theme = theme;
+//     if (ageGroup && ageGroup !== 'null') query.ageGroup = ageGroup;
+//     if (search) query.title = { $regex: search, $options: "i" };
+//     let sortQuery = { createdAt: -1 };
+
+//     if (req.query.sortBy === 'ratingAvg') {
+//       sortQuery = { ratingAvg: -1, totalLikes: -1, createdAt: -1 };
+//     } else if (req.query.sortBy === 'readCount') {
+//       sortQuery = { readCount: -1, totalLikes: -1, createdAt: -1 };
+//     }
+
+//     const stories = await Story.find(query)
+//       .populate('userId', 'name pfp')
+//       .sort(sortQuery)
+//       .skip((page - 1) * limit)
+//       .limit(limit);
+
+//     const totalStories = await Story.countDocuments(query);
+
+//     res.json({
+//       success: true,
+//       stories,
+//       pagination: {
+//         currentPage: page,
+//         totalPages: Math.ceil(totalStories / limit),
+//         totalStories
+//       }
+//     });
+
+//   } catch (error) {
+//     console.error('Error fetching public stories:', error);
+//     res.status(500).json({ success: false, error: 'Failed to fetch stories' });
+//   }
+// };
+
 export const getPublicStories = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 12;
     const search = req.query.search || "";
-    const theme = req.query.theme;
-    const ageGroup = req.query.ageGroup;
+    const theme = req.query.theme || "";
+    const ageGroup = req.query.ageGroup || "";
+    const sortBy = req.query.sortBy || "newest";
+    const queryParams = { page, limit, search, theme, ageGroup, sortBy };
+    const cacheKey = `stories:public:${JSON.stringify(queryParams)}`;
+
+    try {
+      const cachedData = await redis.get(cacheKey);
+      if (cachedData) {
+        return res.json(JSON.parse(cachedData));
+      }
+    } catch (cacheError) {
+      console.error("Redis get error (skipping cache):", cacheError);
+    }
 
     const query = { status: "published" };
 
     if (theme && theme !== 'null') query.theme = theme;
     if (ageGroup && ageGroup !== 'null') query.ageGroup = ageGroup;
     if (search) query.title = { $regex: search, $options: "i" };
-    let sortQuery = { createdAt: -1 };
 
-    if (req.query.sortBy === 'ratingAvg') {
+    let sortQuery = { createdAt: -1 };
+    if (sortBy === 'ratingAvg') {
       sortQuery = { ratingAvg: -1, totalLikes: -1, createdAt: -1 };
-    } else if (req.query.sortBy === 'readCount') {
+    } else if (sortBy === 'readCount') {
       sortQuery = { readCount: -1, totalLikes: -1, createdAt: -1 };
     }
 
@@ -1125,11 +1185,12 @@ export const getPublicStories = async (req, res) => {
       .populate('userId', 'name pfp')
       .sort(sortQuery)
       .skip((page - 1) * limit)
-      .limit(limit);
+      .limit(limit)
+      .lean();
 
     const totalStories = await Story.countDocuments(query);
 
-    res.json({
+    const responseData = {
       success: true,
       stories,
       pagination: {
@@ -1137,7 +1198,15 @@ export const getPublicStories = async (req, res) => {
         totalPages: Math.ceil(totalStories / limit),
         totalStories
       }
-    });
+    };
+
+    try {
+      await redis.set(cacheKey, JSON.stringify(responseData), "EX", 300);
+    } catch (cacheError) {
+      console.error("Redis set error:", cacheError);
+    }
+
+    res.json(responseData);
 
   } catch (error) {
     console.error('Error fetching public stories:', error);
@@ -1274,7 +1343,7 @@ export const rateStory = async (req, res) => {
 export const getAvailableVoices = async (req, res) => {
   try {
     const { language } = req.params;
-    
+
     // Danh sách voices tiếng Việt
     const vietnameseVoices = {
       'vi-VN-HoaiMyNeural': {
@@ -1285,7 +1354,7 @@ export const getAvailableVoices = async (req, res) => {
       },
       'vi-VN-NamMinhNeural': {
         name: 'Nam Minh',
-        gender: 'male', 
+        gender: 'male',
         description: 'Giọng nam miền Bắc, ấm áp, thân thiện',
         locale: 'vi-VN'
       },
@@ -1323,5 +1392,86 @@ export const getAvailableVoices = async (req, res) => {
       success: false,
       error: 'Failed to fetch available voices'
     });
+  }
+};
+
+export const searchStories = async (req, res) => {
+  try {
+    const {
+      q = "",
+      page = 1,
+      limit = 12,
+      theme,
+      ageGroup,
+      sort = "newest"
+    } = req.query;
+
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+
+    const queryParams = { page, limit, search: q, theme, ageGroup, sort };
+    const cacheKey = `stories:search:${JSON.stringify(queryParams)}`;
+
+    try {
+      const cachedData = await redis.get(cacheKey);
+      if (cachedData) {
+        return res.json(JSON.parse(cachedData));
+      }
+    } catch (err) {
+      console.warn("Redis get error:", err);
+    }
+
+    const query = { status: "published" };
+
+    if (q && q.trim() !== "") {
+      const searchRegex = { $regex: q, $options: "i" };
+      query.$or = [
+        { title: searchRegex },
+        { tags: searchRegex }
+      ];
+    }
+
+    if (theme && theme !== 'null') query.theme = theme;
+    if (ageGroup && ageGroup !== 'null') query.ageGroup = ageGroup;
+
+    let sortOption = { createdAt: -1 };
+    if (sort === 'rating') sortOption = { ratingAvg: -1, totalLikes: -1 };
+    else if (sort === 'popular') sortOption = { readCount: -1, totalLikes: -1 };
+    else if (sort === 'oldest') sortOption = { createdAt: 1 };
+
+    const [stories, totalStories] = await Promise.all([
+      Story.find(query)
+        .populate('userId', 'name pfp')
+        .sort(sortOption)
+        .skip((pageNum - 1) * limitNum)
+        .limit(limitNum)
+        .lean(),
+      Story.countDocuments(query)
+    ]);
+
+    const responseData = {
+      success: true,
+      stories,
+      pagination: {
+        current: pageNum,
+        pageSize: limitNum,
+        total: totalStories,
+        totalPages: Math.ceil(totalStories / limitNum)
+      }
+    };
+
+    try {
+      if (totalStories > 0) {
+        await redis.set(cacheKey, JSON.stringify(responseData), "EX", 300);
+      }
+    } catch (err) {
+      console.warn("Redis set error:", err);
+    }
+
+    res.json(responseData);
+
+  } catch (error) {
+    console.error("Search API Error:", error);
+    res.status(500).json({ success: false, error: "Lỗi hệ thống khi tìm kiếm" });
   }
 };

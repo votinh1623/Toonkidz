@@ -109,3 +109,14 @@ export const getSystemStats = async () => {
 export const rateStory = async (storyId, rating) => {
   return await post(`stories/${storyId}/rate`, { rating });
 };
+
+export const searchStoriesApi = async (params) => {
+  try {
+    const queryString = new URLSearchParams(params).toString();
+    const res = await get(`stories/search?${queryString}`);
+    return res;
+  } catch (err) {
+    console.error("Error searching stories:", err);
+    throw err;
+  }
+};

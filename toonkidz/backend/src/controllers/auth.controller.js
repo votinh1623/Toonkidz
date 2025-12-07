@@ -153,11 +153,11 @@ export const sendOtp = async (req, res) => {
 
 export const verifyOtpAndSignup = async (req, res) => {
   const { email, name, password, otp } = req.body;
-  console.log("Verify request body:", req.body); // 👈 log what frontend sends
+  console.log("Verify request body:", req.body);
 
   try {
     if (!email || !name || !password || !otp) {
-      console.log("❌ Missing fields");
+      console.log("Missing fields");
       return res.status(400).json({ success: false, message: "Missing required fields" });
     }
 
@@ -167,11 +167,11 @@ export const verifyOtpAndSignup = async (req, res) => {
     console.log("Received OTP from frontend:", otp);
 
     if (!storedOtp) {
-      console.log("❌ OTP expired or invalid");
+      console.log("OTP expired or invalid");
       return res.status(400).json({ success: false, message: "OTP expired or invalid" });
     }
     if (storedOtp.trim() !== otp.trim()) {
-      console.log("❌ OTP mismatch");
+      console.log("OTP mismatch");
       return res.status(400).json({ success: false, message: "Incorrect OTP" });
     }
 
