@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { StarFilled } from "@ant-design/icons";
+import "./StarRating.scss";
 
 const StarRating = ({ value, onChange, readOnly = false }) => {
   const [hover, setHover] = useState(0);
