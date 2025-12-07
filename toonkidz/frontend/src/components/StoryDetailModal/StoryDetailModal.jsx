@@ -1,10 +1,11 @@
 import React, { useRef, useEffect, useState } from "react";
-import { Modal, Carousel, Button, Rate, Tooltip, message, Spin } from "antd";
-import { RedoOutlined, CloseOutlined, HeartOutlined, HeartFilled } from "@ant-design/icons";
+import { Modal, Carousel, Button, Tooltip, message, Spin } from "antd";
+import { RedoOutlined, CloseOutlined, HeartOutlined, HeartFilled, LockOutlined, UnlockOutlined } from "@ant-design/icons";
 import "./StoryDetailModal.scss";
 import { incrementStoryReadCount, rateStory, getStoryById } from "../../service/storyService";
 import { toggleFavorite } from "../../service/userService";
 import StarRating from "./StarRating";
+import { toast } from "sonner";
 
 const StoryDetailModal = ({ story: initialStory, open, onClose, currentUser }) => {
 
@@ -18,6 +19,12 @@ const StoryDetailModal = ({ story: initialStory, open, onClose, currentUser }) =
   const [isFavorite, setIsFavorite] = useState(false);
   const [userRating, setUserRating] = useState(0);
   const [hasRated, setHasRated] = useState(false);
+
+  const [isLocked, setIsLocked] = useState(false);
+  const [unlockProgress, setUnlockProgress] = useState(0);
+  const animationFrame = useRef(null);
+  const startTimeRef = useRef(null);
+  const btnRef = useRef(null);
 
   const stopAllAudio = () => {
     audioRefs.current.forEach(audio => {
@@ -34,6 +41,9 @@ const StoryDetailModal = ({ story: initialStory, open, onClose, currentUser }) =
     const initStory = async () => {
       if (open && initialStory) {
         setLoading(true);
+        setIsLocked(false);
+        setUnlockProgress(0);
+
         try {
           const storyId = initialStory._id || initialStory.id;
           const res = await getStoryById(storyId);
@@ -41,10 +51,6 @@ const StoryDetailModal = ({ story: initialStory, open, onClose, currentUser }) =
           if (isMounted && res.success) {
             const freshStory = res.story;
             setCurrentStory(freshStory);
-
-            console.log("=== DEBUG STORY DETAIL ===");
-            console.log("1. Current User ID:", currentUser?._id);
-            console.log("2. Story Favorites Array:", freshStory.favorites);
 
             if (carouselRef.current) {
               carouselRef.current.goTo(0, true);
@@ -62,14 +68,10 @@ const StoryDetailModal = ({ story: initialStory, open, onClose, currentUser }) =
             if (currentUser && Array.isArray(freshStory.favorites)) {
               const isLiked = freshStory.favorites.some(item => {
                 const itemId = (item && item._id) ? item._id : item;
-
                 return String(itemId) === String(currentUser._id);
               });
-
-              console.log("3. Kết quả isLiked:", isLiked);
               setIsFavorite(isLiked);
             } else {
-              console.log("3. Không check được Favorite (thiếu user hoặc favorites null)");
               setIsFavorite(false);
             }
           }
@@ -87,10 +89,59 @@ const StoryDetailModal = ({ story: initialStory, open, onClose, currentUser }) =
     return () => {
       isMounted = false;
       stopAllAudio();
+      cancelAnimationFrame(animationFrame.current);
     };
   }, [open, initialStory, currentUser]);
 
-  if (!currentStory && !loading) return null;
+  const startUnlock = () => {
+    if (!isLocked) {
+      setIsLocked(true);
+      toast.success("Đã mở khóa! Bé có thể thao tác rồi.", {
+        icon: '🔓',
+        style: {
+          borderRadius: '20px',
+          background: 'rgba(0, 0, 0, 0.8)',
+          color: '#fff',
+          backdropFilter: 'blur(10px)',
+        }
+      });
+      return;
+    }
+
+    startTimeRef.current = Date.now();
+    const duration = 1500;
+
+    const animate = () => {
+      const elapsed = Date.now() - startTimeRef.current;
+      const progress = Math.min((elapsed / duration) * 100, 100);
+
+      if (btnRef.current) {
+        btnRef.current.style.setProperty("--progress", progress);
+      }
+
+      if (progress < 100) {
+        animationFrame.current = requestAnimationFrame(animate);
+      } else {
+        setIsLocked(false);
+        if (btnRef.current) {
+          btnRef.current.style.setProperty("--progress", 0);
+        }
+
+        message.success("Đã mở khóa!");
+      }
+    };
+
+    animationFrame.current = requestAnimationFrame(animate);
+  };
+
+
+  const cancelUnlock = () => {
+    cancelAnimationFrame(animationFrame.current);
+    if (btnRef.current) {
+      btnRef.current.style.setProperty("--progress", 0);
+    }
+  };
+
 
   const handleToggleFavorite = async () => {
     const storyId = currentStory._id || currentStory.id;
@@ -108,7 +159,6 @@ const StoryDetailModal = ({ story: initialStory, open, onClose, currentUser }) =
   const handleRate = async (value) => {
     if (value === userRating) return;
     setUserRating(value);
-
     const storyId = currentStory._id || currentStory.id;
     try {
       const res = await rateStory(storyId, value);
@@ -117,9 +167,11 @@ const StoryDetailModal = ({ story: initialStory, open, onClose, currentUser }) =
         message.success("Cập nhật đánh giá thành công!");
       } else {
         message.error("Đánh giá thất bại.");
+        setUserRating(0);
       }
     } catch (error) {
       message.error("Lỗi kết nối.");
+      setUserRating(0);
     }
   };
 
@@ -129,7 +181,6 @@ const StoryDetailModal = ({ story: initialStory, open, onClose, currentUser }) =
     if (audio) {
       audio.play().catch(() => { });
     }
-
     const contentPageCount = currentStory?.pages?.length || 0;
     if (contentPageCount > 0 && currentSlideIndex >= contentPageCount && !hasCountedRead) {
       try {
@@ -145,11 +196,17 @@ const StoryDetailModal = ({ story: initialStory, open, onClose, currentUser }) =
   const handleStartReading = () => carouselRef.current.goTo(1);
   const handleAudioEnded = () => carouselRef.current.next();
   const handleReRead = () => carouselRef.current.goTo(0);
-  const handleClose = () => { stopAllAudio(); onClose(); };
+
+  const handleClose = () => {
+    if (!isLocked) {
+      stopAllAudio();
+      onClose();
+    }
+  };
 
   if (loading) {
     return (
-      <Modal open={open} onCancel={handleClose} footer={null} centered width={900} className="story-modal">
+      <Modal open={open} footer={null} centered width={900} className="story-modal">
         <div style={{ height: 600, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Spin size="large" />
         </div>
@@ -157,13 +214,74 @@ const StoryDetailModal = ({ story: initialStory, open, onClose, currentUser }) =
     )
   }
 
+  if (!currentStory) return null;
+
   const coverSlide = { isCover: true, title: currentStory.title, head: currentStory.head, coverImage: currentStory.coverImage };
   const endSlide = { isEnd: true, title: currentStory.title, coverImage: currentStory.coverImage };
   const allSlides = [coverSlide, ...(currentStory.pages || []), endSlide];
+  const radius = 22;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (unlockProgress / 100) * circumference;
 
   return (
-    <Modal open={open} onCancel={handleClose} footer={null} width={900} className="story-modal" centered destroyOnClose>
-      <Carousel ref={carouselRef} dots={{ className: "custom-dots" }} arrows={true} infinite={false} afterChange={handleSlideChange} speed={800} draggable={false}>
+    <Modal
+      open={open}
+      onCancel={handleClose}
+      footer={null}
+      width={900}
+      className={`story-modal ${isLocked ? 'child-locked' : ''}`}
+      centered
+      destroyOnClose
+
+      maskClosable={!isLocked}
+      keyboard={!isLocked}
+    >
+
+      <div
+        ref={btnRef}
+        className={`child-lock-btn ${isLocked ? 'locked' : ''}`}
+        onMouseDown={startUnlock}
+        onMouseUp={cancelUnlock}
+        onMouseLeave={cancelUnlock}
+        onTouchStart={startUnlock}
+        onTouchEnd={cancelUnlock}
+      >
+        <svg className="progress-ring" width="50" height="50">
+          <circle
+            className="progress-ring__circle"
+            stroke="white"
+            strokeWidth="3"
+            fill="transparent"
+            r={radius}
+            cx="25"
+            cy="25"
+            style={{
+              strokeDasharray: `${circumference} ${circumference}`,
+              strokeDashoffset: strokeDashoffset
+            }}
+          />
+        </svg>
+
+        <div className="icon-container">
+          {isLocked ? <LockOutlined /> : <UnlockOutlined />}
+        </div>
+      </div>
+
+      {!isLocked && (
+        <button className="custom-close-btn" onClick={handleClose}>
+          <CloseOutlined />
+        </button>
+      )}
+
+      <Carousel
+        ref={carouselRef}
+        dots={!isLocked}
+        arrows={true}
+        infinite={false}
+        afterChange={handleSlideChange}
+        speed={800}
+        draggable={!isLocked}
+      >
         {allSlides.map((slide, index) => {
           if (slide.isCover) {
             return (
@@ -186,13 +304,16 @@ const StoryDetailModal = ({ story: initialStory, open, onClose, currentUser }) =
                 <div className="end-content">
                   <h2>🎉 Chúc mừng! 🎉</h2>
                   <p>Bạn đã hoàn thành câu chuyện<br /><strong>"{slide.title}"</strong></p>
-                  <div className="interaction-section">
+
+                  <div className={`interaction-section ${isLocked ? 'disabled-content' : ''}`}>
                     <div className="rating-box">
                       <span>Bạn thấy truyện thế nào?</span>
-                      <StarRating
-                        value={userRating}
-                        onChange={handleRate}
-                      />
+                      <div className={isLocked ? 'pointer-events-none' : ''}>
+                        <StarRating
+                          value={userRating}
+                          onChange={handleRate}
+                        />
+                      </div>
                       {hasRated && <span className="thank-you">Cảm ơn bé! ❤️</span>}
                     </div>
                     <div className="favorite-box">
@@ -202,14 +323,22 @@ const StoryDetailModal = ({ story: initialStory, open, onClose, currentUser }) =
                           className={`fav-btn ${isFavorite ? 'active' : ''}`}
                           icon={isFavorite ? <HeartFilled style={{ color: '#ff4d4f' }} /> : <HeartOutlined />}
                           onClick={handleToggleFavorite}
+                          disabled={isLocked}
                         />
                       </Tooltip>
                       <span>{isFavorite ? "Đã yêu thích" : "Thêm vào yêu thích"}</span>
                     </div>
                   </div>
+
                   <div className="end-actions">
-                    <Button className="end-btn reread" size="large" icon={<RedoOutlined />} onClick={handleReRead}>Đọc lại</Button>
-                    <Button className="end-btn close" size="large" icon={<CloseOutlined />} onClick={handleClose}>Đóng</Button>
+                    <Button className="end-btn reread" size="large" icon={<RedoOutlined />} onClick={handleReRead}>
+                      Đọc lại
+                    </Button>
+                    {!isLocked && (
+                      <Button className="end-btn close" size="large" icon={<CloseOutlined />} onClick={handleClose}>
+                        Đóng
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>

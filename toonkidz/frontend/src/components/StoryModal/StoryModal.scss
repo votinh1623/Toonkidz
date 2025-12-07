@@ -10,7 +10,6 @@
     padding: 20px;
   }
 
-  // Ẩn nút đóng
   .ant-modal-close {
     display: none;
   }
@@ -37,12 +36,11 @@
         }
       }
 
-      // Arrows
       .slick-prev,
       .slick-next {
         width: 40px !important;
         height: 40px !important;
-        background: rgba(198, 169, 238, 0.6) !important; // tím nhẹ
+        background: rgba(198, 169, 238, 0.6) !important;
         border-radius: 50% !important;
         display: flex !important;
         align-items: center !important;

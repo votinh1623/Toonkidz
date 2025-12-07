@@ -1,5 +1,3 @@
-// src/pages/StoryViewPage/StoryViewPage.jsx
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Spin, message } from 'antd';
