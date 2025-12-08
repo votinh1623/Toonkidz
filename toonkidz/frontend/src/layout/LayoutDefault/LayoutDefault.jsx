@@ -1,4 +1,3 @@
-// src/layout/LayoutDefault/LayoutDefault.jsx
 import { Outlet, useLocation } from "react-router-dom";
 import Header from "../../components/Header/Header";
 import { Layout, Grid, Drawer, Spin, message } from "antd";
@@ -13,9 +12,7 @@ const { useBreakpoint } = Grid;
 
 const socket = io("http://localhost:3000", { autoConnect: false });
 
-const fullBleedPaths = [
-  '/home/chat'
-];
+const fullBleedPaths = ['/home/chat'];
 
 const LayoutDefault = () => {
   const screens = useBreakpoint();
@@ -27,7 +24,9 @@ const LayoutDefault = () => {
   const [conversations, setConversations] = useState([]);
   const [totalUnreadMessages, setTotalUnreadMessages] = useState(0);
   const [onlineUsers, setOnlineUsers] = useState(new Set());
+
   const socketRef = useRef(socket);
+  const userRef = useRef(null);
 
   const location = useLocation();
   const isFullBleed = fullBleedPaths.includes(location.pathname);
@@ -44,10 +43,8 @@ const LayoutDefault = () => {
       if (res.success) {
         setConversations(res.conversations);
         return res.conversations;
-      } else {
-        message.error("Không thể tải danh sách tin nhắn.");
-        return [];
       }
+      return [];
     } catch (err) {
       console.error("Lỗi fetchConversations:", err);
       return [];
@@ -57,72 +54,106 @@ const LayoutDefault = () => {
   useEffect(() => {
     let isMounted = true;
 
-    const updateConvosFromSocket = (newMessage) => {
-      const isViewingChat = window.location.pathname.startsWith('/home/chat');
-      const selectedConvoId = messagesSetterRef.current ? messagesSetterRef.current.convoId : null;
+    const handleSocketMessage = (newMessage) => {
+      const curUser = userRef.current;
 
-      if (messagesSetterRef.current && newMessage.conversationId === selectedConvoId) {
-        messagesSetterRef.current.setter(prev => [...prev, newMessage]);
-      }
+      const msgConvoId = typeof newMessage.conversationId === 'object'
+        ? String(newMessage.conversationId._id)
+        : String(newMessage.conversationId);
 
-      setConversations(prevConvos => {
-        let conversationExists = false;
+      const activeConvoId = messagesSetterRef.current?.convoId
+        ? String(messagesSetterRef.current.convoId)
+        : null;
 
-        const newConvos = prevConvos.map(convo => {
-          if (convo._id === newMessage.conversationId) {
-            conversationExists = true;
-            const newUnread = (isViewingChat && convo._id === selectedConvoId) ? 0 : (convo.unreadCount || 0) + 1;
-            return { ...convo, lastMessage: newMessage, unreadCount: newUnread };
+      if (messagesSetterRef.current && activeConvoId === msgConvoId) {
+        messagesSetterRef.current.setter(prev => {
+          if (prev.some(m => m._id === newMessage._id)) return prev;
+          if (newMessage.tempId) {
+            return prev.map(m => m._id === newMessage.tempId ? { ...newMessage, tempId: undefined } : m);
           }
-          return convo;
+          return [...prev, newMessage];
         });
 
-        if (!conversationExists) {
+        if (curUser && newMessage.senderId !== curUser._id) {
+          socketRef.current.emit('markAsRead', { conversationId: msgConvoId });
+        }
+      }
+      setConversations(prevConvos => {
+        const convoIndex = prevConvos.findIndex(c => String(c._id) === msgConvoId);
+        if (convoIndex === -1) {
           fetchConversations();
+          return prevConvos;
+        }
+        const updatedConvos = prevConvos.map(c => ({ ...c }));
+        const currentConvo = updatedConvos[convoIndex];
+        let newUnreadCount = parseInt(currentConvo.unreadCount || 0);
+
+        const isMyMessage = curUser && String(newMessage.senderId) === String(curUser._id);
+
+        if (isMyMessage) {
+          newUnreadCount = 0;
+        } else {
+          if (!activeConvoId || String(activeConvoId) !== msgConvoId) {
+            newUnreadCount += 1;
+            console.log(`[DEBUG] Unread increased to: ${newUnreadCount}`);
+          } else {
+            newUnreadCount = 0;
+          }
         }
 
-        return newConvos.sort((a, b) => new Date(b.lastMessage?.createdAt || 0) - new Date(a.lastMessage?.createdAt || 0));
+        currentConvo.lastMessage = newMessage;
+        currentConvo.unreadCount = newUnreadCount;
+        currentConvo.updatedAt = new Date().toISOString();
+
+        return updatedConvos.sort((a, b) =>
+          new Date(b.updatedAt || b.lastMessage?.createdAt || 0) -
+          new Date(a.updatedAt || a.lastMessage?.createdAt || 0)
+        );
       });
     };
 
     const handleUnreadCountReset = ({ conversationId }) => {
       setConversations(prevConvos =>
         prevConvos.map(convo =>
-          convo._id === conversationId ? { ...convo, unreadCount: 0 } : convo
+          String(convo._id) === String(conversationId) ? { ...convo, unreadCount: 0 } : convo
         )
       );
     };
 
-
     const initialize = async () => {
-      setLoadingProfile(true);
+      if (!currentUser) setLoadingProfile(true);
       try {
         const user = await getProfile();
         if (!isMounted) return;
 
         setCurrentUser(user);
-        socketRef.current.io.opts.query = { userId: user._id };
-        socketRef.current.connect();
+        userRef.current = user;
 
-        socketRef.current.on('getOnlineUsers', (userIds) => {
-          setOnlineUsers(new Set(userIds));
-        });
-        socketRef.current.on('receiveMessage', updateConvosFromSocket);
+        if (!socketRef.current.connected) {
+          socketRef.current.io.opts.query = { userId: user._id };
+          socketRef.current.connect();
+        }
+
+        socketRef.current.off('receiveMessage');
+        socketRef.current.off('messageSent');
+        socketRef.current.off('unreadCountReset');
+        socketRef.current.off('getOnlineUsers');
+
+        socketRef.current.on('getOnlineUsers', (userIds) => setOnlineUsers(new Set(userIds)));
+        socketRef.current.on('receiveMessage', handleSocketMessage);
+        socketRef.current.on('messageSent', handleSocketMessage);
         socketRef.current.on('unreadCountReset', handleUnreadCountReset);
 
         fetchConversations();
 
       } catch (err) {
         if (err.response && err.response.status === 429) {
-          message.error("Bạn đang tải trang quá nhanh. Vui lòng chờ 15 giây.");
+          console.warn("Rate limit exceeded.");
         } else {
-          console.error("Failed to fetch profile/connect:", err);
-          message.error("Lỗi kết nối, vui lòng tải lại trang.");
+          console.error("Init error", err);
         }
       } finally {
-        if (isMounted) {
-          setLoadingProfile(false);
-        }
+        if (isMounted) setLoadingProfile(false);
       }
     };
 
@@ -130,15 +161,15 @@ const LayoutDefault = () => {
 
     return () => {
       isMounted = false;
-      socketRef.current?.disconnect();
       socketRef.current?.off('getOnlineUsers');
       socketRef.current?.off('receiveMessage');
+      socketRef.current?.off('messageSent');
       socketRef.current?.off('unreadCountReset');
     };
   }, [fetchConversations]);
 
   useEffect(() => {
-    const total = conversations.reduce((acc, convo) => acc + (convo.unreadCount || 0), 0);
+    const total = conversations.reduce((acc, convo) => acc + (parseInt(convo.unreadCount) || 0), 0);
     setTotalUnreadMessages(total);
   }, [conversations]);
 
@@ -153,15 +184,10 @@ const LayoutDefault = () => {
       />
       <Layout className="layout-child">
         {screens.md && (
-          <Sider
-            theme="light"
-            width={256}
-            className="layout-default-sider"
-          >
+          <Sider theme="light" width={256} className="layout-default-sider">
             {loadingProfile ? <Spin /> : <SiderContent user={currentUser} totalUnreadMessages={totalUnreadMessages} />}
           </Sider>
         )}
-
         {!screens.md && (
           <Drawer
             placement="left"
@@ -179,7 +205,6 @@ const LayoutDefault = () => {
             )}
           </Drawer>
         )}
-
         <Content className={`layout__content ${isFullBleed ? 'layout__content--full-bleed' : ''}`}>
           <Outlet context={{
             currentUser,

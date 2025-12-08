@@ -74,3 +74,13 @@ export const adminDeactivateUser = async (userId) => {
     throw err;
   }
 };
+
+export const toggleUserStatus = async (userId, isActive) => {
+  try {
+    const res = await put(`users/admin/${userId}/status`, { isActive });
+    return res;
+  } catch (error) {
+    console.error("Error toggling user status:", error);
+    throw error;
+  }
+};

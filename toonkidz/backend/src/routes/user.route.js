@@ -11,7 +11,8 @@ import {
   getAllUsers,
   updateUserById,
   deleteUserById,
-  deactivateUser
+  deactivateUser,
+  toggleUserStatus
 } from '../controllers/user.controller.js';
 import multer from 'multer';
 
@@ -22,6 +23,8 @@ router.route('/')
   .get(auth, adminAuth, getAllUsers);
 
 router.get('/profile', auth, getProfile);
+
+router.put('/admin/:id/status', auth, adminAuth, toggleUserStatus);
 
 router.put('/profile', auth, upload.single('pfp'), updateProfile);
 

@@ -304,3 +304,19 @@ export const deactivateUser = async (req, res) => {
     res.status(500).json({ success: false, error: 'Failed to deactivate user' });
   }
 };
+
+export const toggleUserStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isActive } = req.body;
+
+    const user = await User.findByIdAndUpdate(id, { isActive }, { new: true });
+    if (!user) return res.status(404).json({ success: false, error: "User not found" });
+    if (!isActive) {
+    }
+
+    res.json({ success: true, user });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};

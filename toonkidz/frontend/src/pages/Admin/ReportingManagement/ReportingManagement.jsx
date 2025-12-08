@@ -92,7 +92,6 @@ const ReportingManagement = () => {
       const res = await updateReportStatus(reportId, newStatus);
       if (res.success) {
         message.success("Cập nhật trạng thái thành công!");
-        // Tải lại danh sách lọc hiện tại
         fetchReports();
       } else {
         message.error(res.error || "Cập nhật thất bại.");

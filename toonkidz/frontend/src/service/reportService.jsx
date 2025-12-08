@@ -1,10 +1,13 @@
-// src/service/reportService.jsx
-import { post, get, put, del } from '@/utils/request';
+import { post, get, put, del, postFormData } from '@/utils/request';
 
 const API_ENDPOINT = 'reports';
 
-export const createReport = async ({ targetId, targetType, reason, details }) => {
-  return post(API_ENDPOINT, { targetId, targetType, reason, details });
+export const createReport = async (data) => {
+  if (data instanceof FormData) {
+    return postFormData(API_ENDPOINT, data);
+  }
+
+  return post(API_ENDPOINT, data);
 };
 
 export const getAllReports = async (status, targetType, page = 1, pageSize = 5) => {

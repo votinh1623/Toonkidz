@@ -1,7 +1,6 @@
-// src/components/ReportDetailModal/ReportDetailModal.jsx
-import React from 'react';
-import { Modal, Tag, Avatar, Typography, Button, Space, message } from 'antd';
-import { UserOutlined } from '@ant-design/icons';
+import React, { useState } from 'react';
+import { Modal, Tag, Typography, Button, Space, message, Image, Divider } from 'antd';
+import { UserOutlined, PictureOutlined } from '@ant-design/icons';
 import './ReportDetailModal.scss';
 import { useNavigate } from 'react-router-dom';
 
@@ -28,7 +27,7 @@ const ReportDetailModal = ({ open, onClose, report }) => {
 
   if (!report) return null;
 
-  const { reporterId, targetType, reason, status, createdAt, targetDetail } = report;
+  const { reporterId, targetType, reason, details, evidenceImages, status, createdAt, targetDetail } = report;
   const statusInfo = statusMap[status] || { text: status, color: "default" };
 
   const handleViewContext = () => {
@@ -113,6 +112,7 @@ const ReportDetailModal = ({ open, onClose, report }) => {
       title="Chi tiết Báo cáo"
       open={open}
       onCancel={onClose}
+      width={700}
       footer={[
         <Button key="close" onClick={onClose}>
           Đóng
@@ -123,33 +123,71 @@ const ReportDetailModal = ({ open, onClose, report }) => {
       ]}
     >
       <div className="report-detail-modal-body">
-        <div className="report-item">
-          <Text strong>Người báo cáo:</Text>
-          <Space>
-            {reporterId.pfp ? (
-              <img className="avatar-img" src={reporterId.pfp} alt={reporterId.name} />
-            ) : (
-              <div className="avatar-initials">
-                {getInitials(reporterId.name)}
+        <div className="report-section">
+          <div className="report-row">
+            <Text strong>Người báo cáo:</Text>
+            <Space>
+              {reporterId?.pfp ? (
+                <img className="avatar-small" src={reporterId.pfp} alt={reporterId.name} />
+              ) : (
+                <div className="avatar-initials-small">{getInitials(reporterId?.name)}</div>
+              )}
+              <Text>{reporterId?.name} ({reporterId?.email})</Text>
+            </Space>
+          </div>
+          <div className="report-row">
+            <Text strong>Ngày báo cáo:</Text>
+            <Text>{new Date(createdAt).toLocaleString('vi-VN')}</Text>
+          </div>
+          <div className="report-row">
+            <Text strong>Trạng thái:</Text>
+            <Tag color={statusInfo.color}>{statusInfo.text}</Tag>
+          </div>
+        </div>
+
+        <Divider style={{ margin: '12px 0' }} />
+
+        <div className="report-section">
+          <Title level={5}>Nội dung báo cáo</Title>
+          <div className="report-row">
+            <Text strong>Lý do chính:</Text>
+            <Tag color="volcano">{reason}</Tag>
+          </div>
+          {details && (
+            <div className="report-row vertical">
+              <Text strong>Chi tiết thêm:</Text>
+              <Paragraph className="report-text-box">
+                {details}
+              </Paragraph>
+            </div>
+          )}
+
+          {evidenceImages && evidenceImages.length > 0 && (
+            <div className="report-row vertical">
+              <Text strong><PictureOutlined /> Ảnh minh chứng ({evidenceImages.length}):</Text>
+              <div className="evidence-gallery">
+                <Image.PreviewGroup>
+                  {evidenceImages.map((img, index) => (
+                    <div key={index} className="evidence-item">
+                      <Image
+                        src={img}
+                        width={100}
+                        height={100}
+                        style={{ objectFit: 'cover', borderRadius: '8px' }}
+                      />
+                    </div>
+                  ))}
+                </Image.PreviewGroup>
               </div>
-            )}
-            <Text>{reporterId.name} ({reporterId.email})</Text>
-          </Space>
+            </div>
+          )}
         </div>
-        <div className="report-item">
-          <Text strong>Ngày báo cáo:</Text>
-          <Text>{new Date(createdAt).toLocaleString('vi-VN')}</Text>
+
+        <Divider style={{ margin: '12px 0' }} />
+
+        <div className="report-section target-section">
+          {renderTargetDetail()}
         </div>
-        <div className="report-item">
-          <Text strong>Trạng thái:</Text>
-          <Tag color={statusInfo.color}>{statusInfo.text}</Tag>
-        </div>
-        <div className="report-item">
-          <Text strong>Lý do:</Text>
-          <Text type="danger">{reason}</Text>
-        </div>
-        <hr />
-        {renderTargetDetail()}
       </div>
     </Modal>
   );

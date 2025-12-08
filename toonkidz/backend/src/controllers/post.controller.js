@@ -8,14 +8,14 @@ import { createNotification } from './notification.controller.js';
 const populateSharedPost = {
   path: 'originalPostId',
   populate: [
-    { path: 'userId', select: 'name pfp' },
+    { path: 'userId', select: 'name pfp isActive' },
     { path: 'storyId' }
   ]
 };
 
 const populateComments = {
   path: 'comments',
-  populate: { path: 'userId', select: 'name pfp' }
+  populate: { path: 'userId', select: 'name pfp isActive' }
 };
 
 export const createPost = async (req, res) => {
@@ -122,7 +122,7 @@ export const getAllPosts = async (req, res) => {
     }
 
     const posts = await Post.find(query)
-      .populate('userId', 'name pfp')
+      .populate('userId', 'name pfp isActive')
       .populate('storyId')
       .populate(populateSharedPost)
       .populate(populateComments)
@@ -215,7 +215,7 @@ export const getPostsByUserId = async (req, res) => {
     }
 
     const posts = await Post.find({ userId: targetUserId, ...visibilityQuery })
-      .populate('userId', 'name pfp')
+      .populate('userId', 'name pfp isActive')
       .populate('storyId')
       .populate(populateSharedPost)
       .populate(populateComments)
@@ -326,7 +326,7 @@ export const addComment = async (req, res) => {
     }
 
     const post = await Post.findById(postId)
-      .populate('userId', 'name')
+      .populate('userId', 'name pfp isActive')
       .populate(populateSharedPost);
 
     if (!post) {

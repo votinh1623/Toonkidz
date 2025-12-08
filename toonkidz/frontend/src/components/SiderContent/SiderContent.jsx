@@ -98,13 +98,13 @@ const SiderContent = ({ onClose, user, totalUnreadMessages }) => {
           badge={totalUnreadMessages}
           onClose={onClose}
         />
-        <NavItem
+        {/* <NavItem
           to="/home/notifications"
           icon={<Bell className="icon" />}
           label="Thông báo"
           badge="5"
           onClose={onClose}
-        />
+        /> */}
 
         {user?.role === 'admin' && (
           <NavItem
@@ -123,12 +123,12 @@ const SiderContent = ({ onClose, user, totalUnreadMessages }) => {
           label="Tài khoản"
           onClose={onClose}
         />
-        <NavItem
+        {/* <NavItem
           to="/home/settings"
           icon={<Settings className="icon" />}
           label="Cài đặt"
           onClose={onClose}
-        />
+        /> */}
       </nav>
 
       <div className="sider__profile" onClick={() => handleNavigate("/home/profile")}>

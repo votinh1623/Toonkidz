@@ -1,28 +1,65 @@
-// backend/src/controllers/report.controller.js
 import Report from '../models/report.model.js';
 import Post from '../models/post.model.js';
 import User from '../models/user.model.js';
 import mongoose from 'mongoose';
+import cloudinary from "../lib/cloudinary.js";
+import fs from "fs";
+const uploadEvidenceImages = async (files) => {
+  const imageUrls = [];
+
+  for (const file of files) {
+    try {
+      const result = await cloudinary.uploader.upload(file.path, {
+        folder: "toonkidz/report_evidence",
+        resource_type: "image",
+      });
+      imageUrls.push(result.secure_url);
+      fs.unlinkSync(file.path);
+    } catch (error) {
+      console.error("Lỗi upload ảnh minh chứng:", error);
+      if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+    }
+  }
+  return imageUrls;
+};
 
 export const createReport = async (req, res) => {
   try {
-    const { targetId, targetType, reason } = req.body;
+    const { targetId, targetType, reason, details } = req.body;
     const reporterId = req.user.id;
+    const files = req.files || [];
 
     if (!targetId || !targetType || !reason) {
+      files.forEach(file => {
+        if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+      });
       return res.status(400).json({ success: false, error: 'Vui lòng cung cấp đủ thông tin.' });
+    }
+
+    let evidenceImages = [];
+    if (files.length > 0) {
+      evidenceImages = await uploadEvidenceImages(files);
     }
 
     const newReport = new Report({
       reporterId,
       targetId: new mongoose.Types.ObjectId(targetId),
       targetType,
-      reason
+      reason,
+      details,
+      evidenceImages
     });
 
     await newReport.save();
     res.status(201).json({ success: true, message: 'Đã gửi báo cáo thành công.' });
+
   } catch (error) {
+    console.error("Create Report Error:", error);
+    if (req.files) {
+      req.files.forEach(file => {
+        if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+      });
+    }
     res.status(500).json({ success: false, error: 'Lỗi máy chủ: ' + error.message });
   }
 };
@@ -69,7 +106,7 @@ export const getAllReports = async (req, res) => {
             commentText: comment?.text,
             postId: post._id,
             postAuthor: post.userId,
-            storyTitle: post.storyId?.title // Lấy title (đã populate)
+            storyTitle: post.storyId?.title
           };
         }
       } else if (report.targetType === 'User') {

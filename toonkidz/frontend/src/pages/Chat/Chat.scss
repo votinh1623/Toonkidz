@@ -33,8 +33,25 @@ $online-color: #2ecc71;
       margin-bottom: 1rem;
     }
 
-    .cl-search .ant-input-prefix {
-      color: $text-light;
+    .cl-search {
+      border-radius: 20px;
+      background: #f8f9fa;
+      border: 1px solid #eef2f6;
+
+      .ant-input {
+        background: transparent;
+        padding-left: 10px;
+      }
+
+      .ant-input-prefix {
+        margin-right: 8px;
+        color: $text-light;
+      }
+
+      &:hover,
+      &:focus-within {
+        border-color: $primary-color;
+      }
     }
 
     .ant-input-affix-wrapper {
@@ -69,6 +86,10 @@ $online-color: #2ecc71;
     .convo-avatar-wrapper {
       position: relative;
       flex-shrink: 0;
+
+      .avatar-initials {
+        margin-right: 0px;
+      }
 
       &.online::after {
         content: '';
@@ -125,7 +146,7 @@ $online-color: #2ecc71;
       }
 
       .unread-badge {
-        background: $primary-color;
+        background: #ef4444;
         color: #fff;
         font-size: 0.75rem;
         font-weight: 600;
@@ -206,10 +227,10 @@ $online-color: #2ecc71;
 
     .message-bubble {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       align-items: flex-end;
-      max-width: 80%;
-      align-self: flex-start;
+      max-width: 70%;
+      margin-bottom: 4px;
 
       .msg-avatar-img,
       .msg-avatar-initials {
@@ -245,54 +266,98 @@ $online-color: #2ecc71;
       }
 
       .message-content {
-        padding: 12px 16px;
+        padding: 8px 12px;
         border-radius: 18px;
-        max-width: 100%;
         position: relative;
-        word-wrap: break-word;
-        min-width: 10px;
+        min-width: 60px;
 
-        p {
-          margin: 0;
-          line-height: 1.6;
-          word-break: break-all;
-          white-space: normal;
+        .text-content {
+          font-size: 0.95rem;
+          line-height: 1.5;
+          word-wrap: break-word;
+          margin-bottom: 2px;
         }
 
-        .message-timestamp {
-          position: absolute;
-          bottom: 8px;
-          right: 16px;
+        .edited-tag {
           font-size: 0.7rem;
-          color: $text-light;
+          font-style: italic;
+          opacity: 0.7;
+          margin-left: 4px;
+        }
+
+        .message-meta {
+          display: flex;
+          justify-content: flex-end;
+          margin-top: 2px;
+
+          .message-timestamp {
+            font-size: 0.65rem;
+            opacity: 0.7;
+            user-select: none;
+          }
         }
       }
 
       &.sent {
-        justify-content: flex-end;
         align-self: flex-end;
+        justify-content: flex-end;
 
         .message-content {
           background: $primary-color;
           color: #fff;
           border-bottom-right-radius: 4px;
-          order: 2;
+          box-shadow: 0 1px 2px rgba(108, 99, 255, 0.3);
+
+          .text-content {
+            color: #fff;
+          }
 
           .message-timestamp {
-            color: #e0e0e0;
+            color: rgba(255, 255, 255, 0.9);
           }
+        }
+
+        .shared-post-snippet {
+          border: none;
         }
       }
 
       &.received {
+        align-self: flex-start;
         justify-content: flex-start;
 
         .message-content {
           background: #fff;
           color: $text-color;
-          border: 1px solid #eef2f6;
+          border: 1px solid #f0f0f0;
           border-bottom-left-radius: 4px;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+          .text-content {
+            color: $text-color;
+          }
+
+          .message-timestamp {
+            color: #999;
+          }
         }
+      }
+
+      .message-action-btn {
+        opacity: 0;
+        transition: opacity 0.2s;
+        padding: 4px;
+        color: #999;
+
+        &:hover {
+          color: $primary-color;
+          background: #f0f0f0;
+          border-radius: 50%;
+        }
+      }
+
+      &:hover .message-action-btn {
+        opacity: 1;
       }
     }
 
@@ -302,6 +367,7 @@ $online-color: #2ecc71;
   }
 
   .chat-input-area {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -309,7 +375,7 @@ $online-color: #2ecc71;
     background: #fff;
     border-top: 1px solid $border-color;
 
-    input[type="text"] {
+    >input[type="text"] {
       flex: 1;
       border: none;
       outline: none;
@@ -332,8 +398,95 @@ $online-color: #2ecc71;
       transition: background-color 0.2s ease;
 
       &:hover {
-        // ✅ 2. Thay thế 'darken' bằng 'color.adjust'
         background: color.adjust($primary-color, $lightness: -10%);
+      }
+    }
+
+    .editing-indicator {
+      position: absolute;
+      top: -30px;
+      left: 0;
+      width: 100%;
+      height: 30px;
+      background: #fff3cd;
+      color: #856404;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      font-size: 0.85rem;
+      border-top: 1px solid #ffeeba;
+      animation: slideUp 0.2s ease-out;
+
+      .cancel-edit-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #856404;
+        display: flex;
+        align-items: center;
+
+        &:hover {
+          color: #533f03;
+        }
+      }
+    }
+
+    .emoji-container {
+      position: relative;
+
+      .emoji-picker-popup {
+        position: absolute;
+        bottom: 50px;
+        left: 0;
+        z-index: 1000;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        border-radius: 10px;
+        animation: popUp 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+        .EmojiPickerReact {
+          .epr-search-container {
+            input.epr-search-input {
+              padding-left: 40px !important;
+              border-radius: 8px;
+
+              &:focus {
+                border-color: $primary-color;
+              }
+            }
+          }
+        }
+
+      }
+
+      .icon-btn.active {
+        color: $primary-color;
+      }
+    }
+
+    @keyframes popUp {
+      from {
+        transform: scale(0.8);
+        opacity: 0;
+        transform-origin: bottom left;
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1;
+        transform-origin: bottom left;
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(100%);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
       }
     }
   }
@@ -362,6 +515,81 @@ $online-color: #2ecc71;
     h2 {
       font-weight: 600;
       color: $text-color;
+    }
+  }
+}
+
+.shared-post-snippet {
+  cursor: pointer;
+  border-radius: 12px;
+  padding: 10px;
+  width: 260px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  overflow: hidden;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  }
+
+  .shared-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: $primary-color;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+  }
+
+  .shared-content {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+
+    .shared-cover {
+      width: 48px;
+      height: 64px;
+      border-radius: 6px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: #f0f0f0;
+      border: 1px solid #eee;
+    }
+
+    .shared-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+
+      .shared-title {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #333;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 4px;
+      }
+
+      .shared-caption {
+        font-size: 0.8rem;
+        color: #666;
+        margin: 0;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
     }
   }
 }

@@ -39,10 +39,14 @@ export const initializeSocketIO = (socketServer) => {
         if (receiverSocketId) {
           global.io.to(receiverSocketId).emit('receiveMessage', message);
         }
-        socket.emit('messageSent', message);
+        const responseData = message.toObject();
+        responseData.tempId = data.tempId;
+
+        socket.emit('messageSent', responseData);
+
       } catch (error) {
         console.error("Error handling message:", error.message);
-        socket.emit('messageError', { error: "Failed to send message" });
+        socket.emit('messageError', { error: "Failed to send message", tempId: data.tempId }); // Trả tempId để frontend xử lý lỗi
       }
     });
 

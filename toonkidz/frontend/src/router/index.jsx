@@ -26,6 +26,7 @@ import AdminRoute from "./AdminRoute";
 import Chat from "../pages/Chat/Chat";
 import FeedbackManagement from "../pages/Admin/FeedbackManagement/FeedbackManagement";
 import ReportingManagement from "../pages/Admin/ReportingManagement/ReportingManagement";
+import Settings from "../pages/Settings/Setting";
 
 export const route = [
   { path: "/login", element: <Login /> },
@@ -55,6 +56,7 @@ export const route = [
               { path: "profile/:userId", element: <ProfilePage /> },
               { path: "story/:storyId", element: <StoryViewPage /> },
               { path: "edit-story/:storyId", element: <EditStory /> },
+              { path: "settings", element: <Settings /> },
             ],
           },
 

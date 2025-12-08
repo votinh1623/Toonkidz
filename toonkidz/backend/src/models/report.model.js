@@ -28,7 +28,16 @@ const reportSchema = new mongoose.Schema({
     enum: ['pending', 'reviewed', 'resolved', 'rejected'],
     default: 'pending',
     index: true
-  }
+  },
+  details: {
+    type: String,
+    required: false
+  },
+  evidenceImages: [
+    {
+      type: String
+    }
+  ]
 }, {
   timestamps: true
 });
