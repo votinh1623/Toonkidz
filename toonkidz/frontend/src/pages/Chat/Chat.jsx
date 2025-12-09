@@ -8,7 +8,8 @@ import { toast } from 'sonner';
 
 import {
   Search, Paperclip, Smile, Send, Phone, MoreVertical,
-  Edit, Trash2, X, Flag, MessageSquareDashed
+  Edit, Trash2, X, Flag, MessageSquareDashed,
+  PhoneMissed, PhoneOutgoing, PhoneIncoming, Video
 } from 'lucide-react';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 
@@ -36,7 +37,6 @@ const SharedPostSnippet = ({ postData, navigate }) => {
   if (!postData || !postData.userId) {
     return <div className="shared-post-snippet error">Bài viết không tồn tại.</div>;
   }
-
   const isShared = postData.originalPostId;
   const originalPost = isShared ? postData.originalPostId : postData;
   const author = originalPost.userId;
@@ -68,6 +68,79 @@ const SharedPostSnippet = ({ postData, navigate }) => {
     </div>
   );
 };
+
+const CallMessageSnippet = ({ msg, currentUser, onCallAgain }) => {
+  const isMyMsg = msg.senderId._id === currentUser?._id;
+  const isMissed = msg.content === 'MISSED_CALL';
+
+  let Icon = Video;
+  let text = "Cuộc gọi video";
+  let subText = "";
+  let iconColor = "#555";
+  let bgColor = "#f0f2f5";
+  const canCallBack = isMissed && !isMyMsg;
+
+  if (isMissed) {
+    if (isMyMsg) {
+      Icon = PhoneOutgoing;
+      text = "Cuộc gọi video đi";
+      subText = "Người nhận không trả lời";
+    } else {
+      Icon = PhoneMissed;
+      text = "Cuộc gọi video bị nhỡ";
+      subText = "Nhấn để gọi lại";
+      iconColor = "#ff4d4f";
+      bgColor = "#fff1f0";
+    }
+  } else {
+    if (isMyMsg) {
+      Icon = PhoneOutgoing;
+      text = "Cuộc gọi video đi";
+      subText = "Cuộc gọi đã kết thúc";
+    } else {
+      Icon = PhoneIncoming;
+      text = "Cuộc gọi video đến";
+      subText = "Cuộc gọi đã kết thúc";
+    }
+  }
+
+  return (
+    <div
+      className="call-message-snippet"
+      onClick={() => {
+        if (canCallBack) {
+          onCallAgain();
+        }
+      }}
+      style={{
+        display: 'flex', alignItems: 'center', gap: '12px',
+        padding: '10px 15px', borderRadius: '12px',
+        background: bgColor, border: isMissed && !isMyMsg ? '1px solid #ffccc7' : '1px solid #e5e7eb',
+        minWidth: '200px',
+        cursor: canCallBack ? 'pointer' : 'default',
+        transition: '0.2s'
+      }}
+      onMouseEnter={(e) => { if (canCallBack) e.currentTarget.style.opacity = '0.8'; }}
+      onMouseLeave={(e) => { if (canCallBack) e.currentTarget.style.opacity = '1'; }}
+    >
+      <div style={{
+        background: isMissed && !isMyMsg ? '#ff4d4f' : '#ddd',
+        padding: '8px', borderRadius: '50%', display: 'flex'
+      }}>
+        <Icon size={20} color={isMissed && !isMyMsg ? 'white' : '#555'} />
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <span style={{ fontWeight: '600', fontSize: '14px', color: isMissed && !isMyMsg ? '#ff4d4f' : '#333' }}>
+          {text}
+        </span>
+        <span style={{ fontSize: '12px', color: '#888' }}>
+          {subText}
+        </span>
+      </div>
+    </div>
+  );
+};
+
 
 const Chat = () => {
   const {
@@ -102,18 +175,44 @@ const Chat = () => {
   const inputRef = useRef(null);
   const friendSearchTimeout = useRef(null);
 
-  const [isIncomingCall, setIsIncomingCall] = useState(false);
-  const [incomingCallData, setIncomingCallData] = useState(null);
   const [isCalling, setIsCalling] = useState(false);
+
+  const performSendMessage = (content, type = 'text') => {
+    if (!socketRef.current || !currentUser || !selectedConvo) return;
+
+    const tempId = Date.now().toString();
+    const messageData = {
+      content: content.trim(),
+      receiverId: selectedConvo.partner._id,
+      senderId: currentUser._id,
+      conversationId: selectedConvo._id,
+      tempId: tempId,
+      messageType: type
+    };
+
+    socketRef.current.emit('sendMessage', messageData);
+
+    const optimisticMessage = {
+      ...messageData,
+      _id: tempId,
+      senderId: { _id: currentUser._id, name: currentUser.name, pfp: currentUser.pfp },
+      createdAt: new Date().toISOString(),
+      messageType: type
+    };
+
+    setMessages(prev => [...prev, optimisticMessage]);
+  };
 
   useEffect(() => {
     if (!socket) return;
-    socket.on("incoming-call", (data) => {
-      setIncomingCallData(data);
-      setIsIncomingCall(true);
-    });
 
     socket.on("call-accepted", ({ roomId }) => {
+      localStorage.setItem('currentCallInfo', JSON.stringify({
+        conversationId: selectedConvo._id,
+        partnerId: selectedConvo.partner._id,
+        partner: selectedConvo.partner,
+        isCaller: true
+      }));
       setIsCalling(false);
       navigate(`/video-call/${roomId}`);
     });
@@ -121,56 +220,55 @@ const Chat = () => {
     socket.on("call-rejected", () => {
       setIsCalling(false);
       message.info("Người dùng đang bận hoặc từ chối cuộc gọi.");
+      performSendMessage("MISSED_CALL", "call");
     });
 
     return () => {
-      socket.off("incoming-call");
       socket.off("call-accepted");
       socket.off("call-rejected");
     };
-  }, [socket, navigate]);
+  }, [socket, navigate, selectedConvo]);
+
 
   const handlePhoneClick = () => {
     if (!selectedConvo || !currentUser) return;
 
-    const roomId = `room_${Date.now()}`; // Tạo Room ID ngẫu nhiên
+    const roomId = `room_${Date.now()}`;
     setIsCalling(true);
 
-    // Gửi sự kiện lên Server
     socket.emit("call-user", {
       callerId: currentUser._id,
       callerName: currentUser.name,
       pfp: currentUser.pfp,
       receiverId: selectedConvo.partner._id,
+      conversationId: selectedConvo._id,
       roomId: roomId
     });
   };
 
-  const handleAcceptCall = () => {
-    if (!incomingCallData) return;
-    socket.emit("accept-call", {
-      roomId: incomingCallData.roomId,
-      callerId: incomingCallData.from
-    });
-
-    setIsIncomingCall(false);
-    navigate(`/video-call/${incomingCallData.roomId}`);
-  };
-
-  const handleRejectCall = () => {
-    if (!incomingCallData) return;
-    socket.emit("reject-call", { callerId: incomingCallData.from });
-    setIsIncomingCall(false);
-    setIncomingCallData(null);
-  };
-
   useEffect(() => {
     if (location.state?.targetConversation) {
+      console.log("Nhận conversation từ State:", location.state.targetConversation);
       const { targetConversation } = location.state;
       setSelectedConvo(targetConversation);
       window.history.replaceState({}, document.title);
+      return;
     }
-  }, [location.state]);
+
+    const lastConvoId = sessionStorage.getItem('lastActiveConvoId');
+    if (lastConvoId) {
+      console.log("Nhận conversation từ SessionStorage:", lastConvoId);
+
+      if (conversations.length > 0) {
+        const foundConvo = conversations.find(c => c._id === lastConvoId);
+        if (foundConvo) {
+          setSelectedConvo(foundConvo);
+          sessionStorage.removeItem('lastActiveConvoId');
+        } else {
+        }
+      }
+    }
+  }, [location.state, conversations]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -282,9 +380,7 @@ const Chat = () => {
 
   useEffect(() => {
     if (!selectedConvo) return;
-
     socketRef.current.emit('markAsRead', { conversationId: selectedConvo._id });
-
     const fetchMessages = async () => {
       setLoadingMessages(true);
       try {
@@ -356,26 +452,7 @@ const Chat = () => {
       return;
     }
 
-    const tempId = Date.now().toString();
-    const messageData = {
-      content: newMessage.trim(),
-      receiverId: selectedConvo.partner._id,
-      senderId: currentUser._id,
-      conversationId: selectedConvo._id,
-      tempId: tempId
-    };
-
-    socketRef.current.emit('sendMessage', messageData);
-
-    const optimisticMessage = {
-      ...messageData,
-      _id: tempId,
-      senderId: { _id: currentUser._id, name: currentUser.name, pfp: currentUser.pfp },
-      createdAt: new Date().toISOString(),
-      messageType: 'text'
-    };
-
-    setMessages(prev => [...prev, optimisticMessage]);
+    performSendMessage(newMessage, 'text');
     setNewMessage("");
   };
 
@@ -410,7 +487,6 @@ const Chat = () => {
 
   return (
     <div className="chat-layout">
-      {/* SIDEBAR */}
       <aside className="conversation-list">
         <div className="cl-header">
           <h2>Tin nhắn</h2>
@@ -490,9 +566,12 @@ const Chat = () => {
                     <div className="convo-bottom">
                       <p className={`convo-last-message ${convo.unreadCount > 0 ? 'unread' : ''}`}>
                         {convo.lastMessage?.senderId === currentUser?._id ? "Bạn: " : ""}
-                        {convo.lastMessage?.messageType === 'shared_post'
-                          ? 'Đã chia sẻ một bài viết'
-                          : (convo.lastMessage?.content || "...")}
+                        {convo.lastMessage?.messageType === 'call'
+                          ? (convo.lastMessage.content === 'MISSED_CALL' ? '📞 Cuộc gọi nhỡ' : '📞 Cuộc gọi video')
+                          : convo.lastMessage?.messageType === 'shared_post'
+                            ? 'Đã chia sẻ một bài viết'
+                            : (convo.lastMessage?.content || "...")
+                        }
                       </p>
                       {convo.unreadCount > 0 && <span className="unread-badge">{convo.unreadCount}</span>}
                     </div>
@@ -537,6 +616,26 @@ const Chat = () => {
               ) : (
                 messages.map(msg => {
                   const isMyMsg = msg.senderId._id === currentUser?._id;
+                  let messageContent;
+                  if (msg.messageType === 'call') {
+                    messageContent = (
+                      <CallMessageSnippet
+                        msg={msg}
+                        currentUser={currentUser}
+                        onCallAgain={handlePhoneClick}
+                      />
+                    );
+                  } else if (msg.messageType === 'shared_post' && msg.sharedPostId) {
+                    messageContent = <SharedPostSnippet postData={msg.sharedPostId} navigate={navigate} />;
+                  } else {
+                    messageContent = (
+                      <div className="text-content">
+                        {msg.content}
+                        {msg.isEdited && <span className="edited-tag">(Đã sửa)</span>}
+                      </div>
+                    );
+                  }
+
                   return (
                     <div key={msg._id} className={`message-bubble ${isMyMsg ? 'sent' : 'received'}`}>
                       {!isMyMsg && (
@@ -550,20 +649,14 @@ const Chat = () => {
                       )}
 
                       <div className="message-content">
-                        {msg.messageType === 'shared_post' && msg.sharedPostId ? (
-                          <SharedPostSnippet postData={msg.sharedPostId} navigate={navigate} />
-                        ) : (
-                          <div className="text-content">
-                            {msg.content}
-                            {msg.isEdited && <span className="edited-tag">(Đã sửa)</span>}
-                          </div>
-                        )}
+                        {messageContent}
+
                         <div className="message-meta">
                           <span className="message-timestamp">{formatTimestamp(msg.createdAt)}</span>
                         </div>
                       </div>
 
-                      {isMyMsg && (
+                      {isMyMsg && msg.messageType !== 'call' && (
                         <Dropdown overlay={renderMessageMenu(msg)} trigger={['click']} placement="topRight">
                           <Button type="text" className="message-action-btn"><BsThreeDotsVertical /></Button>
                         </Dropdown>
@@ -657,41 +750,9 @@ const Chat = () => {
           <p>Đang chờ {selectedConvo?.partner?.name} trả lời...</p>
           <Button danger onClick={() => {
             setIsCalling(false);
+            socketRef.current.emit("reject-call", { callerId: currentUser._id });
+            performSendMessage("MISSED_CALL", "call");
           }}>Hủy</Button>
-        </div>
-      </Modal>
-
-      <Modal
-        title="Cuộc gọi đến!"
-        open={isIncomingCall}
-        footer={null}
-        closable={false}
-        centered
-      >
-        <div style={{ textAlign: 'center' }}>
-          <img
-            src={incomingCallData?.pfp || 'default.png'}
-            style={{ width: 80, height: 80, borderRadius: '50%', marginBottom: 15 }}
-          />
-          <h3>{incomingCallData?.name} đang gọi video cho bạn...</h3>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 20 }}>
-            <Button
-              shape="circle"
-              size="large"
-              style={{ backgroundColor: 'green', color: 'white' }}
-              onClick={handleAcceptCall}
-            >
-              <Phone />
-            </Button>
-            <Button
-              shape="circle"
-              size="large"
-              danger
-              onClick={handleRejectCall}
-            >
-              <X />
-            </Button>
-          </div>
         </div>
       </Modal>
     </div>

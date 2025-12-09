@@ -1,11 +1,12 @@
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import Header from "../../components/Header/Header";
-import { Layout, Grid, Drawer, Spin, message } from "antd";
+import { Layout, Grid, Drawer, Spin, message, Modal, Button } from "antd";
 import SiderContent from "../../components/SiderContent/SiderContent.jsx";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { getProfile } from "../../service/userService.jsx";
 import { getConversations } from "../../service/messageService.jsx";
 import io from 'socket.io-client';
+import { Phone, X } from 'lucide-react';
 
 const { Sider, Content } = Layout;
 const { useBreakpoint } = Grid;
@@ -16,6 +17,7 @@ const fullBleedPaths = ['/home/chat'];
 
 const LayoutDefault = () => {
   const screens = useBreakpoint();
+  const navigate = useNavigate();
   const [drawerVisible, setDrawerVisible] = useState(false);
 
   const [currentUser, setCurrentUser] = useState(null);
@@ -24,6 +26,9 @@ const LayoutDefault = () => {
   const [conversations, setConversations] = useState([]);
   const [totalUnreadMessages, setTotalUnreadMessages] = useState(0);
   const [onlineUsers, setOnlineUsers] = useState(new Set());
+
+  const [isIncomingCall, setIsIncomingCall] = useState(false);
+  const [incomingCallData, setIncomingCallData] = useState(null);
 
   const socketRef = useRef(socket);
   const userRef = useRef(null);
@@ -51,9 +56,32 @@ const LayoutDefault = () => {
     }
   }, []);
 
+  const handleAcceptCall = () => {
+    if (!incomingCallData) return;
+    socketRef.current.emit("accept-call", {
+      roomId: incomingCallData.roomId,
+      callerId: incomingCallData.from
+    });
+
+    localStorage.setItem('currentCallInfo', JSON.stringify({
+      conversationId: incomingCallData.conversationId,
+      partnerId: incomingCallData.from,
+      isCaller: false
+    }));
+
+    setIsIncomingCall(false);
+    navigate(`/video-call/${incomingCallData.roomId}`);
+  };
+
+  const handleRejectCall = () => {
+    if (!incomingCallData) return;
+    socketRef.current.emit("reject-call", { callerId: incomingCallData.from });
+    setIsIncomingCall(false);
+    setIncomingCallData(null);
+  };
+
   useEffect(() => {
     let isMounted = true;
-
     const handleSocketMessage = (newMessage) => {
       const curUser = userRef.current;
 
@@ -95,7 +123,6 @@ const LayoutDefault = () => {
         } else {
           if (!activeConvoId || String(activeConvoId) !== msgConvoId) {
             newUnreadCount += 1;
-            console.log(`[DEBUG] Unread increased to: ${newUnreadCount}`);
           } else {
             newUnreadCount = 0;
           }
@@ -120,6 +147,19 @@ const LayoutDefault = () => {
       );
     };
 
+    const handleIncomingCall = (data) => {
+      console.log("📞 [DEBUG] Incoming call data:", data);
+      if (!data.conversationId) console.error("❌ [LỖI] Server không gửi conversationId!");
+
+      setIncomingCallData(data);
+      setIsIncomingCall(true);
+    };
+
+    const handleCallRejectedByCaller = () => {
+      setIsIncomingCall(false);
+      setIncomingCallData(null);
+    };
+
     const initialize = async () => {
       if (!currentUser) setLoadingProfile(true);
       try {
@@ -138,11 +178,16 @@ const LayoutDefault = () => {
         socketRef.current.off('messageSent');
         socketRef.current.off('unreadCountReset');
         socketRef.current.off('getOnlineUsers');
+        socketRef.current.off('incoming-call');
+        socketRef.current.off('call-rejected');
 
         socketRef.current.on('getOnlineUsers', (userIds) => setOnlineUsers(new Set(userIds)));
         socketRef.current.on('receiveMessage', handleSocketMessage);
         socketRef.current.on('messageSent', handleSocketMessage);
         socketRef.current.on('unreadCountReset', handleUnreadCountReset);
+
+        socketRef.current.on('incoming-call', handleIncomingCall);
+        socketRef.current.on('call-rejected', handleCallRejectedByCaller);
 
         fetchConversations();
 
@@ -165,6 +210,8 @@ const LayoutDefault = () => {
       socketRef.current?.off('receiveMessage');
       socketRef.current?.off('messageSent');
       socketRef.current?.off('unreadCountReset');
+      socketRef.current?.off('incoming-call');
+      socketRef.current?.off('call-rejected');
     };
   }, [fetchConversations]);
 
@@ -217,6 +264,43 @@ const LayoutDefault = () => {
           }} />
         </Content>
       </Layout>
+
+      <Modal
+        title="Cuộc gọi đến!"
+        open={isIncomingCall}
+        footer={null}
+        closable={false}
+        centered
+        zIndex={9999}
+      >
+        <div style={{ textAlign: 'center' }}>
+          <img
+            src={incomingCallData?.pfp || 'https://via.placeholder.com/150'}
+            style={{ width: 80, height: 80, borderRadius: '50%', marginBottom: 15, objectFit: 'cover' }}
+            alt="caller"
+          />
+          <h3>{incomingCallData?.name} đang gọi video...</h3>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 20 }}>
+            <Button
+              shape="circle"
+              size="large"
+              style={{ backgroundColor: 'green', color: 'white', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              onClick={handleAcceptCall}
+            >
+              <Phone size={24} />
+            </Button>
+            <Button
+              shape="circle"
+              size="large"
+              danger
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              onClick={handleRejectCall}
+            >
+              <X size={24} />
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </Layout>
   );
 };
