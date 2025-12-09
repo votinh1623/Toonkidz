@@ -320,3 +320,38 @@ export const toggleUserStatus = async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
+export const searchUsers = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search || "";
+
+    const query = {
+      $or: [
+        { name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ],
+    };
+
+    const users = await User.find(query)
+      .select('-password')
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    const totalUsers = await User.countDocuments(query);
+
+    res.json({
+      success: true,
+      users,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalUsers / limit),
+        totalUsers
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to search users' });
+  }
+};

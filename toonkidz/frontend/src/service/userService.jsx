@@ -84,3 +84,14 @@ export const toggleUserStatus = async (userId, isActive) => {
     throw error;
   }
 };
+
+export const searchUsers = async (page = 1, limit = 10, search = "") => {
+  try {
+    const params = new URLSearchParams({ page, limit, search });
+    const res = await get(`users/search?${params.toString()}`);
+    return res;
+  } catch (err) {
+    console.error("Error searching users:", err);
+    throw err;
+  }
+};

@@ -12,7 +12,8 @@ import {
 } from 'lucide-react';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 
-import { getMessages } from '../../service/messageService';
+import { getMessages, findOrCreateConversation } from '../../service/messageService';
+import { searchUsers } from '../../service/userService';
 import ReportModal from '../../components/ReportModal/ReportModal';
 import './Chat.scss';
 
@@ -23,7 +24,7 @@ const formatTimestamp = (dateString) => {
 };
 
 const getInitials = (name) => {
-  if (!name) return "?";
+  if (!name) return '?';
   const words = name.split(' ');
   if (words.length > 1) {
     return `${words[0][0]}${words[words.length - 1][0]}`.toUpperCase();
@@ -68,7 +69,6 @@ const SharedPostSnippet = ({ postData, navigate }) => {
   );
 };
 
-
 const Chat = () => {
   const {
     currentUser,
@@ -89,6 +89,9 @@ const Chat = () => {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [friendQuery, setFriendQuery] = useState('');
+  const [friendResults, setFriendResults] = useState([]);
+  const [friendLoading, setFriendLoading] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
@@ -97,6 +100,7 @@ const Chat = () => {
   const messageEndRef = useRef(null);
   const messageAreaRef = useRef(null);
   const inputRef = useRef(null);
+  const friendSearchTimeout = useRef(null);
 
   const [isIncomingCall, setIsIncomingCall] = useState(false);
   const [incomingCallData, setIncomingCallData] = useState(null);
@@ -188,6 +192,73 @@ const Chat = () => {
       setMessagesExternally(null);
     };
   }, [selectedConvo, setMessagesExternally]);
+
+  useEffect(() => {
+    if (!friendQuery || friendQuery.trim().length < 2) {
+      setFriendResults([]);
+      setFriendLoading(false);
+      return;
+    }
+
+    setFriendLoading(true);
+    if (friendSearchTimeout.current) clearTimeout(friendSearchTimeout.current);
+    friendSearchTimeout.current = setTimeout(async () => {
+      try {
+        const res = await searchUsers(1, 8, friendQuery.trim());
+        if (res && res.success) {
+          setFriendResults(res.users || []);
+        } else {
+          setFriendResults([]);
+        }
+      } catch (err) {
+        setFriendResults([]);
+      } finally {
+        setFriendLoading(false);
+      }
+    }, 300);
+
+    return () => {
+      if (friendSearchTimeout.current) clearTimeout(friendSearchTimeout.current);
+    };
+  }, [friendQuery]);
+
+  const handleStartChatFromSearch = async (user) => {
+    if (!user) return;
+    try {
+      const res = await findOrCreateConversation(user._id);
+      if (res && res.success) {
+        const conversationData = {
+          _id: res.conversationId,
+          partner: user,
+          updatedAt: new Date().toISOString()
+        };
+
+        // add to conversations list if not exists
+        setConversations(prev => {
+          const exists = prev.find(c => c._id === conversationData._id);
+          if (exists) return prev;
+          return [conversationData, ...prev];
+        });
+
+        setSelectedConvo(conversationData);
+        setFriendQuery('');
+        setFriendResults([]);
+      } else {
+        message.error(res.error || 'Không thể tạo cuộc trò chuyện.');
+      }
+    } catch (err) {
+      console.error(err);
+      message.error('Lỗi khi tạo cuộc trò chuyện.');
+    }
+  };
+
+  const handleViewProfile = (user) => {
+    navigate(`/home/profile/${user._id}`);
+  };
+
+  const handleFollowUser = (user) => {
+    message.success(`Theo dõi ${user.name} thành công!`);
+  };
 
   useEffect(() => {
     if (socket) {
@@ -308,7 +379,6 @@ const Chat = () => {
     setNewMessage("");
   };
 
-
   const renderMessageMenu = (msg) => (
     <Menu>
       {msg.messageType === 'text' && (
@@ -344,33 +414,69 @@ const Chat = () => {
       <aside className="conversation-list">
         <div className="cl-header">
           <h2>Tin nhắn</h2>
-          <Input
-            className="cl-search"
-            placeholder="Tìm kiếm..."
-            prefix={<Search size={16} color="#888" />}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+          <div className="cl-friend-search-section">
+            <span className="cl-friend-label">Tìm bạn bè</span>
+            <Input
+              className="cl-friend-search"
+              placeholder="Nhập tên hoặc email..."
+              prefix={<Search size={16} color="#888" />}
+              value={friendQuery}
+              onChange={(e) => setFriendQuery(e.target.value)}
+            />
+          </div>
+          <div className="cl-divider"></div>
+          <div className="cl-search-section">
+            <span className="cl-convo-label">Cuộc trò chuyện</span>
+            <Input
+              className="cl-search"
+              placeholder="Tìm kiếm..."
+              prefix={<Search size={16} color="#888" />}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </div>
 
         <div className="cl-items">
-          {loadingConvos ? (
-            <Spin style={{ padding: "20px", display: 'block', margin: '0 auto' }} />
+          {friendQuery && friendQuery.trim().length >= 2 ? (
+            friendLoading ? (
+              <div style={{ padding: 20, textAlign: 'center' }}><Spin /></div>
+            ) : friendResults.length > 0 ? (
+              friendResults.map(user => (
+                <div key={user._id} className="friend-result">
+                  <div className={`convo-avatar-wrapper ${onlineUsers.has(user._id) ? 'online' : ''}`} onClick={() => handleViewProfile(user)} style={{ cursor: 'pointer' }}>
+                    {user.pfp ? (
+                      <img className="avatar" src={user.pfp} alt={user.name} />
+                    ) : (
+                      <div className="avatar-initials">{getInitials(user.name)}</div>
+                    )}
+                  </div>
+                  <div className="convo-details">
+                    <div className="convo-top">
+                      <span className="convo-name" onClick={() => handleViewProfile(user)} style={{ cursor: 'pointer', color: '#0084ff' }}>{user.name}</span>
+                    </div>
+                    <div className="convo-bottom">
+                      <Button size="small" onClick={() => handleStartChatFromSearch(user)}>Nhắn</Button>
+                      <Button size="small" type="default" onClick={() => handleFollowUser(user)} style={{ marginLeft: 4 }}>Theo dõi</Button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div style={{ padding: 12, color: '#777' }}>Không tìm thấy người dùng.</div>
+            )
           ) : (
-            filteredConversations.map(convo => {
-              const isOnline = convo.partner && onlineUsers.has(convo.partner._id);
-              if (!convo.partner) return null;
-
-              const isSelected = selectedConvo?._id === convo._id;
-
-              return (
+            loadingConvos ? (
+              <Spin style={{ padding: "20px", display: 'block', margin: '0 auto' }} />
+            ) : (
+              filteredConversations.map(convo => (
                 <div
                   key={convo._id}
-                  className={`convo-item ${isSelected ? 'active' : ''}`}
+                  className={`convo-item ${selectedConvo?._id === convo._id ? 'active' : ''}`}
                   onClick={() => setSelectedConvo(convo)}
                 >
-                  <div className={`convo-avatar-wrapper ${isOnline ? 'online' : ''}`}>
-                    {convo.partner.pfp ? (
+                  <div className={`convo-avatar-wrapper ${convo.partner && onlineUsers.has(convo.partner._id) ? 'online' : ''}`}>
+                    {convo.partner?.pfp ? (
                       <img className="avatar" src={convo.partner.pfp} alt={convo.partner.name} />
                     ) : (
                       <div className="avatar-initials">{getInitials(convo.partner?.name)}</div>
@@ -392,8 +498,8 @@ const Chat = () => {
                     </div>
                   </div>
                 </div>
-              );
-            })
+              ))
+            )
           )}
         </div>
       </aside>
@@ -536,9 +642,7 @@ const Chat = () => {
           targetName={selectedConvo.partner.name}
           onReported={() => { toast.success("Báo cáo người dùng thành công"); }}
         />
-      )}
-
-      <Modal
+      )}      <Modal
         title="Đang gọi..."
         open={isCalling}
         footer={null}

@@ -9,6 +9,7 @@ import {
   followUser,
   getProfile,
   getAllUsers,
+  searchUsers,
   updateUserById,
   deleteUserById,
   deactivateUser,
@@ -21,6 +22,8 @@ const router = express.Router();
 
 router.route('/')
   .get(auth, adminAuth, getAllUsers);
+
+router.get('/search', auth, searchUsers);
 
 router.get('/profile', auth, getProfile);
 

@@ -33,6 +33,40 @@ $online-color: #2ecc71;
       margin-bottom: 1rem;
     }
 
+    .cl-friend-search-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+
+      .cl-friend-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: $text-color;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+    }
+
+    .cl-divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, #ddd, transparent);
+      margin: 1rem 0;
+    }
+
+    .cl-search-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+
+      .cl-convo-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: $text-color;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+    }
+
     .cl-search {
       border-radius: 20px;
       background: #f8f9fa;
@@ -168,6 +202,112 @@ $online-color: #2ecc71;
       .convo-name {
         color: $primary-color;
       }
+    }
+  }
+
+  .friend-result {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    margin-bottom: 8px;
+
+    .convo-avatar-wrapper {
+      flex-shrink: 0;
+      position: relative;
+
+      .avatar-initials {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #fff;
+        background: linear-gradient(to bottom right, #a78bfa, #ec4899);
+      }
+
+      .avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+
+      &.online::after {
+        content: '';
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
+        width: 12px;
+        height: 12px;
+        background: $online-color;
+        border-radius: 50%;
+        border: 2px solid #fff;
+      }
+    }
+
+    .convo-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+
+      .convo-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .convo-name {
+          font-weight: 600;
+          color: $text-color;
+          flex: 1;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+
+      .convo-bottom {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        justify-content: flex-start;
+
+        button {
+          font-size: 0.8rem;
+          height: 28px;
+          padding: 0 10px;
+          border-radius: 6px;
+
+          &:first-child {
+            background: $primary-color;
+            color: white;
+            border: none;
+
+            &:hover {
+              background: darken($primary-color, 10%);
+            }
+          }
+
+          &:last-child {
+            border-color: #ddd;
+
+            &:hover {
+              border-color: $primary-color;
+              color: $primary-color;
+            }
+          }
+        }
+      }
+    }
+
+    &:hover {
+      background: #f5f5f7;
     }
   }
 }
