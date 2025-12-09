@@ -10,6 +10,10 @@ const userSocketMap = {};
 export let io;
 global.userSocketMap = userSocketMap;
 
+export const getUserSocketId = (userId) => {
+  return userSocketMap[userId];
+};
+
 const getOnlineUserIds = () => Object.keys(userSocketMap);
 
 export const initializeSocketIO = (socketServer) => {
@@ -135,6 +139,33 @@ export const initializeSocketIO = (socketServer) => {
       }
       global.io.emit('getOnlineUsers', getOnlineUserIds());
     });
+
+    socket.on("call-user", (data) => {
+      const receiverSocketId = getUserSocketId(data.receiverId);
+      if (receiverSocketId) {
+        global.io.to(receiverSocketId).emit("incoming-call", {
+          from: data.callerId,
+          name: data.callerName,
+          roomId: data.roomId,
+          pfp: data.pfp
+        });
+      }
+    });
+
+    socket.on("accept-call", (data) => {
+      const callerSocketId = getUserSocketId(data.callerId);
+      if (callerSocketId) {
+        global.io.to(callerSocketId).emit("call-accepted", { roomId: data.roomId });
+      }
+    });
+
+    socket.on("reject-call", (data) => {
+      const callerSocketId = getUserSocketId(data.callerId);
+      if (callerSocketId) {
+        global.io.to(callerSocketId).emit("call-rejected");
+      }
+    });
+
   });
 };
 

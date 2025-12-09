@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext, useNavigate, useLocation } from 'react-router-dom';
 
-import { Input, Spin, message, Dropdown, Menu, Button } from 'antd';
+import { Input, Spin, message, Dropdown, Menu, Button, Modal } from 'antd';
 import Swal from 'sweetalert2';
 import EmojiPicker from 'emoji-picker-react';
 import { toast } from 'sonner';
@@ -97,6 +97,68 @@ const Chat = () => {
   const messageEndRef = useRef(null);
   const messageAreaRef = useRef(null);
   const inputRef = useRef(null);
+
+  const [isIncomingCall, setIsIncomingCall] = useState(false);
+  const [incomingCallData, setIncomingCallData] = useState(null);
+  const [isCalling, setIsCalling] = useState(false);
+
+  useEffect(() => {
+    if (!socket) return;
+    socket.on("incoming-call", (data) => {
+      setIncomingCallData(data);
+      setIsIncomingCall(true);
+    });
+
+    socket.on("call-accepted", ({ roomId }) => {
+      setIsCalling(false);
+      navigate(`/video-call/${roomId}`);
+    });
+
+    socket.on("call-rejected", () => {
+      setIsCalling(false);
+      message.info("Người dùng đang bận hoặc từ chối cuộc gọi.");
+    });
+
+    return () => {
+      socket.off("incoming-call");
+      socket.off("call-accepted");
+      socket.off("call-rejected");
+    };
+  }, [socket, navigate]);
+
+  const handlePhoneClick = () => {
+    if (!selectedConvo || !currentUser) return;
+
+    const roomId = `room_${Date.now()}`; // Tạo Room ID ngẫu nhiên
+    setIsCalling(true);
+
+    // Gửi sự kiện lên Server
+    socket.emit("call-user", {
+      callerId: currentUser._id,
+      callerName: currentUser.name,
+      pfp: currentUser.pfp,
+      receiverId: selectedConvo.partner._id,
+      roomId: roomId
+    });
+  };
+
+  const handleAcceptCall = () => {
+    if (!incomingCallData) return;
+    socket.emit("accept-call", {
+      roomId: incomingCallData.roomId,
+      callerId: incomingCallData.from
+    });
+
+    setIsIncomingCall(false);
+    navigate(`/video-call/${incomingCallData.roomId}`);
+  };
+
+  const handleRejectCall = () => {
+    if (!incomingCallData) return;
+    socket.emit("reject-call", { callerId: incomingCallData.from });
+    setIsIncomingCall(false);
+    setIncomingCallData(null);
+  };
 
   useEffect(() => {
     if (location.state?.targetConversation) {
@@ -354,7 +416,9 @@ const Chat = () => {
                 </div>
               </div>
               <div className="ch-actions">
-                <button className="icon-btn"><Phone size={20} /></button>
+                <button className="icon-btn" onClick={handlePhoneClick}>
+                  <Phone size={20} />
+                </button>
                 <Dropdown overlay={headerMenu} trigger={['click']} placement="bottomRight">
                   <button className="icon-btn"><MoreVertical size={20} /></button>
                 </Dropdown>
@@ -473,6 +537,59 @@ const Chat = () => {
           onReported={() => { toast.success("Báo cáo người dùng thành công"); }}
         />
       )}
+
+      <Modal
+        title="Đang gọi..."
+        open={isCalling}
+        footer={null}
+        closable={false}
+        centered
+      >
+        <div style={{ textAlign: 'center' }}>
+          <img
+            src={selectedConvo?.partner?.pfp || 'default.png'}
+            style={{ width: 80, height: 80, borderRadius: '50%', marginBottom: 15 }}
+          />
+          <p>Đang chờ {selectedConvo?.partner?.name} trả lời...</p>
+          <Button danger onClick={() => {
+            setIsCalling(false);
+          }}>Hủy</Button>
+        </div>
+      </Modal>
+
+      <Modal
+        title="Cuộc gọi đến!"
+        open={isIncomingCall}
+        footer={null}
+        closable={false}
+        centered
+      >
+        <div style={{ textAlign: 'center' }}>
+          <img
+            src={incomingCallData?.pfp || 'default.png'}
+            style={{ width: 80, height: 80, borderRadius: '50%', marginBottom: 15 }}
+          />
+          <h3>{incomingCallData?.name} đang gọi video cho bạn...</h3>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 20 }}>
+            <Button
+              shape="circle"
+              size="large"
+              style={{ backgroundColor: 'green', color: 'white' }}
+              onClick={handleAcceptCall}
+            >
+              <Phone />
+            </Button>
+            <Button
+              shape="circle"
+              size="large"
+              danger
+              onClick={handleRejectCall}
+            >
+              <X />
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
