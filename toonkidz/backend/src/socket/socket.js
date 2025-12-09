@@ -147,8 +147,11 @@ export const initializeSocketIO = (socketServer) => {
           from: data.callerId,
           name: data.callerName,
           roomId: data.roomId,
-          pfp: data.pfp
+          pfp: data.pfp,
+          conversationId: data.conversationId
         });
+      } else {
+        socket.emit("call-rejected");
       }
     });
 
@@ -198,8 +201,10 @@ const internalSendMessage = async (content, receiverId, senderId, messageType = 
     _id: newMessage._id,
     content: newMessage.content,
     senderId: senderId,
-    createdAt: newMessage.createdAt
+    createdAt: newMessage.createdAt,
+    messageType: messageType
   };
+
   conversation.lastMessageAt = newMessage.createdAt;
 
   const currentUnread = conversation.unreadCounts.get(receiverId) || 0;

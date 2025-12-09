@@ -21,7 +21,7 @@ const messageSchema = new mongoose.Schema(
     },
     messageType: {
       type: String,
-      enum: ['text', 'shared_post'],
+      enum: ['text', 'shared_post', "call", "image"],
       default: 'text'
     },
     sharedPostId: {
