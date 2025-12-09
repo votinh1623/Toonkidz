@@ -27,6 +27,7 @@ import Chat from "../pages/Chat/Chat";
 import FeedbackManagement from "../pages/Admin/FeedbackManagement/FeedbackManagement";
 import ReportingManagement from "../pages/Admin/ReportingManagement/ReportingManagement";
 import Settings from "../pages/Settings/Setting";
+import VideoPage from "../pages/VideoCall/VideoPage";
 
 export const route = [
   { path: "/login", element: <Login /> },
@@ -67,6 +68,11 @@ export const route = [
             ],
           },
         ],
+      },
+
+      {
+        path: "video-call/:roomId",
+        element: <VideoPage />
       },
 
       {

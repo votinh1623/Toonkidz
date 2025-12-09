@@ -6,21 +6,33 @@ $secondary-color: #a6c1ee;
 $background-gradient: linear-gradient(90deg, $primary-color, $secondary-color);
 $hover-gradient: linear-gradient(90deg, #a6c1ee, #fbc2eb);
 
-.chat-fab {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  width: 56px;
-  height: 56px;
+.chat-fab.ant-btn {
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
 
+  padding: 0 !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
   background: $background-gradient !important;
   border: none !important;
   z-index: 1001;
   box-shadow: 0 4px 12px rgba(166, 193, 238, 0.4);
+  position: absolute;
+  bottom: 30px;
+  right: 30px;
 
   &:hover {
     background: $hover-gradient !important;
     transform: scale(1.05);
+  }
+
+  span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .lucide {
