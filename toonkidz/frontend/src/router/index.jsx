@@ -6,6 +6,7 @@ import AdminLayout from "../layout/AdminLayout/AdminLayout";
 
 import Login from "../components/auth/Login/Login";
 import Signup from "../components/auth/Signup/Signup";
+import ForgotPassword from "../components/auth/ForgotPassword/ForgotPassword";
 
 import Homepage from "../pages/Homepage/Homepage";
 import CreateComic from "../pages/CreateComic/CreateComic";
@@ -31,6 +32,7 @@ import VideoPage from "../pages/VideoCall/VideoPage";
 
 export const route = [
   { path: "/login", element: <Login /> },
+  { path: "/forgot-password", element: <ForgotPassword /> },
   { path: "/signup", element: <Signup /> },
 
   {

@@ -207,3 +207,72 @@ export const verifyOtpAndSignup = async (req, res) => {
     return res.status(500).json({ success: false, message: "Signup failed" });
   }
 };
+
+// ----- Password reset (forgot password) -----
+export const sendResetOtp = async (req, res) => {
+  const { email } = req.body;
+  try {
+    if (!email) return res.status(400).json({ message: 'Email is required' });
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const key = `otp:reset:${email.toLowerCase()}`;
+    await redis.set(key, otp, 'EX', 300);
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    });
+
+    await transporter.sendMail({
+      from: `"Toonkidz" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'Mã OTP đặt lại mật khẩu',
+      text: `Mã OTP của bạn để đặt lại mật khẩu là: ${otp} (hết hạn sau 5 phút)`,
+    });
+
+    return res.json({ success: true, message: 'OTP sent' });
+  } catch (error) {
+    console.error('Error in sendResetOtp', error.message);
+    return res.status(500).json({ success: false, message: 'Failed to send OTP' });
+  }
+};
+
+export const verifyResetOtp = async (req, res) => {
+  const { email, otp } = req.body;
+  try {
+    if (!email || !otp) return res.status(400).json({ success: false, message: 'Missing fields' });
+    const key = `otp:reset:${email.toLowerCase()}`;
+    const stored = await redis.get(key);
+    if (!stored) return res.status(400).json({ success: false, message: 'OTP expired or invalid' });
+    if (stored.trim() !== otp.trim()) return res.status(400).json({ success: false, message: 'Incorrect OTP' });
+    return res.json({ success: true, message: 'OTP verified' });
+  } catch (error) {
+    console.error('Error in verifyResetOtp', error.message);
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  const { email, otp, newPassword } = req.body;
+  try {
+    if (!email || !otp || !newPassword) return res.status(400).json({ success: false, message: 'Missing fields' });
+    const key = `otp:reset:${email.toLowerCase()}`;
+    const stored = await redis.get(key);
+    if (!stored) return res.status(400).json({ success: false, message: 'OTP expired or invalid' });
+    if (stored.trim() !== otp.trim()) return res.status(400).json({ success: false, message: 'Incorrect OTP' });
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    user.password = newPassword;
+    await user.save();
+    await redis.del(key);
+
+    return res.json({ success: true, message: 'Password updated' });
+  } catch (error) {
+    console.error('Error in resetPassword', error.message);
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+};

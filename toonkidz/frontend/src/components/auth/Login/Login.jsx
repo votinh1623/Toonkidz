@@ -105,6 +105,9 @@ const Login = () => {
             {loading ? "Signing In..." : "Sign In"}
           </button>
         </form>
+        <div className="forgot-password-link">
+          <NavLink to="/forgot-password">Quên mật khẩu?</NavLink>
+        </div>
 
         <div className="signup-link">
           <span>Chưa có tài khoản? </span>

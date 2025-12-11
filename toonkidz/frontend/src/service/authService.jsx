@@ -17,3 +17,15 @@ export const sendOtp = async (data) => {
 export const verifyOtp = async (data) => {
   return await postPublic("auth/verify-otp", data);
 };
+
+export const sendResetOtp = async (data) => {
+  return await postPublic('auth/send-reset-otp', data);
+};
+
+export const verifyResetOtp = async (data) => {
+  return await postPublic('auth/verify-reset-otp', data);
+};
+
+export const resetPassword = async (data) => {
+  return await postPublic('auth/reset-password', data);
+};
