@@ -50,6 +50,11 @@ const lastMessageSchema = new mongoose.Schema(
     createdAt: {
       type: Date,
       default: null
+    },
+    messageType: {
+      type: String,
+      enum: ['text', 'shared_post', 'call', 'image'],
+      default: 'text'
     }
   },
   {

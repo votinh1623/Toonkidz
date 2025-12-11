@@ -17,6 +17,7 @@ import { getMessages, findOrCreateConversation } from '../../service/messageServ
 import { searchUsers } from '../../service/userService';
 import ReportModal from '../../components/ReportModal/ReportModal';
 import './Chat.scss';
+import '../../layout/LayoutDefault/CallModal.scss';
 
 const formatTimestamp = (dateString) => {
   if (!dateString) return '';
@@ -566,7 +567,7 @@ const Chat = () => {
                     <div className="convo-bottom">
                       <p className={`convo-last-message ${convo.unreadCount > 0 ? 'unread' : ''}`}>
                         {convo.lastMessage?.senderId === currentUser?._id ? "Bạn: " : ""}
-                        {convo.lastMessage?.messageType === 'call'
+                        {(convo.lastMessage?.messageType === 'call' || convo.lastMessage?.content === 'CALL_ENDED' || convo.lastMessage?.content === 'MISSED_CALL')
                           ? (convo.lastMessage.content === 'MISSED_CALL' ? '📞 Cuộc gọi nhỡ' : '📞 Cuộc gọi video')
                           : convo.lastMessage?.messageType === 'shared_post'
                             ? 'Đã chia sẻ một bài viết'
@@ -617,7 +618,7 @@ const Chat = () => {
                 messages.map(msg => {
                   const isMyMsg = msg.senderId._id === currentUser?._id;
                   let messageContent;
-                  if (msg.messageType === 'call') {
+                  if (msg.messageType === 'call' || msg.content === 'CALL_ENDED' || msg.content === 'MISSED_CALL') {
                     messageContent = (
                       <CallMessageSnippet
                         msg={msg}
@@ -735,24 +736,43 @@ const Chat = () => {
           targetName={selectedConvo.partner.name}
           onReported={() => { toast.success("Báo cáo người dùng thành công"); }}
         />
-      )}      <Modal
-        title="Đang gọi..."
+      )}
+      <Modal
+        title={null}
         open={isCalling}
         footer={null}
         closable={false}
         centered
+        width={360}
+        className="call-modal"
       >
-        <div style={{ textAlign: 'center' }}>
-          <img
-            src={selectedConvo?.partner?.pfp || 'default.png'}
-            style={{ width: 80, height: 80, borderRadius: '50%', marginBottom: 15 }}
-          />
-          <p>Đang chờ {selectedConvo?.partner?.name} trả lời...</p>
-          <Button danger onClick={() => {
-            setIsCalling(false);
-            socketRef.current.emit("reject-call", { callerId: currentUser._id });
-            performSendMessage("MISSED_CALL", "call");
-          }}>Hủy</Button>
+        <div className="call-modal-content">
+          <div className="avatar-container">
+            <img
+              src={selectedConvo?.partner?.pfp || 'https://via.placeholder.com/150'}
+              alt="Partner"
+              className="caller-avatar"
+            />
+            <div className="pulse-ring"></div>
+          </div>
+
+          <h3 className="caller-name">{selectedConvo?.partner?.name}</h3>
+          <p className="call-status">Đang gọi...</p>
+
+          <div className="call-actions">
+            <Button
+              shape="circle"
+              size="large"
+              className="action-btn reject-btn"
+              onClick={() => {
+                setIsCalling(false);
+                socketRef.current.emit("reject-call", { callerId: currentUser._id });
+                performSendMessage("MISSED_CALL", "call");
+              }}
+            >
+              <X size={28} />
+            </Button>
+          </div>
         </div>
       </Modal>
     </div>

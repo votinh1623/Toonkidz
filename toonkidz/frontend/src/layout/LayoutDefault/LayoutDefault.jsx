@@ -7,6 +7,8 @@ import { getProfile } from "../../service/userService.jsx";
 import { getConversations } from "../../service/messageService.jsx";
 import io from 'socket.io-client';
 import { Phone, X } from 'lucide-react';
+import "./LayoutDefault.scss";
+import "./CallModal.scss";
 
 const { Sider, Content } = Layout;
 const { useBreakpoint } = Grid;
@@ -266,37 +268,44 @@ const LayoutDefault = () => {
       </Layout>
 
       <Modal
-        title="Cuộc gọi đến!"
+        title={null}
         open={isIncomingCall}
         footer={null}
         closable={false}
         centered
-        zIndex={9999}
+        width={360}
+        className="call-modal"
       >
-        <div style={{ textAlign: 'center' }}>
-          <img
-            src={incomingCallData?.pfp || 'https://via.placeholder.com/150'}
-            style={{ width: 80, height: 80, borderRadius: '50%', marginBottom: 15, objectFit: 'cover' }}
-            alt="caller"
-          />
-          <h3>{incomingCallData?.name} đang gọi video...</h3>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 20 }}>
+        <div className="call-modal-content">
+          <div className="avatar-container">
+            <img
+              src={incomingCallData?.pfp || 'https://via.placeholder.com/150'}
+              alt="caller"
+              className="caller-avatar"
+            />
+            <div className="pulse-ring"></div>
+          </div>
+
+          <h3 className="caller-name">{incomingCallData?.name}</h3>
+          <p className="call-status">Đang gọi video cho bạn...</p>
+
+          <div className="call-actions">
             <Button
               shape="circle"
               size="large"
-              style={{ backgroundColor: 'green', color: 'white', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              className="action-btn accept-btn"
               onClick={handleAcceptCall}
             >
-              <Phone size={24} />
+              <Phone size={28} />
             </Button>
+
             <Button
               shape="circle"
               size="large"
-              danger
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              className="action-btn reject-btn"
               onClick={handleRejectCall}
             >
-              <X size={24} />
+              <X size={28} />
             </Button>
           </div>
         </div>
