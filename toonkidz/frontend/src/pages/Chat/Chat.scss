@@ -1,5 +1,5 @@
-// src/pages/Chat/Chat.scss
 @use "sass:color";
+
 $primary-color: #6c63ff;
 $hover-color: #f5edff;
 $border-color: #eef2f6;
@@ -289,9 +289,13 @@ $online-color: #2ecc71;
             color: white;
             border: none;
 
+            // --- SỬA LỖI TẠI ĐÂY ---
+            // Thay darken() bằng color.adjust()
             &:hover {
-              background: darken($primary-color, 10%);
+              background: color.adjust($primary-color, $lightness: -10%);
             }
+
+            // -----------------------
           }
 
           &:last-child {
