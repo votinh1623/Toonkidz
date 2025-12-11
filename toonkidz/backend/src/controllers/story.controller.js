@@ -143,7 +143,7 @@ YÊU CẦU BẮT BUỘC:
 5. Mỗi trang PHẢI có imagePrompt bằng tiếng Anh.
 6. PHẢI có coverImagePrompt bằng tiếng Anh.
 
-ĐỊNH DẠNG JSON BẮT BUỘC - KHÔNG ĐƯỢC THIẾU BẤT KỲ TRƯỜNG NÀO:
+ĐỊNH DẠNG JSON BẮT BUỘC - KHÔNG ĐƯỢC THIẾU BẤT KỲ TRƯỜNG NÀO, không được chứa "json" trong response, chỉ response với định dạng json:
 {
   "title": "Tiêu đề câu chuyện",
   "heading": "Tóm tắt ngắn gọn",
