@@ -1,6 +1,6 @@
 // src/pages/Admin/ReportingManagement/ReportingManagement.jsx
 import React, { useState, useEffect, useCallback } from "react";
-import { Table, Tag, Input, Space, Tooltip, Modal, message, Button, Select, Dropdown, Menu } from "antd";
+import { Table, Tag, Space, Tooltip, Modal, message, Select, Dropdown, Menu } from "antd";
 import { EyeOutlined, CheckCircleOutlined, StopOutlined, ClockCircleOutlined, DownOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { getAllReports, updateReportStatus, adminDeleteComment } from "../../../service/reportService";
@@ -235,22 +235,25 @@ const ReportingManagement = () => {
         <Space>
           <Tooltip title="Xem chi tiết">
             <span>
-              <Button className="action-btn view" icon={<EyeOutlined />} onClick={() => handleViewReport(record)} />
+              <button className="action-btn view" onClick={() => handleViewReport(record)}>
+                <EyeOutlined />
+              </button>
             </span>
           </Tooltip>
           <Dropdown overlay={<ActionMenu record={record} />}>
-            <Button className="action-btn edit">
+            <button className="action-btn edit">
               Cập nhật <DownOutlined />
-            </Button>
+            </button>
           </Dropdown>
           {record.targetType === 'Comment' && (
             <Tooltip title="Xóa nhanh bình luận">
               <span>
-                <Button
+                <button
                   className="action-btn delete"
-                  icon={<DeleteOutlined />}
                   onClick={() => handleQuickDeleteComment(record)}
-                />
+                >
+                  <DeleteOutlined />
+                </button>
               </span>
             </Tooltip>
           )}

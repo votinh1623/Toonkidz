@@ -3,19 +3,23 @@
   background-color: #fff;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  font-family: "Be Vietnam Pro", sans-serif;
+  transition: all 0.3s ease;
 
   &__header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 20px;
     flex-wrap: wrap;
-    gap: 16px;
     margin-bottom: 24px;
 
     h2 {
       margin: 0;
       font-size: 22px;
-      font-weight: 600;
+      font-weight: 700;
+      color: #1a1a1a;
+      white-space: nowrap;
     }
   }
 
@@ -23,9 +27,86 @@
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
+    align-items: center;
+    flex: 1;
+    justify-content: flex-end;
+  }
 
-    .filter-select {
-      width: 180px;
+  .search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 280px;
+
+    .search-input {
+      width: 100%;
+      height: 40px;
+      padding: 0 16px 0 38px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-family: "Be Vietnam Pro", sans-serif;
+      font-size: 14px;
+      color: #333;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      background-color: #fafafa;
+
+      &::placeholder {
+        color: #999;
+      }
+
+      &:hover {
+        border-color: #a663cc;
+        background-color: #fff;
+      }
+
+      &:focus {
+        outline: none;
+        border-color: #a663cc;
+        background-color: #fff;
+        box-shadow: 0 0 0 3px rgba(166, 99, 204, 0.1);
+      }
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      color: #a663cc;
+      font-size: 16px;
+      pointer-events: none;
+    }
+  }
+
+  .filter-select {
+    min-width: 180px;
+    font-family: "Be Vietnam Pro", sans-serif;
+
+    .ant-select-selector {
+      border-radius: 8px !important;
+      height: 40px !important;
+      border: 2px solid #e0e0e0 !important;
+      background-color: #fafafa !important;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+
+      .ant-select-selection-search-input,
+      .ant-select-selection-item,
+      .ant-select-selection-placeholder {
+        height: 40px !important;
+        line-height: 38px !important;
+        font-size: 14px;
+        font-family: "Be Vietnam Pro", sans-serif;
+      }
+    }
+
+    &:hover .ant-select-selector {
+      border-color: #a663cc !important;
+      background-color: #fff !important;
+    }
+
+    &.ant-select-focused .ant-select-selector {
+      border-color: #a663cc !important;
+      box-shadow: 0 0 0 3px rgba(166, 99, 204, 0.1) !important;
+      background-color: #fff !important;
     }
   }
 
@@ -34,41 +115,242 @@
     height: 32px;
     border-radius: 50%;
     object-fit: cover;
-    border: 1px solid #f0f0f0;
+    border: 2px solid #a663cc;
+    box-shadow: 0 2px 8px rgba(166, 99, 204, 0.2);
   }
 
   .action-btn {
-    border-radius: 6px;
-
-    &.view {
-      color: #1677ff;
-      border-color: #1677ff;
-
-      &:hover {
-        background: #f0f6ff;
-      }
-    }
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s ease;
+    font-size: 15px;
 
     &.edit {
-      color: #faad14;
-      border-color: #faad14;
+      background-color: #f1f8e9;
+      color: #43a047;
 
       &:hover {
-        background: #fffbe6;
+        background-color: #dcedc8;
       }
     }
 
     &.delete {
-      color: #ff4d4f;
-      border-color: #ff4d4f;
+      background-color: #fdecea;
+      color: #e53935;
 
       &:hover {
-        background: #fff1f0;
+        background-color: #ffcdd2;
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
       }
     }
   }
 
+  .ant-table-wrapper {
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #f0f0f0;
+  }
+
+  .ant-table-thead>tr>th {
+    background: #fafafa;
+    font-weight: 600;
+    color: #333;
+    font-family: "Be Vietnam Pro", sans-serif;
+  }
+
+  .ant-tag {
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+  }
+
   .ant-table-pagination.ant-pagination {
     margin-top: 24px;
+  }
+
+  .ant-modal-header {
+    border-bottom: 2px solid #f0f0f0;
+  }
+
+  .ant-modal-title {
+    font-family: "Be Vietnam Pro", sans-serif;
+    font-weight: 600;
+    color: #1a1a1a;
+    font-size: 16px;
+  }
+
+  .ant-form-item-label>label {
+    font-family: "Be Vietnam Pro", sans-serif;
+    font-weight: 500;
+    color: #333;
+  }
+
+  .ant-input,
+  .ant-select-selector {
+    font-family: "Be Vietnam Pro", sans-serif;
+  }
+
+  @media (max-width: 1200px) {
+    padding: 20px;
+
+    &__header {
+      flex-direction: column;
+      align-items: flex-start;
+
+      h2 {
+        width: 100%;
+      }
+    }
+
+    &__actions {
+      width: 100%;
+      justify-content: flex-start;
+    }
+
+    .search-wrapper {
+      max-width: none;
+      flex: 1;
+      min-width: 240px;
+    }
+
+    .filter-select {
+      min-width: 160px;
+    }
+  }
+
+  @media (max-width: 992px) {
+    &__actions {
+      gap: 10px;
+    }
+
+    .search-wrapper {
+      max-width: 200px;
+    }
+
+    .filter-select {
+      min-width: 140px;
+    }
+
+    .ant-table-wrapper {
+      font-size: 13px;
+    }
+
+    .ant-table-thead>tr>th {
+      padding: 12px 8px !important;
+    }
+
+    .ant-table-tbody>tr>td {
+      padding: 12px 8px !important;
+    }
+
+    .action-btn {
+      width: 32px;
+      height: 32px;
+      font-size: 13px;
+    }
+
+    .user-avatar-sm {
+      width: 28px;
+      height: 28px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 16px;
+
+    &__header {
+      h2 {
+        font-size: 18px;
+      }
+    }
+
+    &__actions {
+      width: 100%;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .search-wrapper {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .filter-select {
+      width: 100%;
+      min-width: auto;
+    }
+
+    .ant-table-wrapper {
+      font-size: 12px;
+      overflow-x: auto;
+    }
+
+    .ant-table-thead>tr>th,
+    .ant-table-tbody>tr>td {
+      padding: 10px 6px !important;
+    }
+
+    .action-btn {
+      width: 30px;
+      height: 30px;
+      font-size: 12px;
+    }
+
+    .user-avatar-sm {
+      width: 26px;
+      height: 26px;
+    }
+  }
+
+  @media (max-width: 576px) {
+    padding: 12px;
+
+    &__header {
+      h2 {
+        font-size: 16px;
+      }
+    }
+
+    .search-input {
+      font-size: 13px;
+      height: 36px;
+    }
+
+    .filter-select {
+      .ant-select-selector {
+        height: 36px !important;
+      }
+    }
+
+    .ant-table-wrapper {
+      font-size: 11px;
+    }
+
+    .ant-tag {
+      font-size: 10px;
+      padding: 2px 8px;
+    }
+
+    .action-btn {
+      width: 28px;
+      height: 28px;
+      font-size: 11px;
+    }
+
+    .user-avatar-sm {
+      width: 24px;
+      height: 24px;
+    }
   }
 }

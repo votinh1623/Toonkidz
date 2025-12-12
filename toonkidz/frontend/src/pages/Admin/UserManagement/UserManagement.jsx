@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Table, Tag, Input, Space, Tooltip, Modal, message, Button, Select, Switch, Form } from "antd";
-import { EditOutlined, DeleteOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
+import { Table, Tag, Space, Tooltip, Modal, message, Form, Select, Switch, Button, Input } from "antd";
+import { EditOutlined, DeleteOutlined, SearchOutlined } from "@ant-design/icons";
 import { getAllUsers, adminUpdateUser, adminDeactivateUser } from "../../../service/userService";
 import { useDebounce } from "../../../hooks/useDebounce";
 import Swal from 'sweetalert2/dist/sweetalert2.js';
@@ -181,6 +181,21 @@ const UserManagement = () => {
       <div className="user-management__header">
         <h2>Quản lý người dùng</h2>
         <div className="user-management__actions">
+          <div className="search-wrapper">
+            <input
+              type="text"
+              placeholder="Tìm kiếm theo tên, email..."
+              className="search-input"
+              value={filters.search}
+              onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  setPagination(p => ({ ...p, current: 1 }));
+                }
+              }}
+            />
+            <SearchOutlined className="search-icon" />
+          </div>
           <Select
             className="filter-select"
             placeholder="Lọc theo quyền"
@@ -188,14 +203,6 @@ const UserManagement = () => {
             allowClear
             options={Object.keys(roleMap).map(key => ({ value: key, label: roleMap[key].text }))}
             value={filters.role}
-          />
-          <Input.Search
-            placeholder="Tìm kiếm theo tên, email..."
-            value={filters.search}
-            onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-            onSearch={() => setPagination(p => ({ ...p, current: 1 }))}
-            style={{ width: 250 }}
-            enterButton
           />
         </div>
       </div>
