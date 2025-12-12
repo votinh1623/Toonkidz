@@ -7,6 +7,7 @@ import "./EditStory.scss";
 import { getStoryById, updateStory } from "../../service/storyService";
 import Swal from 'sweetalert2/dist/sweetalert2.js'
 import 'sweetalert2/src/sweetalert2.scss'
+import { toast } from "sonner";
 
 const EditStory = () => {
   const { storyId } = useParams();
@@ -99,7 +100,6 @@ const EditStory = () => {
         return p;
       }));
     } else if (editingPage && fileList.length === 0) {
-      // Handle file removal
       setPages(pages.map(p => {
         if (p.key === editingPage.key) {
           return {
@@ -124,7 +124,6 @@ const EditStory = () => {
       };
 
       if (editingPage) {
-        // The state is already updated, we just close the modal
         message.success("Đã cập nhật trang!");
       } else {
         const newPage = { ...pageData, key: Date.now() };
@@ -162,7 +161,7 @@ const EditStory = () => {
       const pagesData = pages.map(p => ({
         _id: p._id,
         content: p.content,
-        image: p.img && !p.img.startsWith('blob:') ? p.img : null, // Send old URL, not blob
+        image: p.img && !p.img.startsWith('blob:') ? p.img : null,
         audio: p.audio && !p.audio.startsWith('blob:') ? p.audio : null,
       }));
       formData.append("pages", JSON.stringify(pagesData));
@@ -216,7 +215,6 @@ const EditStory = () => {
         </Button>
       </div>
       <Form layout="vertical" form={form} onFinish={handleSubmit} className="add-story__form">
-        {/* Form Items */}
         <Form.Item label="Tiêu đề" name="title" rules={[{ required: true }]}>
           <Input placeholder="Nhập tiêu đề truyện..." />
         </Form.Item>
@@ -297,13 +295,11 @@ const EditStory = () => {
             <Input.TextArea rows={4} />
           </Form.Item>
           <Form.Item label="Ảnh" name="img">
-            {/* ✅ FIX: Call the new handler function on change */}
             <Upload beforeUpload={() => false} listType="picture" maxCount={1} fileList={pageImage} onChange={({ fileList }) => handlePageFileChange(fileList, 'image')}>
               <Button icon={<FileImageOutlined />}>Chọn hoặc thay đổi ảnh</Button>
             </Upload>
           </Form.Item>
           <Form.Item label="Audio" name="audio">
-            {/* ✅ FIX: Call the new handler function on change */}
             <Upload beforeUpload={() => false} maxCount={1} fileList={pageAudio} onChange={({ fileList }) => handlePageFileChange(fileList, 'audio')}>
               <Button icon={<AudioOutlined />}>Tải hoặc thay đổi âm thanh</Button>
             </Upload>

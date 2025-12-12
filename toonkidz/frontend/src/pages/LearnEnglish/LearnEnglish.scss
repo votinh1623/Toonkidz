@@ -2,7 +2,7 @@
   padding: 20px;
   background: #fff;
   min-height: 100vh;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Be Vietnam Pro", sans-serif;
 
   // Hero Section
   .hero-section {
@@ -46,7 +46,7 @@
         padding: 10px 22px;
         border-radius: 10px;
         border: none;
-        font-family: 'Poppins', sans-serif;
+        font-family: "Be Vietnam Pro", sans-serif;
         cursor: pointer;
         transition: all 0.3s ease-in-out;
         animation-delay: 0.6s;
@@ -90,7 +90,7 @@
       border-radius: 15px;
       padding: 30px 20px;
       text-align: center;
-      font-family: 'Poppins', sans-serif;
+      font-family: "Be Vietnam Pro", sans-serif;
       box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
       transition: transform 0.3s ease, box-shadow 0.3s ease;
       display: flex;
@@ -140,14 +140,16 @@
         .stat-value {
           font-size: 28px;
           font-weight: 700;
-          
-          .stat-card:nth-child(1) & { 
+
+          .stat-card:nth-child(1) & {
             color: rgb(244, 167, 104);
           }
-          .stat-card:nth-child(2) & { 
+
+          .stat-card:nth-child(2) & {
             color: rgb(38, 109, 179);
           }
-          .stat-card:nth-child(3) & { 
+
+          .stat-card:nth-child(3) & {
             color: rgb(195, 161, 58);
           }
         }
@@ -174,7 +176,7 @@
         font-weight: 500;
         cursor: pointer;
         transition: all 0.3s ease;
-        font-family: 'Poppins', sans-serif;
+        font-family: "Be Vietnam Pro", sans-serif;
         color: #333;
 
         &.active {
@@ -363,7 +365,7 @@
         font-weight: 600;
         cursor: pointer;
         transition: all 0.3s ease;
-        font-family: 'Poppins', sans-serif;
+        font-family: "Be Vietnam Pro", sans-serif;
         font-size: 14px;
 
         &:hover {
@@ -437,16 +439,16 @@
 
     .stats-overview {
       grid-template-columns: 1fr;
-      
+
       .stat-card {
         padding: 20px 15px;
-        
+
         .stat-icon {
           width: 50px;
           height: 50px;
           font-size: 20px;
         }
-        
+
         .stat-value {
           font-size: 24px;
         }
@@ -466,7 +468,7 @@
 
     .story-card {
       padding: 15px;
-      
+
       .story-meta-section {
         flex-direction: column;
         gap: 10px;

@@ -1,43 +1,50 @@
 // src/pages/Admin/FeedbackManagement/FeedbackManagement.jsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, Table, Tag, Typography, Button, Space, Input, Modal, Form, message, Tooltip, Spin } from 'antd';
+import { Table, Tag, Space, Tooltip, Modal, Form, message, Button, Input } from 'antd';
 import { CheckCircleOutlined, MailOutlined, SendOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { getAllFeedback, replyToFeedback } from '../../../service/feedbackService';
+import Swal from 'sweetalert2';
 import './FeedbackManagement.scss';
 
-const { Title } = Typography;
+const statusMap = {
+  pending: { text: 'Chờ xử lý', color: 'orange' },
+  resolved: { text: 'Đã phản hồi', color: 'green' },
+};
 
 const FeedbackManagement = () => {
   const [feedback, setFeedback] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [pagination, setPagination] = useState({ current: 1, pageSize: 5, total: 0 });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [form] = Form.useForm();
-
   const [isSendingReply, setIsSendingReply] = useState(false);
 
   const fetchFeedback = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await getAllFeedback();
+      const res = await getAllFeedback(pagination.current, pagination.pageSize);
       if (res.success) {
-        setFeedback(res.feedback);
+        setFeedback(res.feedback || []);
+        setPagination(prev => ({
+          ...prev,
+          total: res.total || res.feedback?.length || 0,
+        }));
       } else {
-        message.error(res.error || "Không thể tải danh sách phản hồi.");
+        message.error(res.error || 'Không thể tải danh sách phản hồi.');
       }
     } catch (error) {
-      message.error("Lỗi kết nối khi tải dữ liệu.");
+      message.error('Lỗi kết nối khi tải dữ liệu.');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [pagination.current, pagination.pageSize]);
 
   useEffect(() => {
     fetchFeedback();
   }, [fetchFeedback]);
-
 
   const handleViewAndReply = (record) => {
     setSelectedRequest(record);
@@ -49,29 +56,40 @@ const FeedbackManagement = () => {
     if (!selectedRequest || selectedRequest.status === 'resolved') return;
 
     setIsSendingReply(true);
-    message.loading({ content: 'Đang gửi phản hồi...', key: 'sendKey' });
 
     try {
       const res = await replyToFeedback(selectedRequest._id, values.replyContent);
 
       if (res.success) {
-        setFeedback(prev => prev.map(f =>
-          f._id === selectedRequest._id ? { ...f, status: 'resolved', adminReply: { text: values.replyContent, repliedAt: new Date() } } : f
-        ));
+        setFeedback(prev =>
+          prev.map(f =>
+            f._id === selectedRequest._id
+              ? {
+                ...f,
+                status: 'resolved',
+                adminReply: { text: values.replyContent, repliedAt: new Date() },
+              }
+              : f
+          )
+        );
 
-        message.success({ content: `Đã gửi phản hồi đến ${selectedRequest.senderEmail}!`, key: 'sendKey', duration: 3 });
+        Swal.fire({
+          title: 'Thành công!',
+          html: `Đã gửi phản hồi đến <strong>${selectedRequest.senderEmail}</strong>`,
+          icon: 'success',
+          confirmButtonText: 'OK',
+        });
+
         setIsModalOpen(false);
-
       } else {
-        message.error({ content: res.error || 'Gửi phản hồi thất bại.', key: 'sendKey' });
+        message.error(res.error || 'Gửi phản hồi thất bại.');
       }
     } catch (error) {
-      message.error({ content: 'Lỗi gửi phản hồi server.', key: 'sendKey' });
+      message.error('Lỗi gửi phản hồi server.');
     } finally {
       setIsSendingReply(false);
     }
   };
-
 
   const columns = [
     {
@@ -81,15 +99,16 @@ const FeedbackManagement = () => {
       render: (text, record) => (
         <Space direction="vertical" size={0}>
           <strong>{text}</strong>
-          <span style={{ fontSize: '0.8rem', color: '#666' }}>{record.senderEmail}</span>
+          <span className="sender-email">{record.senderEmail}</span>
         </Space>
-      )
+      ),
     },
     {
       title: 'Nội dung',
       dataIndex: 'content',
       key: 'content',
       ellipsis: true,
+      render: (text) => <span className="content-snippet">{text}</span>,
     },
     {
       title: 'Thời gian',
@@ -103,45 +122,55 @@ const FeedbackManagement = () => {
       dataIndex: 'status',
       key: 'status',
       width: 120,
-      render: (status) => (
-        <Tag color={status === 'resolved' ? 'green' : 'red'}>
-          {status === 'resolved' ? 'Đã phản hồi' : 'Chờ xử lý'}
-        </Tag>
-      )
+      render: (status) => {
+        const statusInfo = statusMap[status] || { text: status, color: 'default' };
+        return <Tag color={statusInfo.color}>{statusInfo.text}</Tag>;
+      },
     },
     {
       title: 'Thao tác',
       key: 'actions',
-      width: 100,
+      width: 80,
       render: (text, record) => (
-        <>
-          <Tooltip title={record.status === 'resolved' ? 'Xem chi tiết' : 'Phản hồi ngay'}>
-            <Button
-              type="primary"
-              icon={record.status === 'resolved' ? <CheckCircleOutlined /> : <MailOutlined />}
-              onClick={() => handleViewAndReply(record)}
-              disabled={record.status === 'resolved'}
-            />
-          </Tooltip>
-        </>
-      )
-    }
+        <Tooltip title={record.status === 'resolved' ? 'Xem chi tiết' : 'Phản hồi'}>
+          <Button
+            className="action-btn reply"
+            icon={record.status === 'resolved' ? <CheckCircleOutlined /> : <MailOutlined />}
+            onClick={() => handleViewAndReply(record)}
+            disabled={record.status === 'resolved'}
+          />
+        </Tooltip>
+      ),
+    },
   ];
 
   return (
     <div className="feedback-management">
-      <Title level={2}>Quản lý Phản hồi Khách</Title>
-      <p>Phản hồi được gửi từ cửa sổ chat nổi trên trang Đăng nhập.</p>
+      <div className="feedback-management__header">
+        <h2>Quản lý Phản hồi Khách</h2>
+        <p className="feedback-description">Phản hồi được gửi từ cửa sổ chat nổi trên trang Đăng nhập.</p>
+      </div>
 
-      <Card className="feedback-table-card">
+      <div className="feedback-management__table-container">
         <Table
           columns={columns}
           dataSource={feedback}
           rowKey="_id"
           loading={loading}
-          pagination={{ pageSize: 10 }}
+          pagination={{
+            current: pagination.current,
+            pageSize: pagination.pageSize,
+            total: pagination.total,
+            onChange: (page, pageSize) => {
+              setPagination(prev => ({
+                ...prev,
+                current: page,
+                pageSize: pageSize,
+              }));
+            },
+          }}
         />
-      </Card>
+      </div>
 
       <Modal
         title={`Phản hồi yêu cầu: ${selectedRequest?.senderName}`}
@@ -149,14 +178,21 @@ const FeedbackManagement = () => {
         onCancel={() => setIsModalOpen(false)}
         footer={null}
         width={600}
+        className="feedback-modal"
       >
         {selectedRequest && (
           <div className="reply-modal-content">
-            <p><strong>Email:</strong> {selectedRequest.senderEmail}</p>
-            <p><strong>Nội dung:</strong></p>
-            <Card className="content-box">
-              {selectedRequest.content}
-            </Card>
+            <div className="modal-info-item">
+              <label>Email:</label>
+              <p>{selectedRequest.senderEmail}</p>
+            </div>
+
+            <div className="modal-info-item">
+              <label>Nội dung Phản hồi:</label>
+              <div className="content-box">
+                {selectedRequest.content}
+              </div>
+            </div>
 
             <Form form={form} layout="vertical" onFinish={handleSendReply}>
               <Form.Item
@@ -182,6 +218,7 @@ const FeedbackManagement = () => {
                 block
                 disabled={selectedRequest.status === 'resolved' || isSendingReply}
                 loading={isSendingReply}
+                className="submit-btn"
               >
                 {selectedRequest.status === 'resolved' ? 'Đã gửi Email Phản hồi' : 'Gửi Email Phản hồi'}
               </Button>

@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import Swal from "sweetalert2";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Modal, Input, Button, Spin } from "antd";
 import { sendOtp, verifyOtp } from "@/service/authService";
@@ -35,16 +34,20 @@ const Signup = () => {
     try {
       setLoading(true);
       const res = await sendOtp({ name, email, password });
-      if (res.success) {
+
+      if (res && (res.success || res.message === "OTP sent successfully")) {
         toast.success("Đã gửi mã OTP tới email của bạn!");
         setIsModalVisible(true);
-      } else if (res.message === "User already exists") {
-        toast.error("Email đã được sử dụng!");
-      } else {
-        toast.error(res.message || "Lỗi khi gửi OTP, vui lòng thử lại!");
       }
     } catch (err) {
-      toast.error("Lỗi khi gửi OTP!");
+      console.error("Lỗi gửi OTP:", err);
+      const errorMessage = err.message || err.response?.data?.message;
+
+      if (errorMessage === "Email already registered") {
+        toast.error("Email này đã được sử dụng!");
+      } else {
+        toast.error(errorMessage || "Lỗi khi gửi OTP, vui lòng thử lại!");
+      }
     } finally {
       setLoading(false);
     }
@@ -80,7 +83,6 @@ const Signup = () => {
 
   return (
     <div className="signup-container">
-      <ToastContainer position="top-right" autoClose={2000} />
       <div className="signup-card">
         <h2>Tạo tài khoản</h2>
 

@@ -1,7 +1,7 @@
 // src/pages/Admin/StoryManagement/StoryManagement.jsx
 import React, { useState, useEffect, useCallback } from "react";
-import { Table, Tag, Input, Space, Tooltip, Modal, message, Button, Select } from "antd";
-import { EyeOutlined, EditOutlined, DeleteOutlined, PlusOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
+import { Table, Tag, Space, Tooltip, Modal, message, Select, Button } from "antd";
+import { EyeOutlined, EditOutlined, DeleteOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { getStories, deleteStoryById } from "../../../service/storyService";
 import { useDebounce } from "../../../hooks/useDebounce";
@@ -188,7 +188,6 @@ const StoryManagement = () => {
       render: (text, record) => (
         <Space>
           <Tooltip title="Xem chi tiết">
-            {/* ✅ FIX: Bọc Button bằng <span> */}
             <span>
               <Button className="action-btn view" icon={<EyeOutlined />} onClick={() => handleViewStory(record)} />
             </span>
@@ -213,6 +212,22 @@ const StoryManagement = () => {
       <div className="story-management__header">
         <h2>Quản lý truyện</h2>
         <div className="story-management__actions">
+          <div className="search-wrapper">
+            <input
+              id="search-input"
+              type="text"
+              placeholder="Tìm kiếm theo tiêu đề..."
+              className="search-input"
+              value={filters.search}
+              onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  setPagination(p => ({ ...p, current: 1 }));
+                }
+              }}
+            />
+            <SearchOutlined className="search-icon" />
+          </div>
           <Select
             className="filter-select"
             placeholder="Lọc theo trạng thái"
@@ -229,17 +244,9 @@ const StoryManagement = () => {
             options={themeOptions}
             value={filters.theme}
           />
-          <Input.Search
-            placeholder="Tìm kiếm theo tiêu đề..."
-            value={filters.search}
-            onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-            onSearch={() => setPagination(p => ({ ...p, current: 1 }))}
-            style={{ width: 250 }}
-            enterButton
-          />
-          <Button className="btn-add" onClick={() => navigate("/admin/stories-management/add")}>
+          <button className="btn-add" onClick={() => navigate("/admin/stories-management/add")}>
             <PlusOutlined /> Thêm mới
-          </Button>
+          </button>
         </div>
       </div>
 

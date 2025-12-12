@@ -1,4 +1,3 @@
-// backend/src/controllers/auth.controller.js
 import User from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import redis from "../lib/redis.js";
@@ -23,7 +22,7 @@ const setCookies = (res, accessToken, refreshToken) => {
     httpOnly: false,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: 60 * 60 * 1000, //set access time
+    maxAge: 60 * 60 * 1000,
   });
   res.cookie("refreshToken", refreshToken, {
     httpOnly: false,
@@ -36,7 +35,10 @@ const setCookies = (res, accessToken, refreshToken) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
+
+    const normalizedEmail = email ? email.trim().toLowerCase() : "";
+
+    const user = await User.findOne({ email: normalizedEmail });
 
     if (user && (await user.comparePassword(password))) {
       if (!user.isActive) {
@@ -117,12 +119,18 @@ export const sendOtp = async (req, res) => {
     if (!email) {
       return res.status(400).json({ message: "Email is required" });
     }
-    const userExists = await User.findOne({ email: email.toLowerCase() });
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const userExists = await User.findOne({ email: normalizedEmail });
+
     if (userExists) {
+      console.log(`[SendOTP] Email ${normalizedEmail} already registered.`);
       return res.status(400).json({ message: "Email already registered" });
     }
+
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const key = `otp:${email.toLowerCase()}`;
+    const key = `otp:${normalizedEmail}`;
     await redis.set(key, otp, "EX", 300);
     console.log("Stored OTP:", await redis.get(key));
 
@@ -136,7 +144,7 @@ export const sendOtp = async (req, res) => {
 
     await transporter.sendMail({
       from: `"Toonkidz" <${process.env.EMAIL_USER}>`,
-      to: email,
+      to: normalizedEmail,
       subject: "Mã xác thực đăng ký (OTP)",
       text: `Mã OTP của bạn là: ${otp} (hết hạn sau 5 phút)`,
     });
@@ -146,8 +154,8 @@ export const sendOtp = async (req, res) => {
       message: "OTP sent successfully"
     });
   } catch (error) {
-    console.error("Error sending OTP:", error.message);
-    res.status(500).json({ message: "Failed to send OTP" });
+    console.error("Error sending OTP:", error);
+    res.status(500).json({ message: "Failed to send OTP", error: error.message });
   }
 };
 
@@ -160,8 +168,9 @@ export const verifyOtpAndSignup = async (req, res) => {
       console.log("Missing fields");
       return res.status(400).json({ success: false, message: "Missing required fields" });
     }
+    const normalizedEmail = email.trim().toLowerCase();
 
-    const key = `otp:${email.toLowerCase()}`;
+    const key = `otp:${normalizedEmail}`;
     const storedOtp = await redis.get(key);
     console.log("Stored OTP in Redis:", storedOtp);
     console.log("Received OTP from frontend:", otp);
@@ -175,14 +184,14 @@ export const verifyOtpAndSignup = async (req, res) => {
       return res.status(400).json({ success: false, message: "Incorrect OTP" });
     }
 
-    const userExists = await User.findOne({ email: email.toLowerCase() });
+    const userExists = await User.findOne({ email: normalizedEmail });
     if (userExists) {
       return res.status(400).json({ success: false, message: "Email already registered" });
     }
 
     const user = await User.create({
-      name,
-      email: email.toLowerCase(),
+      name: name.trim(),
+      email: normalizedEmail,
       password,
     });
 
@@ -208,16 +217,18 @@ export const verifyOtpAndSignup = async (req, res) => {
   }
 };
 
-// ----- Password reset (forgot password) -----
 export const sendResetOtp = async (req, res) => {
   const { email } = req.body;
   try {
     if (!email) return res.status(400).json({ message: 'Email is required' });
-    const user = await User.findOne({ email: email.toLowerCase() });
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const key = `otp:reset:${email.toLowerCase()}`;
+    const key = `otp:reset:${normalizedEmail}`;
     await redis.set(key, otp, 'EX', 300);
 
     const transporter = nodemailer.createTransport({
@@ -227,7 +238,7 @@ export const sendResetOtp = async (req, res) => {
 
     await transporter.sendMail({
       from: `"Toonkidz" <${process.env.EMAIL_USER}>`,
-      to: email,
+      to: normalizedEmail,
       subject: 'Mã OTP đặt lại mật khẩu',
       text: `Mã OTP của bạn để đặt lại mật khẩu là: ${otp} (hết hạn sau 5 phút)`,
     });
@@ -243,7 +254,10 @@ export const verifyResetOtp = async (req, res) => {
   const { email, otp } = req.body;
   try {
     if (!email || !otp) return res.status(400).json({ success: false, message: 'Missing fields' });
-    const key = `otp:reset:${email.toLowerCase()}`;
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const key = `otp:reset:${normalizedEmail}`;
+
     const stored = await redis.get(key);
     if (!stored) return res.status(400).json({ success: false, message: 'OTP expired or invalid' });
     if (stored.trim() !== otp.trim()) return res.status(400).json({ success: false, message: 'Incorrect OTP' });
@@ -258,12 +272,15 @@ export const resetPassword = async (req, res) => {
   const { email, otp, newPassword } = req.body;
   try {
     if (!email || !otp || !newPassword) return res.status(400).json({ success: false, message: 'Missing fields' });
-    const key = `otp:reset:${email.toLowerCase()}`;
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const key = `otp:reset:${normalizedEmail}`;
+
     const stored = await redis.get(key);
     if (!stored) return res.status(400).json({ success: false, message: 'OTP expired or invalid' });
     if (stored.trim() !== otp.trim()) return res.status(400).json({ success: false, message: 'Incorrect OTP' });
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
     user.password = newPassword;
