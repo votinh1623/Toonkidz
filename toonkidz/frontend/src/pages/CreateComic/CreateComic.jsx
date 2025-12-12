@@ -12,7 +12,7 @@ const CreateComic = () => {
   const [loading, setLoading] = useState(false);
   const [generatedStory, setGeneratedStory] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [suggestedKeywords, setSuggestedKeywords] = useState({ 
+  const [suggestedKeywords, setSuggestedKeywords] = useState({
     vietnamese: { easy: [], medium: [], hard: [] },
     english: { easy: [], medium: [], hard: [] }
   });
@@ -46,16 +46,14 @@ const CreateComic = () => {
     { value: '9-12', label: '9-12 tuổi', description: 'Truyện dài, nội dung phong phú' }
   ];
 
-  // Fetch danh sách voices từ backend
   const fetchAvailableVoices = async () => {
     setVoicesLoading(true);
     try {
       const response = await axios.get('/api/voices/vi');
-      
+
       if (response.data.success && response.data.voices) {
         setAvailableVoices(response.data.voices);
-        
-        // Set voice mặc định nếu có
+
         if (response.data.count > 0 && !formData.selectedVoice) {
           const firstVoice = Object.keys(response.data.voices)[0];
           handleInputChange('selectedVoice', firstVoice);
@@ -69,16 +67,14 @@ const CreateComic = () => {
     }
   };
 
-  // Load voices khi component mount
   useEffect(() => {
     fetchAvailableVoices();
   }, []);
 
-  // Lấy gợi ý từ khóa từ backend khi thể loại thay đổi
   useEffect(() => {
     const fetchSuggestedKeywords = async () => {
       if (!selectedGenre) {
-        setSuggestedKeywords({ 
+        setSuggestedKeywords({
           vietnamese: { easy: [], medium: [], hard: [] },
           english: { easy: [], medium: [], hard: [] }
         });
@@ -87,7 +83,7 @@ const CreateComic = () => {
 
       try {
         const response = await axios.get(`/api/themes/${selectedGenre}/keywords`);
-        
+
         if (response.data.words) {
           setSuggestedKeywords(response.data.words);
         }
@@ -125,7 +121,6 @@ const CreateComic = () => {
     }));
   };
 
-  // Thử nghiệm giọng đọc
   const testVoice = async (voiceId = formData.selectedVoice) => {
     if (!voiceId) {
       message.warning('Vui lòng chọn giọng đọc trước');
@@ -145,19 +140,19 @@ const CreateComic = () => {
 
       const audioUrl = URL.createObjectURL(response.data);
       const audio = new Audio(audioUrl);
-      
+
       audio.onended = () => {
         setAudioPlaying(false);
         URL.revokeObjectURL(audioUrl);
       };
-      
+
       audio.onerror = () => {
         setAudioPlaying(false);
         URL.revokeObjectURL(audioUrl);
       };
-      
+
       await audio.play();
-      
+
     } catch (error) {
       setAudioPlaying(false);
       message.error('Không thể thử nghiệm giọng đọc');
@@ -240,13 +235,12 @@ const CreateComic = () => {
     generateStory();
   };
 
-  // Refresh keywords
   const refreshKeywords = async () => {
     if (!selectedGenre) return;
-    
+
     try {
       const response = await axios.get(`/api/themes/${selectedGenre}/keywords`);
-      
+
       if (response.data.words) {
         setSuggestedKeywords(response.data.words);
         setSelectedKeywords([]);
@@ -257,12 +251,10 @@ const CreateComic = () => {
     }
   };
 
-  // Refresh voices
   const refreshVoices = async () => {
     await fetchAvailableVoices();
   };
 
-  // Render voice cards
   const renderVoiceCards = () => {
     if (voicesLoading) {
       return (
@@ -302,13 +294,13 @@ const CreateComic = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="voice-description">
             {voiceInfo.description}
           </div>
-          
+
           <div className="voice-actions">
-            <Button 
+            <Button
               size="small"
               onClick={(e) => {
                 e.stopPropagation();
@@ -330,11 +322,34 @@ const CreateComic = () => {
         <div className="create-comic__header">
           <h1>TOON KIDZ</h1>
           <h2>Tạo truyện AI</h2>
+          <div className="header-description">
+            <p className="description-text">
+              Sáng tạo những câu chuyện kỳ diệu cho con em bạn bằng sức mạnh của AI.
+              Chỉ cần vài bước đơn giản, bạn sẽ có một truyện tranh đầy đủ với hình ảnh,
+              nội dung và audio đọc chuyên nghiệp.
+            </p>
+            <div className="guides">
+              <div className="guide-item">
+                <div className="guide-icon">🎨</div>
+                <div className="guide-title">Chọn Thể Loại</div>
+                <div className="guide-text">Lựa chọn từ 6 thể loại truyện phong phú phù hợp với sở thích của bé</div>
+              </div>
+              <div className="guide-item">
+                <div className="guide-icon">⚙️</div>
+                <div className="guide-title">Tuỳ Chỉnh Chi Tiết</div>
+                <div className="guide-text">Chọn độ tuổi, từ khóa, độ dài truyện và giọng đọc yêu thích</div>
+              </div>
+              <div className="guide-item">
+                <div className="guide-icon">✨</div>
+                <div className="guide-title">Tạo & Xuất Bản</div>
+                <div className="guide-text">Xem trước, chỉnh sửa và xuất bản truyện của bạn trong vài giây</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="create-comic__main">
           <div className="create-comic__main__left">
-            {/* Genre Selection */}
             <div className="create-comic__section">
               <h2>Chọn thể loại truyện</h2>
               <div className="genre-grid">
@@ -351,7 +366,6 @@ const CreateComic = () => {
               </div>
             </div>
 
-            {/* Story Settings */}
             <div className="create-comic__section">
               <h2>Cài đặt truyện</h2>
 
@@ -359,15 +373,14 @@ const CreateComic = () => {
                 <div className="setting-group">
                   <div className="keywords-header">
                     <label>Từ khóa gợi ý cho {genres.find(g => g.id === selectedGenre)?.label}:</label>
-                    <Button 
-                      size="small" 
+                    <Button
+                      size="small"
                       onClick={refreshKeywords}
                     >
                       Làm mới
                     </Button>
                   </div>
-                  
-                  {/* Từ khóa theo cấp độ */}
+
                   {suggestedKeywords.vietnamese.easy.length > 0 && (
                     <div className="keyword-section">
                       <div className="keyword-section-title">
@@ -428,7 +441,6 @@ const CreateComic = () => {
                     </div>
                   )}
 
-                  {/* Hiển thị từ khóa đã chọn */}
                   {selectedKeywords.length > 0 && (
                     <div className="selected-keywords-info">
                       <div className="selected-count">
@@ -436,10 +448,10 @@ const CreateComic = () => {
                       </div>
                       <div className="selected-list">
                         {selectedKeywords.map(keyword => (
-                          <Tag 
-                            key={keyword} 
-                            color="purple" 
-                            closable 
+                          <Tag
+                            key={keyword}
+                            color="purple"
+                            closable
                             onClose={() => handleKeywordSelect(keyword)}
                           >
                             {keyword}
@@ -482,7 +494,6 @@ const CreateComic = () => {
                 </div>
               </div>
 
-              {/* Audio Settings */}
               <div className="setting-group">
                 <div className="audio-checkbox">
                   <Checkbox
@@ -492,25 +503,24 @@ const CreateComic = () => {
                     <span className="audio-label">Thêm audio đọc truyện</span>
                   </Checkbox>
                 </div>
-                
+
                 {formData.addAudio && (
                   <div className="voice-selection-section">
                     <div className="section-header">
                       <div className="section-title">Chọn giọng đọc:</div>
-                      <Button 
-                        size="small" 
+                      <Button
+                        size="small"
                         onClick={refreshVoices}
                         loading={voicesLoading}
                       >
                         Làm mới
                       </Button>
                     </div>
-                    
+
                     <div className="voice-cards-grid">
                       {renderVoiceCards()}
                     </div>
-                    
-                    {/* Selected voice info */}
+
                     {formData.selectedVoice && availableVoices[formData.selectedVoice] && (
                       <div className="selected-voice-info">
                         <div className="selected-voice-badge">
@@ -547,7 +557,6 @@ const CreateComic = () => {
             </div>
           </div>
 
-          {/* Preview Panel */}
           <div className="create-comic__preview">
             <div className="preview-card">
               <h3>Xem trước</h3>
@@ -555,9 +564,9 @@ const CreateComic = () => {
               {generatedStory ? (
                 <div className="preview-content">
                   <div className="preview-cover">
-                    <img 
-                      src={generatedStory.coverImage || '/default-cover.jpg'} 
-                      alt={generatedStory.title} 
+                    <img
+                      src={generatedStory.coverImage || '/default-cover.jpg'}
+                      alt={generatedStory.title}
                       onError={(e) => {
                         e.target.src = '/default-cover.jpg';
                       }}
@@ -591,7 +600,6 @@ const CreateComic = () => {
               )}
             </div>
 
-            {/* Quick Stats */}
             <div className="stats-card">
               <h4>Thống kê</h4>
               <div className="stats-grid">
@@ -618,7 +626,6 @@ const CreateComic = () => {
         </div>
       </div>
 
-      {/* Preview Modal */}
       <Modal
         title="Xem trước truyện"
         open={previewModalOpen}
@@ -629,8 +636,8 @@ const CreateComic = () => {
         {generatedStory && (
           <div className="preview-modal-content">
             <div className="preview-header">
-              <img 
-                src={generatedStory.coverImage || '/default-cover.jpg'} 
+              <img
+                src={generatedStory.coverImage || '/default-cover.jpg'}
                 alt={generatedStory.title}
                 onError={(e) => {
                   e.target.src = '/default-cover.jpg';
@@ -654,8 +661,8 @@ const CreateComic = () => {
                   <div key={index} className="page-preview">
                     <div className="page-number">Trang {page.pageNumber || index + 1}</div>
                     <div className="page-image">
-                      <img 
-                        src={page.image || '/default-page.jpg'} 
+                      <img
+                        src={page.image || '/default-page.jpg'}
                         alt={`Page ${page.pageNumber || index + 1}`}
                         onError={(e) => {
                           e.target.src = '/default-page.jpg';
@@ -667,10 +674,10 @@ const CreateComic = () => {
                     </div>
                   </div>
                 )) || (
-                  <div className="no-pages">
-                    <p>Chưa có nội dung trang nào được tạo.</p>
-                  </div>
-                )}
+                    <div className="no-pages">
+                      <p>Chưa có nội dung trang nào được tạo.</p>
+                    </div>
+                  )}
               </div>
             </div>
 
