@@ -71,6 +71,11 @@
   background: #fff;
   border-radius: 16px;
   padding: 24px;
+
+  position: relative;
+  border: 1px solid transparent;
+  cursor: pointer;
+
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
   transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
   display: flex;
@@ -79,6 +84,13 @@
   &:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+
+     border-color: rgba(108, 99, 255, 0.25);
+    background: linear-gradient(
+      180deg,
+      rgba(108, 99, 255, 0.04),
+      rgba(236, 72, 153, 0.02)
+    );
   }
 
   .story-content-wrapper {
@@ -266,11 +278,12 @@
     padding: 10px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s ease,transform 0.2s ease;
 
     &:hover {
       background-color: #dcfce7;
       border-color: #86efac;
+      transform: translateY(-2px);
     }
   }
 
@@ -291,6 +304,10 @@
       color: #555;
       font-size: 15px;
       font-weight: 500;
+
+      padding: 6px 10px;
+      border-radius: 10px;
+
       transition: color 0.2s, transform 0.2s;
 
       svg {
