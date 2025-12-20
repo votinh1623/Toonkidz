@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Checkbox, Slider, Input, message, Spin, Modal, Tag, Button, Row, Col, Card } from 'antd';
 import "./CreateComic.scss";
 import StoryModal from '../../components/StoryModal/StoryModal';
+import StoryPreviewModal from '../../components/StoryPreviewModal/StoryPreviewModal';
 import axios from 'axios';
 
 const { TextArea } = Input;
@@ -626,96 +627,12 @@ const CreateComic = () => {
         </div>
       </div>
 
-      <Modal
-        title="Xem trước truyện"
+      <StoryPreviewModal
+        story={generatedStory}
         open={previewModalOpen}
-        onCancel={() => setPreviewModalOpen(false)}
-        footer={null}
-        width={1000}
-      >
-        {generatedStory && (
-          <div className="preview-modal-content">
-            <div className="preview-header">
-              <img
-                src={generatedStory.coverImage || '/default-cover.jpg'}
-                alt={generatedStory.title}
-                onError={(e) => {
-                  e.target.src = '/default-cover.jpg';
-                }}
-              />
-              <div className="preview-header-info">
-                <h2>{generatedStory.title || 'Tiêu đề truyện'}</h2>
-                <p>{generatedStory.heading || 'Mô tả truyện'}</p>
-                <div className="preview-tags">
-                  <Tag color="blue">Thể loại: {formData.theme}</Tag>
-                  <Tag color="green">Độ tuổi: {formData.ageGroup}</Tag>
-                  <Tag color="orange">{generatedStory.pages?.length || 0} trang</Tag>
-                </div>
-              </div>
-            </div>
-
-            <div className="preview-pages">
-              <h3>Nội dung truyện:</h3>
-              <div className="pages-grid">
-                {generatedStory.pages?.map((page, index) => (
-                  <div key={index} className="page-preview">
-                    <div className="page-number">Trang {page.pageNumber || index + 1}</div>
-                    <div className="page-image">
-                      <img
-                        src={page.image || '/default-page.jpg'}
-                        alt={`Page ${page.pageNumber || index + 1}`}
-                        onError={(e) => {
-                          e.target.src = '/default-page.jpg';
-                        }}
-                      />
-                    </div>
-                    <div className="page-content">
-                      <p>{page.content || 'Nội dung trang...'}</p>
-                    </div>
-                  </div>
-                )) || (
-                    <div className="no-pages">
-                      <p>Chưa có nội dung trang nào được tạo.</p>
-                    </div>
-                  )}
-              </div>
-            </div>
-
-            <div className="preview-actions">
-              <Row gutter={16} justify="center">
-                <Col>
-                  <Button
-                    type="primary"
-                    size="large"
-                    loading={saving}
-                    onClick={() => saveStory('published')}
-                  >
-                    Xuất bản ngay
-                  </Button>
-                </Col>
-                <Col>
-                  <Button
-                    size="large"
-                    loading={saving}
-                    onClick={() => saveStory('draft')}
-                  >
-                    Lưu bản nháp
-                  </Button>
-                </Col>
-                <Col>
-                  <Button
-                    size="large"
-                    onClick={retryGeneration}
-                    loading={loading}
-                  >
-                    Tạo lại
-                  </Button>
-                </Col>
-              </Row>
-            </div>
-          </div>
-        )}
-      </Modal>
+        onClose={() => setPreviewModalOpen(false)}
+        onSave={saveStory}
+      />
 
       <StoryModal
         open={open}

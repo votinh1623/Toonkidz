@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import { Modal, Carousel, Button, Tooltip, message, Spin } from "antd";
 import { RedoOutlined, CloseOutlined, HeartOutlined, HeartFilled, LockOutlined, UnlockOutlined } from "@ant-design/icons";
+import { Volume2, PauseCircle } from "lucide-react";
 import "./StoryDetailModal.scss";
 import { incrementStoryReadCount, rateStory, getStoryById } from "../../service/storyService";
 import { toggleFavorite } from "../../service/userService";
@@ -22,6 +23,9 @@ const StoryDetailModal = ({ story: initialStory, open, onClose, currentUser }) =
 
   const [isLocked, setIsLocked] = useState(false);
   const [unlockProgress, setUnlockProgress] = useState(0);
+
+  const [playingIndex, setPlayingIndex] = useState(null);
+
   const animationFrame = useRef(null);
   const startTimeRef = useRef(null);
   const btnRef = useRef(null);
@@ -33,6 +37,7 @@ const StoryDetailModal = ({ story: initialStory, open, onClose, currentUser }) =
         audio.currentTime = 0;
       }
     });
+    setPlayingIndex(null);
   };
 
   useEffect(() => {
@@ -43,6 +48,7 @@ const StoryDetailModal = ({ story: initialStory, open, onClose, currentUser }) =
         setLoading(true);
         setIsLocked(false);
         setUnlockProgress(0);
+        setPlayingIndex(null);
 
         try {
           const storyId = initialStory._id || initialStory.id;
@@ -96,7 +102,7 @@ const StoryDetailModal = ({ story: initialStory, open, onClose, currentUser }) =
   const startUnlock = () => {
     if (!isLocked) {
       setIsLocked(true);
-      toast.success("Đã mở khóa! Bé có thể thao tác rồi.", {
+      toast.success("Đã khóa! Nhẫn giữ để mở khoá!.", {
         icon: '🔓',
         style: {
           borderRadius: '20px',
@@ -175,12 +181,38 @@ const StoryDetailModal = ({ story: initialStory, open, onClose, currentUser }) =
     }
   };
 
+  const toggleAudio = (index) => {
+    const audio = audioRefs.current[index];
+    if (!audio) return;
+
+    if (audio.paused) {
+      audioRefs.current.forEach((a, i) => {
+        if (i !== index && a) {
+          a.pause();
+          a.currentTime = 0;
+        }
+      });
+
+      audio.play().catch(e => console.error("Play error:", e));
+      setPlayingIndex(index);
+    } else {
+      audio.pause();
+      setPlayingIndex(null);
+    }
+  };
+
   const handleSlideChange = async (currentSlideIndex) => {
     stopAllAudio();
+
     const audio = audioRefs.current[currentSlideIndex];
     if (audio) {
-      audio.play().catch(() => { });
+      setTimeout(() => {
+        audio.play()
+          .then(() => setPlayingIndex(currentSlideIndex))
+          .catch(() => { });
+      }, 300);
     }
+
     const contentPageCount = currentStory?.pages?.length || 0;
     if (contentPageCount > 0 && currentSlideIndex >= contentPageCount && !hasCountedRead) {
       try {
@@ -194,7 +226,10 @@ const StoryDetailModal = ({ story: initialStory, open, onClose, currentUser }) =
   };
 
   const handleStartReading = () => carouselRef.current.goTo(1);
-  const handleAudioEnded = () => carouselRef.current.next();
+  const handleAudioEnded = () => {
+    setPlayingIndex(null);
+    carouselRef.current.next();
+  };
   const handleReRead = () => carouselRef.current.goTo(0);
 
   const handleClose = () => {
@@ -344,15 +379,43 @@ const StoryDetailModal = ({ story: initialStory, open, onClose, currentUser }) =
               </div>
             );
           }
+          const isPlaying = playingIndex === index;
           return (
             <div key={slide._id || index} className="story-page-slide">
               <div className="story-page-wrapper">
                 <div className="page-image-container">
-                  {slide.image ? <img src={slide.image} alt={`Trang ${slide.pageNumber}`} /> : <div className="no-image-placeholder">Không có hình ảnh</div>}
+                  {slide.image ? (
+                    <img src={slide.image} alt={`Trang ${slide.pageNumber}`} />
+                  ) : (
+                    <div className="no-image-placeholder">Không có hình ảnh</div>
+                  )}
                 </div>
                 <div className="page-content-container">
                   <div className="page-content"><p>{slide.content}</p></div>
-                  {slide.audio && <div className="audio-player"><audio controls src={slide.audio} ref={el => (audioRefs.current[index] = el)} onEnded={() => handleAudioEnded(index)} /></div>}
+
+                  {slide.audio && (
+                    <div className="custom-audio-wrapper">
+                      <button
+                        className={`custom-audio-btn ${isPlaying ? 'playing' : ''}`}
+                        onClick={() => toggleAudio(index)}
+                      >
+                        {isPlaying ? <PauseCircle size={20} /> : <Volume2 size={20} />}
+                        <span>{isPlaying ? 'Đang đọc...' : 'Nghe đọc'}</span>
+
+                        {isPlaying && (
+                          <div className="sound-wave">
+                            <span></span><span></span><span></span>
+                          </div>
+                        )}
+                      </button>
+                      <audio
+                        src={slide.audio}
+                        ref={el => (audioRefs.current[index] = el)}
+                        onEnded={() => handleAudioEnded(index)}
+                        className="hidden-audio"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

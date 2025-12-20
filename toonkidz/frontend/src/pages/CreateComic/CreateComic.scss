@@ -694,202 +694,50 @@ $bp-2xl: 1400px;
   }
 }
 
-.preview-modal {
-  .ant-modal-body {
-    padding: 0;
+// DEPRECATED: Preview modal CSS đã được move sang StoryPreviewModal.scss
+// Giữ lại để avoid breaking changes, nhưng không còn được sử dụng
+/*
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
   }
 
-  .preview-modal-content {
-    max-height: 80vh;
-    overflow-y: auto;
-
-    .preview-header {
-      display: flex;
-      padding: $spacing-2xl;
-      background: linear-gradient(135deg, $primary-color 0%, $primary-dark 100%);
-      color: $background-white;
-      gap: $spacing-xl;
-
-      @media (max-width: $bp-md) {
-        flex-direction: column;
-        padding: $spacing-xl;
-        text-align: center;
-      }
-
-      @media (max-width: $bp-sm) {
-        padding: $spacing-lg;
-      }
-
-      img {
-        width: 150px;
-        height: 150px;
-        object-fit: cover;
-        border-radius: $border-radius-lg;
-        flex-shrink: 0;
-
-        @media (max-width: $bp-md) {
-          width: 120px;
-          height: 120px;
-          margin: 0 auto $spacing-lg;
-        }
-
-        @media (max-width: $bp-sm) {
-          width: 100px;
-          height: 100px;
-        }
-      }
-
-      .preview-header-info {
-        flex: 1;
-
-        h2 {
-          font-size: 2rem;
-          font-weight: 700;
-          margin-bottom: $spacing-md;
-
-          @media (max-width: $bp-md) {
-            font-size: 1.5rem;
-          }
-
-          @media (max-width: $bp-sm) {
-            font-size: 1.3rem;
-          }
-        }
-
-        p {
-          font-size: 1.2rem;
-          opacity: 0.9;
-          margin-bottom: $spacing-lg;
-
-          @media (max-width: $bp-sm) {
-            font-size: 1rem;
-            margin-bottom: $spacing-md;
-          }
-        }
-      }
-    }
-
-    .preview-pages {
-      padding: $spacing-2xl;
-
-      @media (max-width: $bp-md) {
-        padding: $spacing-xl;
-      }
-
-      @media (max-width: $bp-sm) {
-        padding: $spacing-lg;
-      }
-
-      h3 {
-        margin-bottom: $spacing-lg;
-        color: $text-primary;
-        font-weight: 600;
-
-        @media (max-width: $bp-sm) {
-          margin-bottom: $spacing-md;
-          font-size: 1.1rem;
-        }
-      }
-    }
-
-    .pages-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: $spacing-lg;
-
-      @media (max-width: $bp-md) {
-        grid-template-columns: repeat(2, 1fr);
-        gap: $spacing-md;
-      }
-
-      @media (max-width: $bp-sm) {
-        grid-template-columns: 1fr;
-      }
-
-      .page-preview {
-        background: $background-light;
-        border-radius: $border-radius-md;
-        padding: $spacing-lg;
-        border: 1px solid $border-color;
-
-        @media (max-width: $bp-sm) {
-          padding: $spacing-md;
-        }
-
-        .page-number {
-          font-weight: 600;
-          color: $primary-color;
-          margin-bottom: $spacing-lg;
-          font-size: 1.1rem;
-
-          @media (max-width: $bp-sm) {
-            font-size: 1rem;
-            margin-bottom: $spacing-md;
-          }
-        }
-
-        .page-image {
-          margin-bottom: $spacing-lg;
-
-          img {
-            width: 100%;
-            height: 150px;
-            object-fit: cover;
-            border-radius: $border-radius-sm;
-
-            @media (max-width: $bp-sm) {
-              height: 120px;
-            }
-          }
-        }
-
-        .page-content {
-          p {
-            line-height: 1.6;
-            color: $text-primary;
-            margin: 0;
-            font-size: 0.95rem;
-
-            @media (max-width: $bp-sm) {
-              font-size: 0.9rem;
-            }
-          }
-        }
-      }
-
-      .no-pages {
-        grid-column: 1 / -1;
-        text-align: center;
-        padding: $spacing-2xl;
-        color: $text-tertiary;
-
-        p {
-          margin: 0;
-        }
-      }
-    }
-
-    .preview-actions {
-      padding: $spacing-2xl;
-      background: $background-light;
-      border-top: 1px solid $border-color;
-
-      @media (max-width: $bp-md) {
-        padding: $spacing-xl;
-      }
-
-      @media (max-width: $bp-sm) {
-        padding: $spacing-lg;
-      }
-
-      .ant-btn {
-        @media (max-width: $bp-sm) {
-          width: 100%;
-        }
-      }
-    }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleInCard {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.preview-modal {
+  /* 
+  DEPRECATED: Phần này không còn được sử dụng
+  Xem trước truyện đã được move sang StoryPreviewModal.jsx
+  CSS của nó được quản lý ở StoryPreviewModal.scss
+  */
+
 
 .keyword-section {
   margin-bottom: $spacing-lg;
