@@ -22,6 +22,13 @@
   
 npm install cookie-parser multer...
 
+
+
+pip install flask
+pip install flask-cors
+pip install edge-tts
+
+
  
 + frontend
 
