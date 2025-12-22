@@ -138,7 +138,7 @@ TỪ KHÓA BẮT BUỘC (nếu có): ${storyKeywords.length ? storyKeywords.join
 YÊU CẦU BẮT BUỘC:
 1. Tiêu đề: Một dòng ngắn gọn, hấp dẫn.
 2. Tóm tắt: Một hoặc hai câu mô tả nội dung chính của câu chuyện.
-3. Câu chuyện: Chia thành ${pages || 2} trang, mỗi trang khoảng 20 từ.
+3. Câu chuyện: Chia thành ${pages || 2} trang, mỗi trang khoảng 100 từ.
 4. Mỗi trang phải có nội dung hoàn chỉnh và liên kết với trang trước/sau.
 5. Mỗi trang PHẢI có imagePrompt bằng tiếng Anh.
 6. PHẢI có coverImagePrompt bằng tiếng Anh.
